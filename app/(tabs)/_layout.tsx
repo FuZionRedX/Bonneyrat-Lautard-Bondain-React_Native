@@ -12,23 +12,54 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveTintColor: '#4CAF50',
+        tabBarInactiveTintColor: '#9E9E9E',
         headerShown: false,
         tabBarButton: HapticTab,
+        tabBarStyle: {
+          backgroundColor: '#fff',
+          borderTopWidth: 1,
+          borderTopColor: '#F0F0F0',
+          height: 60,
+          paddingBottom: 8,
+        },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: '500',
+        },
       }}>
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: 'Planner',
+          tabBarIcon: ({ color }) => <IconSymbol size={24} name="calendar" color={color} />,
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="recipes"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: 'Recipes',
+          tabBarIcon: ({ color }) => <IconSymbol size={24} name="fork.knife" color={color} />,
         }}
+      />
+      <Tabs.Screen
+        name="groceries"
+        options={{
+          title: 'Groceries',
+          tabBarIcon: ({ color }) => <IconSymbol size={24} name="cart.fill" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ color }) => <IconSymbol size={24} name="person.fill" color={color} />,
+        }}
+      />
+      {/* Hidden legacy screen */}
+      <Tabs.Screen
+        name="explore"
+        options={{ href: null }}
       />
     </Tabs>
   );
