@@ -1,0 +1,91 @@
+import React, {
+    createContext,
+    ReactNode,
+    useContext,
+    useMemo,
+    useState,
+} from "react";
+
+export interface ProfileData {
+  email: string;
+  password: string;
+  fullName: string;
+  age: string;
+  gender: string;
+  height: string;
+  weight: string;
+  goal: string;
+}
+
+const defaultProfile: ProfileData = {
+  email: "john.doe@example.com",
+  password: "password123",
+  fullName: "John Doe",
+  age: "25",
+  gender: "Male",
+  height: "180",
+  weight: "75",
+  goal: "Gain Muscle",
+};
+
+interface ProfileContextValue {
+  profile: ProfileData;
+  hasProcessedInput: boolean;
+  updateProfile: (nextProfile: ProfileData) => void;
+}
+
+const ProfileContext = createContext<ProfileContextValue | undefined>(
+  undefined,
+);
+
+export function ProfileProvider({ children }: { children: ReactNode }) {
+  const [profile, setProfile] = useState<ProfileData>(defaultProfile);
+  const [hasProcessedInput, setHasProcessedInput] = useState(false);
+
+  const value = useMemo(
+    () => ({
+      profile,
+      hasProcessedInput,
+      updateProfile: (nextProfile: ProfileData) => {
+        setProfile(nextProfile);
+        setHasProcessedInput(true);
+      },
+    }),
+    [hasProcessedInput, profile],
+  );
+
+  return (
+    <ProfileContext.Provider value={value}>{children}</ProfileContext.Provider>
+  );
+}
+
+export function useProfile() {
+  const context = useContext(ProfileContext);
+
+  if (!context) {
+    throw new Error("useProfile must be used within a ProfileProvider");
+  }
+
+  return context;
+}
+
+export function getProfileInitials(fullName: string) {
+  const parts = fullName.trim().split(/\s+/).filter(Boolean);
+
+  if (parts.length === 0) {
+    return "NA";
+  }
+
+  return parts
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
+}
+
+export function maskPassword(password: string) {
+  if (!password) {
+    return "Not set";
+  }
+
+  return "•".repeat(password.length);
+}

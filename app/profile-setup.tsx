@@ -1,5 +1,5 @@
-import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import { useRouter } from "expo-router";
+import React, { useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -9,21 +9,16 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-} from 'react-native';
+} from "react-native";
 
-interface FormData {
-  email: string;
-  password: string;
-  fullName: string;
-  age: string;
-  gender: string;
-  height: string;
-  weight: string;
-  goal: string;
-}
+import {
+  ProfileData,
+  maskPassword,
+  useProfile,
+} from "@/contexts/profile-context";
 
-const GENDERS = ['Male', 'Female', 'Other'];
-const GOALS = ['Lose Weight', 'Gain Muscle', 'Stay Fit', 'Eat Healthier'];
+const GENDERS = ["Male", "Female", "Other"];
+const GOALS = ["Lose Weight", "Gain Muscle", "Stay Fit", "Eat Healthier"];
 
 function StepIndicator({ current, total }: { current: number; total: number }) {
   return (
@@ -31,7 +26,14 @@ function StepIndicator({ current, total }: { current: number; total: number }) {
       {Array.from({ length: total }).map((_, i) => (
         <View
           key={i}
-          style={[styles.stepDot, i < current ? styles.stepDotDone : i === current - 1 ? styles.stepDotActive : styles.stepDotInactive]}
+          style={[
+            styles.stepDot,
+            i < current
+              ? styles.stepDotDone
+              : i === current - 1
+                ? styles.stepDotActive
+                : styles.stepDotInactive,
+          ]}
         />
       ))}
     </View>
@@ -51,7 +53,7 @@ function InputField({
   value: string;
   onChangeText: (v: string) => void;
   secureTextEntry?: boolean;
-  keyboardType?: 'default' | 'email-address' | 'numeric';
+  keyboardType?: "default" | "email-address" | "numeric";
 }) {
   return (
     <View style={styles.fieldWrap}>
@@ -63,7 +65,7 @@ function InputField({
         value={value}
         onChangeText={onChangeText}
         secureTextEntry={secureTextEntry}
-        keyboardType={keyboardType ?? 'default'}
+        keyboardType={keyboardType ?? "default"}
         autoCapitalize="none"
       />
     </View>
@@ -72,25 +74,26 @@ function InputField({
 
 export default function ProfileSetupScreen() {
   const router = useRouter();
+  const { profile, updateProfile } = useProfile();
   const [step, setStep] = useState(1);
-  const [form, setForm] = useState<FormData>({
-    email: '',
-    password: '',
-    fullName: '',
-    age: '',
-    gender: '',
-    height: '',
-    weight: '',
-    goal: '',
-  });
+  const [form, setForm] = useState<ProfileData>(profile);
+  const [statusMessage, setStatusMessage] = useState("");
 
-  const set = (key: keyof FormData) => (value: string) =>
+  const set = (key: keyof ProfileData) => (value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }));
 
   const next = () => {
-    if (step < 3) setStep((s) => s + 1);
-    else router.replace('/(tabs)');
+    if (step < 3) {
+      setStatusMessage("");
+      setStep((s) => s + 1);
+      return;
+    }
+
+    updateProfile(form);
+    setStatusMessage("User input processing completed.");
+    router.replace("/(tabs)/profile");
   };
+
   const back = () => {
     if (step > 1) setStep((s) => s - 1);
     else router.back();
@@ -99,7 +102,7 @@ export default function ProfileSetupScreen() {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         {/* Header */}
@@ -117,29 +120,43 @@ export default function ProfileSetupScreen() {
             <>
               <Text style={styles.sectionHeading}>Tell us about yourself</Text>
               <Text style={styles.sectionSubtitle}>
-                This helps us calculate your daily caloric needs and body mass index.
+                This helps us calculate your daily caloric needs and body mass
+                index.
               </Text>
 
               <InputField
                 label="Email Address"
                 placeholder="example@email.com"
                 value={form.email}
-                onChangeText={set('email')}
+                onChangeText={set("email")}
                 keyboardType="email-address"
               />
               <InputField
                 label="Password"
                 placeholder="••••••••"
                 value={form.password}
-                onChangeText={set('password')}
+                onChangeText={set("password")}
                 secureTextEntry
               />
               <InputField
                 label="Full Name"
                 placeholder="John Doe"
                 value={form.fullName}
-                onChangeText={set('fullName')}
+                onChangeText={set("fullName")}
               />
+
+              <View style={styles.previewCard}>
+                <Text style={styles.previewTitle}>Live Input Preview</Text>
+                <Text style={styles.previewLine}>
+                  Name: {form.fullName || "Not set yet"}
+                </Text>
+                <Text style={styles.previewLine}>
+                  Email: {form.email || "Not set yet"}
+                </Text>
+                <Text style={styles.previewLine}>
+                  Password: {maskPassword(form.password)}
+                </Text>
+              </View>
             </>
           )}
 
@@ -157,7 +174,7 @@ export default function ProfileSetupScreen() {
                     label="Age"
                     placeholder="25"
                     value={form.age}
-                    onChangeText={set('age')}
+                    onChangeText={set("age")}
                     keyboardType="numeric"
                   />
                 </View>
@@ -167,10 +184,18 @@ export default function ProfileSetupScreen() {
                     {GENDERS.map((g) => (
                       <TouchableOpacity
                         key={g}
-                        style={[styles.selectChip, form.gender === g && styles.selectChipActive]}
-                        onPress={() => set('gender')(g)}
+                        style={[
+                          styles.selectChip,
+                          form.gender === g && styles.selectChipActive,
+                        ]}
+                        onPress={() => set("gender")(g)}
                       >
-                        <Text style={[styles.selectChipText, form.gender === g && styles.selectChipTextActive]}>
+                        <Text
+                          style={[
+                            styles.selectChipText,
+                            form.gender === g && styles.selectChipTextActive,
+                          ]}
+                        >
                           {g}
                         </Text>
                       </TouchableOpacity>
@@ -185,7 +210,7 @@ export default function ProfileSetupScreen() {
                     label="Height (cm)"
                     placeholder="180"
                     value={form.height}
-                    onChangeText={set('height')}
+                    onChangeText={set("height")}
                     keyboardType="numeric"
                   />
                 </View>
@@ -194,7 +219,7 @@ export default function ProfileSetupScreen() {
                     label="Weight (kg)"
                     placeholder="75"
                     value={form.weight}
-                    onChangeText={set('weight')}
+                    onChangeText={set("weight")}
                     keyboardType="numeric"
                   />
                 </View>
@@ -214,13 +239,27 @@ export default function ProfileSetupScreen() {
                 {GOALS.map((g) => (
                   <TouchableOpacity
                     key={g}
-                    style={[styles.goalCard, form.goal === g && styles.goalCardActive]}
-                    onPress={() => set('goal')(g)}
+                    style={[
+                      styles.goalCard,
+                      form.goal === g && styles.goalCardActive,
+                    ]}
+                    onPress={() => set("goal")(g)}
                   >
                     <Text style={styles.goalEmoji}>
-                      {g === 'Lose Weight' ? '⚖️' : g === 'Gain Muscle' ? '🏋️' : g === 'Stay Fit' ? '🏃' : '🥗'}
+                      {g === "Lose Weight"
+                        ? "⚖️"
+                        : g === "Gain Muscle"
+                          ? "🏋️"
+                          : g === "Stay Fit"
+                            ? "🏃"
+                            : "🥗"}
                     </Text>
-                    <Text style={[styles.goalCardText, form.goal === g && styles.goalCardTextActive]}>
+                    <Text
+                      style={[
+                        styles.goalCardText,
+                        form.goal === g && styles.goalCardTextActive,
+                      ]}
+                    >
                       {g}
                     </Text>
                   </TouchableOpacity>
@@ -240,110 +279,167 @@ export default function ProfileSetupScreen() {
         </TouchableOpacity>
         <TouchableOpacity style={styles.nextBtn} onPress={next}>
           <Text style={styles.nextBtnText}>
-            {step < 3 ? 'Continue →' : 'Finish Setup ✓'}
+            {step < 3 ? "Continue →" : "Finish Setup ✓"}
           </Text>
         </TouchableOpacity>
       </View>
+
+      {statusMessage ? (
+        <View style={styles.statusBanner}>
+          <Text style={styles.statusText}>{statusMessage}</Text>
+        </View>
+      ) : null}
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F7FA' },
+  container: { flex: 1, backgroundColor: "#F5F7FA" },
 
   header: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     paddingHorizontal: 20,
     paddingTop: 56,
     paddingBottom: 20,
   },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  headerTitle: { fontSize: 18, fontWeight: '800', color: '#1A1A2E' },
-  headerStep: { fontSize: 13, color: '#9E9E9E', fontWeight: '600' },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  headerTitle: { fontSize: 18, fontWeight: "800", color: "#1A1A2E" },
+  headerStep: { fontSize: 13, color: "#9E9E9E", fontWeight: "600" },
 
-  stepIndicator: { flexDirection: 'row', gap: 8 },
+  stepIndicator: { flexDirection: "row", gap: 8 },
   stepDot: { height: 6, flex: 1, borderRadius: 3 },
-  stepDotDone: { backgroundColor: '#4CAF50' },
-  stepDotActive: { backgroundColor: '#4CAF50' },
-  stepDotInactive: { backgroundColor: '#E0E0E0' },
+  stepDotDone: { backgroundColor: "#4CAF50" },
+  stepDotActive: { backgroundColor: "#4CAF50" },
+  stepDotInactive: { backgroundColor: "#E0E0E0" },
 
   body: { padding: 20 },
 
-  sectionHeading: { fontSize: 22, fontWeight: '800', color: '#1A1A2E', marginBottom: 8 },
-  sectionSubtitle: { fontSize: 14, color: '#9E9E9E', marginBottom: 24, lineHeight: 20 },
+  sectionHeading: {
+    fontSize: 22,
+    fontWeight: "800",
+    color: "#1A1A2E",
+    marginBottom: 8,
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    color: "#9E9E9E",
+    marginBottom: 24,
+    lineHeight: 20,
+  },
 
   fieldWrap: { marginBottom: 16 },
-  fieldLabel: { fontSize: 13, fontWeight: '700', color: '#555', marginBottom: 6 },
+  fieldLabel: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#555",
+    marginBottom: 6,
+  },
   input: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: "#E0E0E0",
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 15,
-    color: '#1A1A2E',
+    color: "#1A1A2E",
   },
+  previewCard: {
+    marginTop: 8,
+    backgroundColor: "#E8F5E9",
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: "#C8E6C9",
+  },
+  previewTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#1B5E20",
+    marginBottom: 8,
+  },
+  previewLine: { fontSize: 13, color: "#2E7D32", marginBottom: 4 },
 
-  rowFields: { flexDirection: 'row', marginBottom: 0 },
+  rowFields: { flexDirection: "row", marginBottom: 0 },
 
-  selectRow: { flexDirection: 'column', gap: 6, marginTop: 6 },
+  selectRow: { flexDirection: "column", gap: 6, marginTop: 6 },
   selectChip: {
     paddingVertical: 8,
     paddingHorizontal: 10,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
-    backgroundColor: '#fff',
-    alignItems: 'center',
+    borderColor: "#E0E0E0",
+    backgroundColor: "#fff",
+    alignItems: "center",
   },
-  selectChipActive: { backgroundColor: '#4CAF50', borderColor: '#4CAF50' },
-  selectChipText: { fontSize: 12, fontWeight: '600', color: '#555' },
-  selectChipTextActive: { color: '#fff' },
+  selectChipActive: { backgroundColor: "#4CAF50", borderColor: "#4CAF50" },
+  selectChipText: { fontSize: 12, fontWeight: "600", color: "#555" },
+  selectChipTextActive: { color: "#fff" },
 
-  goalGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  goalGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
   goalCard: {
-    width: '46%',
-    backgroundColor: '#fff',
+    width: "46%",
+    backgroundColor: "#fff",
     borderRadius: 16,
     padding: 20,
-    alignItems: 'center',
+    alignItems: "center",
     borderWidth: 2,
-    borderColor: '#E0E0E0',
-    shadowColor: '#000',
+    borderColor: "#E0E0E0",
+    shadowColor: "#000",
     shadowOpacity: 0.04,
     shadowRadius: 6,
     elevation: 1,
   },
-  goalCardActive: { borderColor: '#4CAF50', backgroundColor: '#E8F5E9' },
+  goalCardActive: { borderColor: "#4CAF50", backgroundColor: "#E8F5E9" },
   goalEmoji: { fontSize: 30, marginBottom: 8 },
-  goalCardText: { fontSize: 14, fontWeight: '700', color: '#555', textAlign: 'center' },
-  goalCardTextActive: { color: '#2E7D32' },
+  goalCardText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#555",
+    textAlign: "center",
+  },
+  goalCardTextActive: { color: "#2E7D32" },
 
   bottomNav: {
-    flexDirection: 'row',
+    flexDirection: "row",
     padding: 16,
     gap: 12,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
+    borderTopColor: "#F0F0F0",
   },
   backBtn: {
     flex: 1,
     borderRadius: 12,
     paddingVertical: 14,
-    alignItems: 'center',
-    backgroundColor: '#F5F7FA',
+    alignItems: "center",
+    backgroundColor: "#F5F7FA",
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: "#E0E0E0",
   },
-  backBtnText: { fontSize: 15, fontWeight: '700', color: '#555' },
+  backBtnText: { fontSize: 15, fontWeight: "700", color: "#555" },
   nextBtn: {
     flex: 2,
     borderRadius: 12,
     paddingVertical: 14,
-    alignItems: 'center',
-    backgroundColor: '#4CAF50',
+    alignItems: "center",
+    backgroundColor: "#4CAF50",
   },
-  nextBtnText: { fontSize: 15, fontWeight: '700', color: '#fff' },
+  nextBtnText: { fontSize: 15, fontWeight: "700", color: "#fff" },
+  statusBanner: {
+    backgroundColor: "#1B5E20",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  statusText: {
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: "700",
+    textAlign: "center",
+  },
 });
