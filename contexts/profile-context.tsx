@@ -1,9 +1,10 @@
+import { getProfile } from "@/constants/api";
 import React, {
-    createContext,
-    ReactNode,
-    useContext,
-    useMemo,
-    useState,
+  createContext,
+  ReactNode,
+  useContext,
+  useMemo,
+  useState,
 } from "react";
 
 export interface ProfileData {
@@ -18,20 +19,29 @@ export interface ProfileData {
 }
 
 const defaultProfile: ProfileData = {
-  email: "john.doe@example.com",
-  password: "password123",
-  fullName: "John Doe",
-  age: "25",
-  gender: "Male",
-  height: "180",
-  weight: "75",
-  goal: "Gain Muscle",
+  email: "",
+  password: "",
+  fullName: "",
+  age: "",
+  gender: "",
+  height: "",
+  weight: "",
+  goal: "",
 };
 
 interface ProfileContextValue {
   profile: ProfileData;
   hasProcessedInput: boolean;
   updateProfile: (nextProfile: ProfileData) => void;
+  connectProfileByEmail: (
+    email: string,
+    password: string,
+  ) => Promise<
+    | { status: "connected"; wasFirstOpen?: boolean }
+    | { status: "not_found" }
+    | { status: "wrong_password" }
+  >;
+  logout: () => void;
 }
 
 const ProfileContext = createContext<ProfileContextValue | undefined>(
@@ -49,6 +59,28 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       updateProfile: (nextProfile: ProfileData) => {
         setProfile(nextProfile);
         setHasProcessedInput(true);
+      },
+      connectProfileByEmail: async (email: string, password: string) => {
+        const saved = await getProfile(email);
+
+        if (!saved) {
+          return { status: "not_found" as const };
+        }
+
+        if (saved.password !== password) {
+          return { status: "wrong_password" as const };
+        }
+
+        setProfile(saved);
+        setHasProcessedInput(true);
+        return {
+          status: "connected" as const,
+          wasFirstOpen: !!saved.wasFirstOpen,
+        };
+      },
+      logout: () => {
+        setProfile(defaultProfile);
+        setHasProcessedInput(false);
       },
     }),
     [hasProcessedInput, profile],
