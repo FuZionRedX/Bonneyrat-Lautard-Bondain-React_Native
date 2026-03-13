@@ -6,6 +6,11 @@ export interface GetProfileResponse extends ProfileData {
   wasFirstOpen?: boolean;
 }
 
+export type LoginProfileResponse =
+  | { status: "connected"; profile: GetProfileResponse }
+  | { status: "not_found" }
+  | { status: "wrong_password" };
+
 export async function saveProfile(profile: ProfileData) {
   const res = await fetch(`${API_BASE}/save_profile.php`, {
     method: "POST",
@@ -24,4 +29,27 @@ export async function getProfile(
   const data = await res.json();
   if (data.error) return null;
   return data as GetProfileResponse;
+}
+
+export async function loginProfile(
+  email: string,
+  password: string,
+): Promise<LoginProfileResponse> {
+  const res = await fetch(`${API_BASE}/login_profile.php`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+
+  const data = await res.json();
+
+  if (data.error === "not_found") {
+    return { status: "not_found" };
+  }
+
+  if (data.error === "wrong_password") {
+    return { status: "wrong_password" };
+  }
+
+  return { status: "connected", profile: data as GetProfileResponse };
 }

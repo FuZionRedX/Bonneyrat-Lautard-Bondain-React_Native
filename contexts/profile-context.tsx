@@ -1,4 +1,4 @@
-import { getProfile } from "@/constants/api";
+import { loginProfile } from "@/constants/api";
 import React, {
   createContext,
   ReactNode,
@@ -61,17 +61,19 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         setHasProcessedInput(true);
       },
       connectProfileByEmail: async (email: string, password: string) => {
-        const saved = await getProfile(email);
+        const result = await loginProfile(email, password);
 
-        if (!saved) {
+        if (result.status === "not_found") {
           return { status: "not_found" as const };
         }
 
-        if (saved.password !== password) {
+        if (result.status === "wrong_password") {
           return { status: "wrong_password" as const };
         }
 
-        setProfile(saved);
+        const saved = result.profile;
+
+        setProfile({ ...saved, password });
         setHasProcessedInput(true);
         return {
           status: "connected" as const,
