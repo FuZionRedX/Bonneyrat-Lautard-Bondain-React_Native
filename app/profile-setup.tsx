@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 
+import { saveProfile } from "@/constants/api";
 import {
   ProfileData,
   maskPassword,
@@ -82,16 +83,21 @@ export default function ProfileSetupScreen() {
   const set = (key: keyof ProfileData) => (value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }));
 
-  const next = () => {
+  const next = async () => {
     if (step < 3) {
       setStatusMessage("");
       setStep((s) => s + 1);
       return;
     }
 
-    updateProfile(form);
-    setStatusMessage("User input processing completed.");
-    router.replace("/(tabs)/profile");
+    try {
+      await saveProfile(form);
+      updateProfile(form);
+      setStatusMessage("User input processing completed.");
+      router.replace("/(tabs)/profile");
+    } catch (e) {
+      setStatusMessage("Failed to save profile. Check your connection.");
+    }
   };
 
   const back = () => {
