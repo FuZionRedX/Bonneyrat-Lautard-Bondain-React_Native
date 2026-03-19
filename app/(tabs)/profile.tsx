@@ -273,20 +273,7 @@ export default function ProfileScreen() {
             )}
           </TouchableOpacity>
 
-          <View style={styles.socialDividerRow}>
-            <View style={styles.socialDividerLine} />
-            <Text style={styles.socialDividerText}>OR CONTINUE WITH</Text>
-            <View style={styles.socialDividerLine} />
-          </View>
-
-          <View style={styles.socialRow}>
-            <TouchableOpacity style={styles.socialButton}>
-              <Text style={styles.socialButtonText}>Google</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.socialButton}>
-              <Text style={styles.socialButtonText}>Apple</Text>
-            </TouchableOpacity>
-          </View>
+          {/* Social login options removed as requested */}
 
           <TouchableOpacity
             style={styles.signupRow}
