@@ -12,11 +12,7 @@ import {
   View,
 } from "react-native";
 
-import {
-  getProfileInitials,
-  maskPassword,
-  useProfile,
-} from "@/contexts/profile-context";
+import { getProfileInitials, useProfile } from "@/contexts/profile-context";
 
 const LAST_PROFILE_EMAIL_KEY = "last_profile_email";
 
@@ -82,29 +78,6 @@ function getBmiMeta(bmi: number | null): BmiMeta {
     description:
       "Your BMI is in a high range. Consider speaking with a healthcare professional for a personalized plan.",
   };
-}
-
-function StatCard({
-  label,
-  value,
-  unit,
-  emoji,
-  color,
-}: {
-  label: string;
-  value: string;
-  unit: string;
-  emoji: string;
-  color: string;
-}) {
-  return (
-    <View style={[styles.statCard, { borderLeftColor: color }]}>
-      <Text style={styles.statEmoji}>{emoji}</Text>
-      <Text style={[styles.statValue, { color }]}>{value}</Text>
-      <Text style={styles.statUnit}>{unit}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
-    </View>
-  );
 }
 
 function MenuItem({
@@ -335,17 +308,6 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </View>
 
-      {hasProcessedInput ? (
-        <View style={styles.statusCard}>
-          <Text style={styles.statusTitle}>
-            User input processing completed
-          </Text>
-          <Text style={styles.statusSubtitle}>
-            Your latest name, email, and password are now active in the app.
-          </Text>
-        </View>
-      ) : null}
-
       <View style={styles.accountCard}>
         <Text style={styles.sectionTitle}>Account Information</Text>
         <View style={styles.accountRow}>
@@ -363,7 +325,9 @@ export default function ProfileScreen() {
         <View>
           <Text style={styles.bmiTitle}>BODY MASS INDEX</Text>
           <Text style={styles.bmiValue}>{bmiDisplay}</Text>
-          <View style={[styles.bmiNormalBadge, { backgroundColor: bmiMeta.color }]}>
+          <View
+            style={[styles.bmiNormalBadge, { backgroundColor: bmiMeta.color }]}
+          >
             <Text style={styles.bmiNormalText}>{bmiMeta.label}</Text>
           </View>
         </View>
@@ -386,31 +350,6 @@ export default function ProfileScreen() {
             ))}
           </View>
         </View>
-      </View>
-
-      {/* Health Stats Row */}
-      <View style={styles.statsRow}>
-        <StatCard
-          label="Heart Rate"
-          value="72"
-          unit="bpm"
-          emoji="❤️"
-          color="#F44336"
-        />
-        <StatCard
-          label="Hydration"
-          value="1.8"
-          unit="L"
-          emoji="💧"
-          color="#2196F3"
-        />
-        <StatCard
-          label="Weight"
-          value={profile.weight}
-          unit="kg"
-          emoji="⚖️"
-          color="#9C27B0"
-        />
       </View>
 
       {/* Body Info */}
@@ -451,7 +390,11 @@ export default function ProfileScreen() {
         <MenuItem emoji="🔔" label="Notifications" />
         <MenuItem emoji="🔗" label="Sync Devices" />
         <MenuItem emoji="⚙️" label="Settings" />
-        <MenuItem emoji="❓" label="Help & Support" />
+        <MenuItem
+          emoji="❓"
+          label="Help & Support"
+          onPress={() => router.push("/help-support" as any)}
+        />
         <MenuItem emoji="🚪" label="Log Out" onPress={handleLogout} />
       </View>
 
@@ -617,22 +560,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   editBtnText: { color: "#4CAF50", fontWeight: "700", fontSize: 13 },
-  statusCard: {
-    marginHorizontal: 16,
-    marginTop: 16,
-    backgroundColor: "#E8F5E9",
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#C8E6C9",
-  },
-  statusTitle: {
-    fontSize: 15,
-    fontWeight: "800",
-    color: "#1B5E20",
-    marginBottom: 4,
-  },
-  statusSubtitle: { fontSize: 13, color: "#2E7D32", lineHeight: 18 },
   accountCard: {
     marginHorizontal: 16,
     marginTop: 12,
@@ -694,35 +621,6 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   scaleSegment: { flex: 1, borderRadius: 2 },
-
-  statsRow: {
-    flexDirection: "row",
-    marginHorizontal: 16,
-    marginBottom: 12,
-    gap: 10,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: "#fff",
-    borderRadius: 14,
-    padding: 12,
-    alignItems: "center",
-    borderLeftWidth: 3,
-    shadowColor: "#000",
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  statEmoji: { fontSize: 20, marginBottom: 4 },
-  statValue: { fontSize: 20, fontWeight: "800" },
-  statUnit: { fontSize: 11, color: "#9E9E9E" },
-  statLabel: {
-    fontSize: 11,
-    color: "#555",
-    fontWeight: "600",
-    marginTop: 4,
-    textAlign: "center",
-  },
 
   bodyInfoCard: {
     marginHorizontal: 16,
