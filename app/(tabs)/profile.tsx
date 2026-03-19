@@ -12,11 +12,7 @@ import {
   View,
 } from "react-native";
 
-import {
-  getProfileInitials,
-  maskPassword,
-  useProfile,
-} from "@/contexts/profile-context";
+import { getProfileInitials, useProfile } from "@/contexts/profile-context";
 
 const LAST_PROFILE_EMAIL_KEY = "last_profile_email";
 
@@ -82,29 +78,6 @@ function getBmiMeta(bmi: number | null): BmiMeta {
     description:
       "Your BMI is in a high range. Consider speaking with a healthcare professional for a personalized plan.",
   };
-}
-
-function StatCard({
-  label,
-  value,
-  unit,
-  emoji,
-  color,
-}: {
-  label: string;
-  value: string;
-  unit: string;
-  emoji: string;
-  color: string;
-}) {
-  return (
-    <View style={[styles.statCard, { borderLeftColor: color }]}>
-      <Text style={styles.statEmoji}>{emoji}</Text>
-      <Text style={[styles.statValue, { color }]}>{value}</Text>
-      <Text style={styles.statUnit}>{unit}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
-    </View>
-  );
 }
 
 function MenuItem({
@@ -363,7 +336,9 @@ export default function ProfileScreen() {
         <View>
           <Text style={styles.bmiTitle}>BODY MASS INDEX</Text>
           <Text style={styles.bmiValue}>{bmiDisplay}</Text>
-          <View style={[styles.bmiNormalBadge, { backgroundColor: bmiMeta.color }]}>
+          <View
+            style={[styles.bmiNormalBadge, { backgroundColor: bmiMeta.color }]}
+          >
             <Text style={styles.bmiNormalText}>{bmiMeta.label}</Text>
           </View>
         </View>
@@ -386,31 +361,6 @@ export default function ProfileScreen() {
             ))}
           </View>
         </View>
-      </View>
-
-      {/* Health Stats Row */}
-      <View style={styles.statsRow}>
-        <StatCard
-          label="Heart Rate"
-          value="72"
-          unit="bpm"
-          emoji="❤️"
-          color="#F44336"
-        />
-        <StatCard
-          label="Hydration"
-          value="1.8"
-          unit="L"
-          emoji="💧"
-          color="#2196F3"
-        />
-        <StatCard
-          label="Weight"
-          value={profile.weight}
-          unit="kg"
-          emoji="⚖️"
-          color="#9C27B0"
-        />
       </View>
 
       {/* Body Info */}
@@ -694,35 +644,6 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   scaleSegment: { flex: 1, borderRadius: 2 },
-
-  statsRow: {
-    flexDirection: "row",
-    marginHorizontal: 16,
-    marginBottom: 12,
-    gap: 10,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: "#fff",
-    borderRadius: 14,
-    padding: 12,
-    alignItems: "center",
-    borderLeftWidth: 3,
-    shadowColor: "#000",
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  statEmoji: { fontSize: 20, marginBottom: 4 },
-  statValue: { fontSize: 20, fontWeight: "800" },
-  statUnit: { fontSize: 11, color: "#9E9E9E" },
-  statLabel: {
-    fontSize: 11,
-    color: "#555",
-    fontWeight: "600",
-    marginTop: 4,
-    textAlign: "center",
-  },
 
   bodyInfoCard: {
     marginHorizontal: 16,
