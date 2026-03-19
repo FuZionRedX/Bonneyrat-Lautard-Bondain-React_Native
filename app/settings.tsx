@@ -4,13 +4,13 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Stack, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    Alert,
-    Appearance,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  Appearance,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 type ThemePreference = "light" | "dark";
@@ -71,7 +71,7 @@ export default function SettingsScreen() {
 
   useEffect(() => {
     AsyncStorage.getItem(THEME_PREF_KEY)
-      .then((savedPreference) => {
+      .then((savedPreference: string | null) => {
         if (savedPreference === "light" || savedPreference === "dark") {
           setThemePreference(savedPreference);
           Appearance.setColorScheme(savedPreference);
