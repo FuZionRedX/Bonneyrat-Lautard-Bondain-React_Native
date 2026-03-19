@@ -35,7 +35,7 @@ export async function loginProfile(
   email: string,
   password: string,
 ): Promise<LoginProfileResponse> {
-  const res = await fetch(`${API_BASE}/login_profile.php`, {
+  const res = await fetch(`${API_BASE}/get_profile.php`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),

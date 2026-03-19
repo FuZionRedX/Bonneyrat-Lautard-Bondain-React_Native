@@ -95,14 +95,14 @@ export default function ProfileScreen() {
 
   const handleConnectProfile = async () => {
     const trimmedEmail = emailToConnect.trim();
-    const trimmedPassword = passwordToConnect.trim();
+    const enteredPassword = passwordToConnect;
 
     if (!trimmedEmail) {
       setConnectError("Enter your email to connect your profile.");
       return;
     }
 
-    if (!trimmedPassword) {
+    if (!enteredPassword.trim()) {
       setConnectError("Enter your password to connect your profile.");
       return;
     }
@@ -112,7 +112,7 @@ export default function ProfileScreen() {
       setConnectError("");
       const result = (await connectProfileByEmail(
         trimmedEmail,
-        trimmedPassword,
+        enteredPassword,
       )) as ConnectResult;
       const status = typeof result === "string" ? result : result.status;
 
