@@ -12,8 +12,7 @@ export default function HelpSupportScreen() {
       >
         <Text style={styles.title}>Need Help?</Text>
         <Text style={styles.subtitle}>
-          Contact our support team and we will get back to you as soon as
-          possible.
+          Contact our support team and we will get back to you between our openning hours
         </Text>
 
         <View style={styles.card}>
@@ -31,7 +30,7 @@ export default function HelpSupportScreen() {
 
           <View style={styles.row}>
             <Text style={styles.label}>Hours</Text>
-            <Text style={styles.value}>Mon-Fri, 9:00-18:00</Text>
+            <Text style={styles.value}>Thur, 2:00AM-2:01AM</Text>
           </View>
         </View>
       </ScrollView>
