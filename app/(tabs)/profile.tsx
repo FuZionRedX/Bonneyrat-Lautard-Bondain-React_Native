@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { getProfileInitials, useProfile } from "@/contexts/profile-context";
 
@@ -100,6 +101,7 @@ function MenuItem({
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { connectProfileByEmail, hasProcessedInput, logout, profile } =
     useProfile();
   const [emailToConnect, setEmailToConnect] = useState("");
@@ -187,7 +189,15 @@ export default function ProfileScreen() {
         style={styles.loginScreen}
         contentContainerStyle={styles.loginContent}
       >
-        <View style={styles.loginTopBar}>
+        <View
+          style={[
+            styles.loginTopBar,
+            {
+              paddingTop: insets.top,
+              height: 52 + insets.top,
+            },
+          ]}
+        >
           <Text style={styles.loginBack}>←</Text>
           <Text style={styles.loginBrand}>VitalSync</Text>
           <View style={{ width: 24 }} />
