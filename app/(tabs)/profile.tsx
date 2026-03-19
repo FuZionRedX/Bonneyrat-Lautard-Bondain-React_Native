@@ -308,17 +308,6 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </View>
 
-      {hasProcessedInput ? (
-        <View style={styles.statusCard}>
-          <Text style={styles.statusTitle}>
-            User input processing completed
-          </Text>
-          <Text style={styles.statusSubtitle}>
-            Your latest name, email, and password are now active in the app.
-          </Text>
-        </View>
-      ) : null}
-
       <View style={styles.accountCard}>
         <Text style={styles.sectionTitle}>Account Information</Text>
         <View style={styles.accountRow}>
@@ -567,22 +556,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   editBtnText: { color: "#4CAF50", fontWeight: "700", fontSize: 13 },
-  statusCard: {
-    marginHorizontal: 16,
-    marginTop: 16,
-    backgroundColor: "#E8F5E9",
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#C8E6C9",
-  },
-  statusTitle: {
-    fontSize: 15,
-    fontWeight: "800",
-    color: "#1B5E20",
-    marginBottom: 4,
-  },
-  statusSubtitle: { fontSize: 13, color: "#2E7D32", lineHeight: 18 },
   accountCard: {
     marginHorizontal: 16,
     marginTop: 12,
