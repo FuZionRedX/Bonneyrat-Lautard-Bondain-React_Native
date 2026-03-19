@@ -390,7 +390,11 @@ export default function ProfileScreen() {
         <MenuItem emoji="🔔" label="Notifications" />
         <MenuItem emoji="🔗" label="Sync Devices" />
         <MenuItem emoji="⚙️" label="Settings" />
-        <MenuItem emoji="❓" label="Help & Support" />
+        <MenuItem
+          emoji="❓"
+          label="Help & Support"
+          onPress={() => router.push("/help-support" as any)}
+        />
         <MenuItem emoji="🚪" label="Log Out" onPress={handleLogout} />
       </View>
 
