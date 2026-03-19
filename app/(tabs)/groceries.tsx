@@ -7,6 +7,9 @@ import {
   View,
 } from 'react-native';
 
+import { Colors } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+
 interface GroceryItem {
   id: number;
   name: string;
@@ -38,6 +41,8 @@ function groupByCategory(items: GroceryItem[]) {
 
 export default function GroceriesScreen() {
   const [items, setItems] = useState<GroceryItem[]>(INITIAL_ITEMS);
+  const colorScheme = useColorScheme() ?? 'light';
+  const colors = Colors[colorScheme];
 
   const toggle = (id: number) =>
     setItems((prev) => prev.map((i) => (i.id === id ? { ...i, checked: !i.checked } : i)));
@@ -46,29 +51,29 @@ export default function GroceriesScreen() {
   const checkedCount = items.filter((i) => i.checked).length;
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView style={[styles.container, { backgroundColor: colors.screenBackground }]} showsVerticalScrollIndicator={false}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.cardBackground }]}>
         <View>
-          <Text style={styles.title}>Groceries</Text>
-          <Text style={styles.subtitle}>
+          <Text style={[styles.title, { color: colors.text }]}>Groceries</Text>
+          <Text style={[styles.subtitle, { color: colors.secondaryText }]}>
             {checkedCount} / {items.length} items checked
           </Text>
         </View>
-        <View style={styles.progressCircle}>
-          <Text style={styles.progressPct}>
+        <View style={[styles.progressCircle, { backgroundColor: colors.primaryLight, borderColor: colors.primary }]}>
+          <Text style={[styles.progressPct, { color: colors.primary }]}>
             {Math.round((checkedCount / items.length) * 100)}%
           </Text>
         </View>
       </View>
 
       {/* Progress bar */}
-      <View style={styles.progressTrackWrap}>
-        <View style={styles.progressTrack}>
+      <View style={[styles.progressTrackWrap, { backgroundColor: colors.cardBackground }]}>
+        <View style={[styles.progressTrack, { backgroundColor: colors.progressTrack }]}>
           <View
             style={[
               styles.progressFill,
-              { width: `${(checkedCount / items.length) * 100}%` as any },
+              { width: `${(checkedCount / items.length) * 100}%` as any, backgroundColor: colors.progressFill },
             ]}
           />
         </View>
@@ -77,22 +82,22 @@ export default function GroceriesScreen() {
       {/* Grouped Items */}
       {Object.entries(grouped).map(([category, catItems]) => (
         <View key={category} style={styles.categorySection}>
-          <Text style={styles.categoryTitle}>{category}</Text>
+          <Text style={[styles.categoryTitle, { color: colors.secondaryText }]}>{category}</Text>
           {catItems.map((item) => (
             <TouchableOpacity
               key={item.id}
-              style={styles.itemRow}
+              style={[styles.itemRow, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}
               onPress={() => toggle(item.id)}
               activeOpacity={0.7}
             >
-              <View style={[styles.checkbox, item.checked && styles.checkboxChecked]}>
-                {item.checked && <Text style={styles.checkmark}>✓</Text>}
+              <View style={[styles.checkbox, { borderColor: colors.border }, item.checked && { backgroundColor: colors.primary, borderColor: colors.primary }]}>
+                {item.checked && <Text style={styles.checkmark}>&#10003;</Text>}
               </View>
               <View style={styles.itemInfo}>
-                <Text style={[styles.itemName, item.checked && styles.itemNameChecked]}>
+                <Text style={[styles.itemName, { color: colors.text }, item.checked && { textDecorationLine: 'line-through', color: colors.secondaryText }]}>
                   {item.name}
                 </Text>
-                <Text style={styles.itemQty}>{item.qty}</Text>
+                <Text style={[styles.itemQty, { color: colors.secondaryText }]}>{item.qty}</Text>
               </View>
             </TouchableOpacity>
           ))}
@@ -105,7 +110,7 @@ export default function GroceriesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F7FA' },
+  container: { flex: 1 },
 
   header: {
     flexDirection: 'row',
@@ -114,31 +119,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 56,
     paddingBottom: 16,
-    backgroundColor: '#fff',
   },
-  title: { fontSize: 24, fontWeight: '800', color: '#1A1A2E' },
-  subtitle: { fontSize: 14, color: '#9E9E9E', marginTop: 2 },
+  title: { fontSize: 24, fontWeight: '800' },
+  subtitle: { fontSize: 14, marginTop: 2 },
   progressCircle: {
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: '#E8F5E9',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 3,
-    borderColor: '#4CAF50',
   },
-  progressPct: { fontSize: 14, fontWeight: '800', color: '#4CAF50' },
+  progressPct: { fontSize: 14, fontWeight: '800' },
 
-  progressTrackWrap: { paddingHorizontal: 16, paddingVertical: 8, backgroundColor: '#fff' },
-  progressTrack: { height: 6, backgroundColor: '#E0E0E0', borderRadius: 3, overflow: 'hidden' },
-  progressFill: { height: 6, backgroundColor: '#4CAF50', borderRadius: 3 },
+  progressTrackWrap: { paddingHorizontal: 16, paddingVertical: 8 },
+  progressTrack: { height: 6, borderRadius: 3, overflow: 'hidden' },
+  progressFill: { height: 6, borderRadius: 3 },
 
   categorySection: { marginHorizontal: 16, marginTop: 16 },
   categoryTitle: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#9E9E9E',
     letterSpacing: 1,
     marginBottom: 8,
     textTransform: 'uppercase',
@@ -147,11 +148,9 @@ const styles = StyleSheet.create({
   itemRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
     borderRadius: 12,
     padding: 14,
     marginBottom: 8,
-    shadowColor: '#000',
     shadowOpacity: 0.04,
     shadowRadius: 4,
     elevation: 1,
@@ -161,16 +160,13 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 6,
     borderWidth: 2,
-    borderColor: '#E0E0E0',
     marginRight: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  checkboxChecked: { backgroundColor: '#4CAF50', borderColor: '#4CAF50' },
   checkmark: { color: '#fff', fontSize: 14, fontWeight: '700' },
 
   itemInfo: { flex: 1 },
-  itemName: { fontSize: 15, fontWeight: '600', color: '#1A1A2E' },
-  itemNameChecked: { textDecorationLine: 'line-through', color: '#BDBDBD' },
-  itemQty: { fontSize: 12, color: '#9E9E9E', marginTop: 2 },
+  itemName: { fontSize: 15, fontWeight: '600' },
+  itemQty: { fontSize: 12, marginTop: 2 },
 });

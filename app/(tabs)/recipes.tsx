@@ -8,7 +8,9 @@ import {
   View,
 } from 'react-native';
 
+import { Colors } from '@/constants/theme';
 import { useProfile } from '@/contexts/profile-context';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 interface MealIngredient {
   name: string;
@@ -51,10 +53,10 @@ const WEIGHT_LOSS_DEFICIT = 500;
 const MEALS = (mealsData as MealsFile).meals;
 
 function getMealEmoji(category: MealCategory) {
-  if (category === 'breakfast') return '🥣';
-  if (category === 'lunch') return '🥗';
-  if (category === 'dinner') return '🍽️';
-  return '🍎';
+  if (category === 'breakfast') return '\u{1F963}';
+  if (category === 'lunch') return '\u{1F957}';
+  if (category === 'dinner') return '\u{1F37D}\uFE0F';
+  return '\u{1F34E}';
 }
 
 function parseProfileNumber(value: string) {
@@ -83,6 +85,8 @@ function calculateBmr(weightKg: number, heightCm: number, ageYears: number, gend
 
 export default function RecipesScreen() {
   const { profile } = useProfile();
+  const colorScheme = useColorScheme() ?? 'light';
+  const colors = Colors[colorScheme];
   const [selectedByCategory, setSelectedByCategory] = useState<Partial<Record<MealCategory, number>>>({});
 
   const heightCm = parseProfileNumber(profile.height);
@@ -179,30 +183,30 @@ export default function RecipesScreen() {
       : 'You do not currently need to lose weight. Continue with your current meal plan.';
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Recipes</Text>
-        <Text style={styles.subtitle}>BMI and BMR based recommendations</Text>
+    <ScrollView style={[styles.container, { backgroundColor: colors.screenBackground }]} showsVerticalScrollIndicator={false}>
+      <View style={[styles.header, { backgroundColor: colors.cardBackground }]}>
+        <Text style={[styles.title, { color: colors.text }]}>Recipes</Text>
+        <Text style={[styles.subtitle, { color: colors.secondaryText }]}>BMI and BMR based recommendations</Text>
       </View>
 
-      <View style={styles.statusCard}>
-        <Text style={styles.statusTitle}>Your Health Baseline</Text>
+      <View style={[styles.statusCard, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
+        <Text style={[styles.statusTitle, { color: colors.text }]}>Your Health Baseline</Text>
         <View style={styles.statusRow}>
-          <Text style={styles.statusMetric}>BMI: {bmiLabel}</Text>
-          <Text style={styles.statusMetric}>BMR: {bmrLabel} kcal</Text>
+          <Text style={[styles.statusMetric, { color: colors.tertiaryText }]}>BMI: {bmiLabel}</Text>
+          <Text style={[styles.statusMetric, { color: colors.tertiaryText }]}>BMR: {bmrLabel} kcal</Text>
         </View>
         {dailyCalories !== null && (
-          <Text style={styles.statusTarget}>
+          <Text style={[styles.statusTarget, { color: colors.labelText }]}>
             Daily target for recommendation: {dailyCalories} kcal
           </Text>
         )}
-        <Text style={styles.statusAdvice}>{adviceText}</Text>
+        <Text style={[styles.statusAdvice, { color: colors.labelText }]}>{adviceText}</Text>
       </View>
 
       {!needsWeightLoss && hasMetrics && (
-        <View style={styles.maintainCard}>
-          <Text style={styles.maintainTitle}>Current Plan Is Appropriate</Text>
-          <Text style={styles.maintainText}>
+        <View style={[styles.maintainCard, { backgroundColor: colors.cardBackground, borderColor: colors.selectedBorder }]}>
+          <Text style={[styles.maintainTitle, { color: colors.primaryText }]}>Current Plan Is Appropriate</Text>
+          <Text style={[styles.maintainText, { color: colors.primaryText }]}>
             Keep following your current meal rhythm and monitor your progress weekly.
           </Text>
         </View>
@@ -210,22 +214,22 @@ export default function RecipesScreen() {
 
       {needsWeightLoss && categoryTargets && optionsByCategory && (
         <>
-          <View style={styles.splitCard}>
-            <Text style={styles.splitTitle}>Calorie Split Across 4 Meals</Text>
+          <View style={[styles.splitCard, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
+            <Text style={[styles.splitTitle, { color: colors.text }]}>Calorie Split Across 4 Meals</Text>
             {CATEGORY_ORDER.map((category) => (
-              <View key={category} style={styles.splitRow}>
-                <Text style={styles.splitLabel}>{CATEGORY_LABELS[category]}</Text>
-                <Text style={styles.splitValue}>{categoryTargets[category]} kcal</Text>
+              <View key={category} style={[styles.splitRow, { borderBottomColor: colors.borderLight }]}>
+                <Text style={[styles.splitLabel, { color: colors.labelText }]}>{CATEGORY_LABELS[category]}</Text>
+                <Text style={[styles.splitValue, { color: colors.text }]}>{categoryTargets[category]} kcal</Text>
               </View>
             ))}
           </View>
 
           {CATEGORY_ORDER.map((category) => (
-            <View key={category} style={styles.categoryCard}>
-              <Text style={styles.categoryTitle}>
+            <View key={category} style={[styles.categoryCard, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
+              <Text style={[styles.categoryTitle, { color: colors.text }]}>
                 {getMealEmoji(category)} {CATEGORY_LABELS[category]} Options
               </Text>
-              <Text style={styles.categoryHint}>
+              <Text style={[styles.categoryHint, { color: colors.secondaryText }]}>
                 Target: {categoryTargets[category]} kcal
               </Text>
 
@@ -235,7 +239,11 @@ export default function RecipesScreen() {
                 return (
                   <TouchableOpacity
                     key={meal.id}
-                    style={[styles.optionCard, selected && styles.optionCardSelected]}
+                    style={[
+                      styles.optionCard,
+                      { borderColor: colors.border, backgroundColor: colors.cardBackground },
+                      selected && { borderColor: colors.primary, backgroundColor: colors.selectedBackground },
+                    ]}
                     onPress={() =>
                       setSelectedByCategory((previous) => ({
                         ...previous,
@@ -244,29 +252,29 @@ export default function RecipesScreen() {
                     }
                   >
                     <View style={styles.optionInfo}>
-                      <Text style={styles.optionName}>{meal.name}</Text>
-                      <Text style={styles.optionMeta}>
+                      <Text style={[styles.optionName, { color: colors.text }]}>{meal.name}</Text>
+                      <Text style={[styles.optionMeta, { color: colors.secondaryText }]}>
                         {meal.ingredients.length} ingredients - {meal.calorieBand}
                       </Text>
                     </View>
-                    <Text style={styles.optionKcal}>{meal.totalCalories} kcal</Text>
+                    <Text style={[styles.optionKcal, { color: colors.primary }]}>{meal.totalCalories} kcal</Text>
                   </TouchableOpacity>
                 );
               })}
             </View>
           ))}
 
-          <View style={styles.finalPlanCard}>
-            <Text style={styles.finalPlanTitle}>Final Daily Meal Plan</Text>
+          <View style={[styles.finalPlanCard, { backgroundColor: colors.darkCard }]}>
+            <Text style={[styles.finalPlanTitle, { color: colors.darkCardText }]}>Final Daily Meal Plan</Text>
             {selectedMeals.map((meal) => (
               <View key={meal.id} style={styles.finalPlanRow}>
-                <Text style={styles.finalPlanMeal}>{meal.name}</Text>
+                <Text style={[styles.finalPlanMeal, { color: colors.darkCardSubtext }]}>{meal.name}</Text>
                 <Text style={styles.finalPlanMealKcal}>{meal.totalCalories} kcal</Text>
               </View>
             ))}
-            <View style={styles.finalPlanDivider} />
+            <View style={[styles.finalPlanDivider, { backgroundColor: colors.border }]} />
             <View style={styles.finalPlanRow}>
-              <Text style={styles.finalPlanTotalLabel}>Total</Text>
+              <Text style={[styles.finalPlanTotalLabel, { color: colors.darkCardText }]}>Total</Text>
               <Text style={styles.finalPlanTotalValue}>{finalPlanCalories} kcal</Text>
             </View>
           </View>
@@ -274,16 +282,16 @@ export default function RecipesScreen() {
       )}
 
       {!hasMetrics && (
-        <View style={styles.emptyCard}>
-          <Text style={styles.empty}>
+        <View style={[styles.emptyCard, { backgroundColor: colors.cardBackground }]}>
+          <Text style={[styles.empty, { color: colors.secondaryText }]}>
             Complete your profile details to unlock BMI and BMR based meal recommendations.
           </Text>
         </View>
       )}
 
       {hasMetrics && needsWeightLoss && selectedMeals.length === 0 && (
-        <View style={styles.emptyCard}>
-          <Text style={styles.empty}>No matching meals found for your calorie targets.</Text>
+        <View style={[styles.emptyCard, { backgroundColor: colors.cardBackground }]}>
+          <Text style={[styles.empty, { color: colors.secondaryText }]}>No matching meals found for your calorie targets.</Text>
         </View>
       )}
 
@@ -293,128 +301,110 @@ export default function RecipesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F7FA' },
+  container: { flex: 1 },
 
   header: {
     paddingHorizontal: 20,
     paddingTop: 56,
     paddingBottom: 16,
-    backgroundColor: '#fff',
   },
-  title: { fontSize: 24, fontWeight: '800', color: '#1A1A2E' },
-  subtitle: { fontSize: 14, color: '#9E9E9E', marginTop: 2 },
+  title: { fontSize: 24, fontWeight: '800' },
+  subtitle: { fontSize: 14, marginTop: 2 },
 
   statusCard: {
     marginHorizontal: 16,
     marginVertical: 14,
-    backgroundColor: '#fff',
     borderRadius: 14,
     padding: 14,
-    shadowColor: '#000',
     shadowOpacity: 0.04,
     shadowRadius: 6,
     elevation: 1,
   },
-  statusTitle: { fontSize: 15, fontWeight: '700', color: '#1A1A2E', marginBottom: 8 },
+  statusTitle: { fontSize: 15, fontWeight: '700', marginBottom: 8 },
   statusRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
-  statusMetric: { fontSize: 13, color: '#344054', fontWeight: '600' },
-  statusTarget: { fontSize: 13, color: '#475467', marginBottom: 8 },
-  statusAdvice: { fontSize: 13, color: '#475467', lineHeight: 18 },
+  statusMetric: { fontSize: 13, fontWeight: '600' },
+  statusTarget: { fontSize: 13, marginBottom: 8 },
+  statusAdvice: { fontSize: 13, lineHeight: 18 },
 
   maintainCard: {
     marginHorizontal: 16,
     marginBottom: 12,
-    backgroundColor: '#fff',
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: '#D1FADF',
   },
-  maintainTitle: { fontSize: 14, fontWeight: '700', color: '#065F46', marginBottom: 4 },
-  maintainText: { fontSize: 13, color: '#065F46' },
+  maintainTitle: { fontSize: 14, fontWeight: '700', marginBottom: 4 },
+  maintainText: { fontSize: 13 },
 
   splitCard: {
     marginHorizontal: 16,
     marginBottom: 12,
-    backgroundColor: '#fff',
     borderRadius: 14,
     padding: 14,
-    shadowColor: '#000',
     shadowOpacity: 0.04,
     shadowRadius: 6,
     elevation: 1,
   },
-  splitTitle: { fontSize: 15, fontWeight: '700', color: '#1A1A2E', marginBottom: 8 },
+  splitTitle: { fontSize: 15, fontWeight: '700', marginBottom: 8 },
   splitRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: 6,
     borderBottomWidth: 1,
-    borderBottomColor: '#F2F4F7',
   },
-  splitLabel: { fontSize: 13, color: '#475467' },
-  splitValue: { fontSize: 13, color: '#1A1A2E', fontWeight: '700' },
+  splitLabel: { fontSize: 13 },
+  splitValue: { fontSize: 13, fontWeight: '700' },
 
   categoryCard: {
     marginHorizontal: 16,
     marginBottom: 12,
-    backgroundColor: '#fff',
     borderRadius: 14,
     padding: 14,
-    shadowColor: '#000',
     shadowOpacity: 0.04,
     shadowRadius: 6,
     elevation: 1,
   },
-  categoryTitle: { fontSize: 15, fontWeight: '700', color: '#1A1A2E' },
-  categoryHint: { fontSize: 12, color: '#667085', marginTop: 2, marginBottom: 10 },
+  categoryTitle: { fontSize: 15, fontWeight: '700' },
+  categoryHint: { fontSize: 12, marginTop: 2, marginBottom: 10 },
 
   optionCard: {
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E4E7EC',
     padding: 12,
     marginBottom: 8,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-  },
-  optionCardSelected: {
-    borderColor: '#16A34A',
-    backgroundColor: '#ECFDF3',
   },
   optionInfo: { flex: 1, paddingRight: 10 },
-  optionName: { fontSize: 14, fontWeight: '700', color: '#1A1A2E' },
-  optionMeta: { fontSize: 12, color: '#667085', marginTop: 3 },
-  optionKcal: { fontSize: 13, fontWeight: '700', color: '#16A34A' },
+  optionName: { fontSize: 14, fontWeight: '700' },
+  optionMeta: { fontSize: 12, marginTop: 3 },
+  optionKcal: { fontSize: 13, fontWeight: '700' },
 
   finalPlanCard: {
     marginHorizontal: 16,
     marginBottom: 12,
-    backgroundColor: '#1A1A2E',
     borderRadius: 14,
     padding: 14,
   },
-  finalPlanTitle: { fontSize: 15, fontWeight: '700', color: '#FFFFFF', marginBottom: 10 },
+  finalPlanTitle: { fontSize: 15, fontWeight: '700', marginBottom: 10 },
   finalPlanRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8,
   },
-  finalPlanMeal: { color: '#E5E7EB', fontSize: 13, flex: 1, paddingRight: 8 },
+  finalPlanMeal: { fontSize: 13, flex: 1, paddingRight: 8 },
   finalPlanMealKcal: { color: '#86EFAC', fontSize: 13, fontWeight: '700' },
-  finalPlanDivider: { height: 1, backgroundColor: '#344054', marginVertical: 8 },
-  finalPlanTotalLabel: { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },
+  finalPlanDivider: { height: 1, marginVertical: 8 },
+  finalPlanTotalLabel: { fontWeight: '700', fontSize: 14 },
   finalPlanTotalValue: { color: '#86EFAC', fontWeight: '800', fontSize: 14 },
 
   emptyCard: {
     marginHorizontal: 16,
     marginBottom: 12,
-    backgroundColor: '#fff',
     borderRadius: 14,
     padding: 14,
   },
-  empty: { textAlign: 'center', color: '#98A2B3', fontSize: 14 },
+  empty: { textAlign: 'center', fontSize: 14 },
 });

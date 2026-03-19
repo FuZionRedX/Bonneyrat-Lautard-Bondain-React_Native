@@ -13,7 +13,9 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { Colors } from "@/constants/theme";
 import { getProfileInitials, useProfile } from "@/contexts/profile-context";
+import { useColorScheme } from "@/hooks/use-color-scheme";
 
 const LAST_PROFILE_EMAIL_KEY = "last_profile_email";
 
@@ -22,7 +24,6 @@ type ConnectResult =
   | "not_found"
   | "wrong_password"
   | {
-      // Some API responses include extra metadata alongside the status.
       status: "connected" | "not_found" | "wrong_password";
       wasFirstOpen?: boolean;
     };
@@ -85,16 +86,18 @@ function MenuItem({
   emoji,
   label,
   onPress,
+  colors,
 }: {
   emoji: string;
   label: string;
   onPress?: () => void;
+  colors: typeof Colors.light;
 }) {
   return (
-    <TouchableOpacity style={styles.menuItem} onPress={onPress}>
+    <TouchableOpacity style={[styles.menuItem, { borderBottomColor: colors.borderLight }]} onPress={onPress}>
       <Text style={styles.menuEmoji}>{emoji}</Text>
-      <Text style={styles.menuLabel}>{label}</Text>
-      <Text style={styles.menuArrow}>›</Text>
+      <Text style={[styles.menuLabel, { color: colors.text }]}>{label}</Text>
+      <Text style={[styles.menuArrow, { color: colors.secondaryText }]}>&rsaquo;</Text>
     </TouchableOpacity>
   );
 }
@@ -102,6 +105,8 @@ function MenuItem({
 export default function ProfileScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const colorScheme = useColorScheme() ?? "light";
+  const colors = Colors[colorScheme];
   const { connectProfileByEmail, hasProcessedInput, logout, profile } =
     useProfile();
   const [emailToConnect, setEmailToConnect] = useState("");
@@ -119,7 +124,6 @@ export default function ProfileScreen() {
   const bmiMeta = getBmiMeta(bmi);
 
   useEffect(() => {
-    // Prefill the email field with the most recently used account.
     AsyncStorage.getItem(LAST_PROFILE_EMAIL_KEY)
       .then((savedEmail) => {
         if (savedEmail) {
@@ -132,7 +136,6 @@ export default function ProfileScreen() {
   }, []);
 
   const handleConnectProfile = async () => {
-    // Normalize inputs to avoid accidental spaces breaking auth.
     const trimmedEmail = emailToConnect.trim();
     const enteredPassword = passwordToConnect;
 
@@ -153,7 +156,6 @@ export default function ProfileScreen() {
         trimmedEmail,
         enteredPassword,
       )) as ConnectResult;
-      // Support both legacy string responses and object responses.
       const status = typeof result === "string" ? result : result.status;
 
       if (status === "not_found") {
@@ -175,7 +177,6 @@ export default function ProfileScreen() {
   };
 
   const handleLogout = () => {
-    // Clear only transient login UI state, then reset profile context.
     setPasswordToConnect("");
     setShowPassword(false);
     setConnectError("");
@@ -186,7 +187,7 @@ export default function ProfileScreen() {
     // Unauthenticated state: show login/connect screen.
     return (
       <ScrollView
-        style={styles.loginScreen}
+        style={[styles.loginScreen, { backgroundColor: colors.loginBarBackground }]}
         contentContainerStyle={styles.loginContent}
       >
         <View
@@ -195,15 +196,16 @@ export default function ProfileScreen() {
             {
               paddingTop: insets.top,
               height: 52 + insets.top,
+              backgroundColor: colors.loginBarBackground,
             },
           ]}
         >
-          <Text style={styles.loginBack}>←</Text>
-          <Text style={styles.loginBrand}>VitalSync</Text>
+          <Text style={[styles.loginBack, { color: colors.text }]}>&larr;</Text>
+          <Text style={[styles.loginBrand, { color: colors.text }]}>VitalSync</Text>
           <View style={{ width: 24 }} />
         </View>
 
-        <View style={styles.heroBlock}>
+        <View style={[styles.heroBlock, { backgroundColor: colors.heroBackground }]}>
           <Image
             source={require("@/assets/images/splash-icon.png")}
             style={styles.heroImage}
@@ -212,18 +214,18 @@ export default function ProfileScreen() {
         </View>
 
         <View style={styles.loginPanel}>
-          <Text style={styles.loginTitle}>Welcome</Text>
-          <Text style={styles.loginSubtitle}>
+          <Text style={[styles.loginTitle, { color: colors.text }]}>Welcome</Text>
+          <Text style={[styles.loginSubtitle, { color: colors.labelText }]}>
             Log in to sync your health goals and track your diet.
           </Text>
 
-          <Text style={styles.inputLabel}>EMAIL</Text>
-          <View style={styles.inputShell}>
-            <Text style={styles.inputIcon}>✉</Text>
+          <Text style={[styles.inputLabel, { color: colors.tertiaryText }]}>EMAIL</Text>
+          <View style={[styles.inputShell, { borderColor: colors.selectedBorder, backgroundColor: colors.loginInputBackground }]}>
+            <Text style={[styles.inputIcon, { color: colors.placeholderText }]}>{'\u2709'}</Text>
             <TextInput
-              style={styles.loginInput}
+              style={[styles.loginInput, { color: colors.text }]}
               placeholder="name@example.com"
-              placeholderTextColor="#7D8A99"
+              placeholderTextColor={colors.placeholderText}
               value={emailToConnect}
               onChangeText={setEmailToConnect}
               autoCapitalize="none"
@@ -231,13 +233,13 @@ export default function ProfileScreen() {
             />
           </View>
 
-          <Text style={styles.inputLabel}>PASSWORD</Text>
-          <View style={styles.inputShell}>
-            <Text style={styles.inputIcon}>🔒</Text>
+          <Text style={[styles.inputLabel, { color: colors.tertiaryText }]}>PASSWORD</Text>
+          <View style={[styles.inputShell, { borderColor: colors.selectedBorder, backgroundColor: colors.loginInputBackground }]}>
+            <Text style={[styles.inputIcon, { color: colors.placeholderText }]}>{'\u{1F512}'}</Text>
             <TextInput
-              style={styles.loginInput}
+              style={[styles.loginInput, { color: colors.text }]}
               placeholder="Enter your password"
-              placeholderTextColor="#7D8A99"
+              placeholderTextColor={colors.placeholderText}
               value={passwordToConnect}
               onChangeText={setPasswordToConnect}
               secureTextEntry={!showPassword}
@@ -247,29 +249,29 @@ export default function ProfileScreen() {
               style={styles.eyeButton}
               onPress={() => setShowPassword((prev) => !prev)}
             >
-              <Text style={styles.eyeText}>
+              <Text style={[styles.eyeText, { color: colors.placeholderText }]}>
                 {showPassword ? "Hide" : "Show"}
               </Text>
             </TouchableOpacity>
           </View>
 
           <TouchableOpacity style={styles.forgotBtn}>
-            <Text style={styles.forgotText}>Forgot Password?</Text>
+            <Text style={[styles.forgotText, { color: colors.primary }]}>Forgot Password?</Text>
           </TouchableOpacity>
 
           {connectError ? (
-            <Text style={styles.loginError}>{connectError}</Text>
+            <Text style={[styles.loginError, { color: colors.dangerText }]}>{connectError}</Text>
           ) : null}
 
           <TouchableOpacity
-            style={styles.loginButton}
+            style={[styles.loginButton, { backgroundColor: colors.loginButtonBackground }]}
             onPress={handleConnectProfile}
             disabled={isConnecting}
           >
             {isConnecting ? (
-              <ActivityIndicator color="#0C111D" />
+              <ActivityIndicator color={colors.loginButtonText} />
             ) : (
-              <Text style={styles.loginButtonText}>Log In</Text>
+              <Text style={[styles.loginButtonText, { color: colors.loginButtonText }]}>Log In</Text>
             )}
           </TouchableOpacity>
 
@@ -279,8 +281,8 @@ export default function ProfileScreen() {
             style={styles.signupRow}
             onPress={() => router.push("/profile-setup" as any)}
           >
-            <Text style={styles.signupMuted}>Don&apos;t have an account? </Text>
-            <Text style={styles.signupLink}>Sign Up</Text>
+            <Text style={[styles.signupMuted, { color: colors.labelText }]}>Don&apos;t have an account? </Text>
+            <Text style={[styles.signupLink, { color: colors.primary }]}>Sign Up</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -289,33 +291,33 @@ export default function ProfileScreen() {
 
   // Authenticated state: show profile, stats, and settings.
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView style={[styles.container, { backgroundColor: colors.screenBackground }]} showsVerticalScrollIndicator={false}>
       {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.avatar}>
+      <View style={[styles.header, { backgroundColor: colors.cardBackground }]}>
+        <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
           <Text style={styles.avatarText}>{initials}</Text>
         </View>
-        <Text style={styles.name}>{profile.fullName}</Text>
-        <Text style={styles.email}>{profile.email}</Text>
+        <Text style={[styles.name, { color: colors.text }]}>{profile.fullName}</Text>
+        <Text style={[styles.email, { color: colors.secondaryText }]}>{profile.email}</Text>
       </View>
 
-      <View style={styles.accountCard}>
-        <Text style={styles.sectionTitle}>Account Information</Text>
-        <View style={styles.accountRow}>
-          <Text style={styles.accountLabel}>Name</Text>
-          <Text style={styles.accountValue}>{profile.fullName}</Text>
+      <View style={[styles.accountCard, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Account Information</Text>
+        <View style={[styles.accountRow, { borderBottomColor: colors.borderLight }]}>
+          <Text style={[styles.accountLabel, { color: colors.secondaryText }]}>Name</Text>
+          <Text style={[styles.accountValue, { color: colors.text }]}>{profile.fullName}</Text>
         </View>
-        <View style={styles.accountRow}>
-          <Text style={styles.accountLabel}>Email</Text>
-          <Text style={styles.accountValue}>{profile.email}</Text>
+        <View style={[styles.accountRow, { borderBottomColor: colors.borderLight }]}>
+          <Text style={[styles.accountLabel, { color: colors.secondaryText }]}>Email</Text>
+          <Text style={[styles.accountValue, { color: colors.text }]}>{profile.email}</Text>
         </View>
       </View>
 
       {/* BMI Card */}
-      <View style={styles.bmiCard}>
+      <View style={[styles.bmiCard, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
         <View>
-          <Text style={styles.bmiTitle}>BODY MASS INDEX</Text>
-          <Text style={styles.bmiValue}>{bmiDisplay}</Text>
+          <Text style={[styles.bmiTitle, { color: colors.secondaryText }]}>BODY MASS INDEX</Text>
+          <Text style={[styles.bmiValue, { color: colors.text }]}>{bmiDisplay}</Text>
           <View
             style={[styles.bmiNormalBadge, { backgroundColor: bmiMeta.color }]}
           >
@@ -323,10 +325,9 @@ export default function ProfileScreen() {
           </View>
         </View>
         <View style={styles.bmiRight}>
-          <Text style={styles.bmiDesc}>{bmiMeta.description}</Text>
+          <Text style={[styles.bmiDesc, { color: colors.tertiaryText }]}>{bmiMeta.description}</Text>
           {/* BMI scale */}
           <View style={styles.bmiScaleRow}>
-            {/* Visual threshold markers for BMI ranges. */}
             {[
               { label: "0", color: "#2196F3" },
               { label: "18.5", color: "#4CAF50" },
@@ -344,53 +345,55 @@ export default function ProfileScreen() {
       </View>
 
       {/* Body Info */}
-      <View style={styles.bodyInfoCard}>
-        <Text style={styles.sectionTitle}>Body Information</Text>
+      <View style={[styles.bodyInfoCard, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Body Information</Text>
         <View style={styles.bodyInfoRow}>
           <View style={styles.bodyInfoItem}>
-            <Text style={styles.bodyInfoLabel}>Age</Text>
-            <Text style={styles.bodyInfoValue}>{profile.age}</Text>
+            <Text style={[styles.bodyInfoLabel, { color: colors.secondaryText }]}>Age</Text>
+            <Text style={[styles.bodyInfoValue, { color: colors.text }]}>{profile.age}</Text>
           </View>
           <View style={styles.bodyInfoItem}>
-            <Text style={styles.bodyInfoLabel}>Gender</Text>
-            <Text style={styles.bodyInfoValue}>{profile.gender}</Text>
+            <Text style={[styles.bodyInfoLabel, { color: colors.secondaryText }]}>Gender</Text>
+            <Text style={[styles.bodyInfoValue, { color: colors.text }]}>{profile.gender}</Text>
           </View>
           <View style={styles.bodyInfoItem}>
-            <Text style={styles.bodyInfoLabel}>Height</Text>
-            <Text style={styles.bodyInfoValue}>{profile.height} cm</Text>
+            <Text style={[styles.bodyInfoLabel, { color: colors.secondaryText }]}>Height</Text>
+            <Text style={[styles.bodyInfoValue, { color: colors.text }]}>{profile.height} cm</Text>
           </View>
           <View style={styles.bodyInfoItem}>
-            <Text style={styles.bodyInfoLabel}>Weight</Text>
-            <Text style={styles.bodyInfoValue}>{profile.weight} kg</Text>
+            <Text style={[styles.bodyInfoLabel, { color: colors.secondaryText }]}>Weight</Text>
+            <Text style={[styles.bodyInfoValue, { color: colors.text }]}>{profile.weight} kg</Text>
           </View>
         </View>
       </View>
 
       {/* Primary Goal */}
-      <View style={styles.goalCard}>
-        <Text style={styles.sectionTitle}>Primary Goal</Text>
+      <View style={[styles.goalCard, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Primary Goal</Text>
         <View style={styles.goalRow}>
-          <TouchableOpacity style={styles.goalChip}>
+          <TouchableOpacity style={[styles.goalChip, { backgroundColor: colors.primary }]}>
             <Text style={styles.goalChipText}>{profile.goal}</Text>
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Menu */}
-      <View style={styles.menuCard}>
-        <MenuItem emoji="🔔" label="Notifications" />
-        <MenuItem emoji="🔗" label="Sync Devices" />
+      <View style={[styles.menuCard, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
+        <MenuItem emoji={'\u{1F514}'} label="Notifications" colors={colors} />
+        <MenuItem emoji={'\u{1F517}'} label="Sync Devices" colors={colors} />
         <MenuItem
-          emoji="⚙️"
+          emoji={'\u2699\uFE0F'}
           label="Settings"
           onPress={() => router.push("/settings" as any)}
+          colors={colors}
         />
         <MenuItem
-          emoji="❓"
+          emoji={'\u2753'}
           label="Help & Support"
           onPress={() => router.push("/help-support" as any)}
+          colors={colors}
         />
-        <MenuItem emoji="🚪" label="Log Out" onPress={handleLogout} />
+        <MenuItem emoji={'\u{1F6AA}'} label="Log Out" onPress={handleLogout} colors={colors} />
       </View>
 
       <View style={{ height: 20 }} />
@@ -399,8 +402,8 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F7FA" },
-  loginScreen: { flex: 1, backgroundColor: "#E7EBEC" },
+  container: { flex: 1 },
+  loginScreen: { flex: 1 },
   loginContent: { flexGrow: 1 },
   loginTopBar: {
     height: 52,
@@ -408,13 +411,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#EEF1F1",
   },
-  loginBack: { fontSize: 22, color: "#111827", fontWeight: "600" },
-  loginBrand: { fontSize: 18, fontWeight: "800", color: "#111827" },
+  loginBack: { fontSize: 22, fontWeight: "600" },
+  loginBrand: { fontSize: 18, fontWeight: "800" },
   heroBlock: {
     height: 190,
-    backgroundColor: "#A7BEB5",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -428,12 +429,10 @@ const styles = StyleSheet.create({
   loginTitle: {
     fontSize: 40,
     lineHeight: 44,
-    color: "#101828",
     fontWeight: "900",
   },
   loginSubtitle: {
     marginTop: 8,
-    color: "#4B5B70",
     fontSize: 13,
     lineHeight: 20,
     maxWidth: 340,
@@ -444,42 +443,36 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "800",
     letterSpacing: 0.8,
-    color: "#38495D",
   },
   inputShell: {
     minHeight: 48,
     borderWidth: 1,
-    borderColor: "#C4ECCC",
     borderRadius: 12,
-    backgroundColor: "#EFF2F4",
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 12,
   },
-  inputIcon: { fontSize: 16, color: "#8597AA", marginRight: 8 },
+  inputIcon: { fontSize: 16, marginRight: 8 },
   loginInput: {
     flex: 1,
-    color: "#26374C",
     fontSize: 14,
     lineHeight: 18,
     paddingVertical: 10,
   },
   eyeButton: { paddingHorizontal: 4, paddingVertical: 4 },
-  eyeText: { color: "#8597AA", fontWeight: "600" },
+  eyeText: { fontWeight: "600" },
   forgotBtn: {
     marginTop: 8,
     alignSelf: "flex-end",
   },
-  forgotText: { color: "#22C55E", fontSize: 13, fontWeight: "700" },
+  forgotText: { fontSize: 13, fontWeight: "700" },
   loginError: {
     marginTop: 8,
     fontSize: 16,
-    color: "#B42318",
     fontWeight: "700",
   },
   loginButton: {
     marginTop: 20,
-    backgroundColor: "#2EEB56",
     minHeight: 52,
     borderRadius: 14,
     alignItems: "center",
@@ -489,72 +482,38 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 4,
   },
-  loginButtonText: { color: "#0C111D", fontSize: 28, fontWeight: "800" },
-  socialDividerRow: {
-    marginTop: 20,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 12,
-  },
-  socialDividerLine: { flex: 1, height: 1, backgroundColor: "#CBD5E1" },
-  socialDividerText: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#64748B",
-    letterSpacing: 0.3,
-  },
-  socialRow: {
-    marginTop: 14,
-    flexDirection: "row",
-    gap: 12,
-  },
-  socialButton: {
-    flex: 1,
-    minHeight: 50,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#D7DCE2",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#F8FAFC",
-  },
-  socialButtonText: { color: "#344054", fontSize: 14, fontWeight: "700" },
+  loginButtonText: { fontSize: 28, fontWeight: "800" },
   signupRow: {
     marginTop: 18,
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
   },
-  signupMuted: { fontSize: 13, color: "#475467" },
-  signupLink: { fontSize: 13, color: "#22C55E", fontWeight: "700" },
+  signupMuted: { fontSize: 13 },
+  signupLink: { fontSize: 13, fontWeight: "700" },
 
   header: {
     alignItems: "center",
     paddingTop: 56,
     paddingBottom: 24,
-    backgroundColor: "#fff",
   },
   avatar: {
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: "#4CAF50",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 10,
   },
   avatarText: { fontSize: 24, fontWeight: "800", color: "#fff" },
-  name: { fontSize: 20, fontWeight: "800", color: "#1A1A2E" },
-  email: { fontSize: 13, color: "#9E9E9E", marginTop: 2 },
+  name: { fontSize: 20, fontWeight: "800" },
+  email: { fontSize: 13, marginTop: 2 },
   accountCard: {
     marginHorizontal: 16,
     marginTop: 12,
     marginBottom: 12,
-    backgroundColor: "#fff",
     borderRadius: 16,
     padding: 16,
-    shadowColor: "#000",
     shadowOpacity: 0.04,
     shadowRadius: 6,
     elevation: 1,
@@ -565,19 +524,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: "#F5F7FA",
   },
-  accountLabel: { fontSize: 13, fontWeight: "700", color: "#9E9E9E" },
-  accountValue: { fontSize: 14, fontWeight: "600", color: "#1A1A2E" },
+  accountLabel: { fontSize: 13, fontWeight: "700" },
+  accountValue: { fontSize: 14, fontWeight: "600" },
 
   bmiCard: {
     margin: 16,
-    backgroundColor: "#fff",
     borderRadius: 16,
     padding: 16,
     flexDirection: "row",
     gap: 14,
-    shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowRadius: 6,
     elevation: 2,
@@ -585,12 +541,10 @@ const styles = StyleSheet.create({
   bmiTitle: {
     fontSize: 10,
     fontWeight: "700",
-    color: "#9E9E9E",
     letterSpacing: 1,
   },
-  bmiValue: { fontSize: 38, fontWeight: "900", color: "#1A1A2E", marginTop: 2 },
+  bmiValue: { fontSize: 38, fontWeight: "900", marginTop: 2 },
   bmiNormalBadge: {
-    backgroundColor: "#4CAF50",
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 3,
@@ -599,7 +553,7 @@ const styles = StyleSheet.create({
   },
   bmiNormalText: { color: "#fff", fontSize: 11, fontWeight: "700" },
   bmiRight: { flex: 1, justifyContent: "center" },
-  bmiDesc: { fontSize: 12, color: "#555", lineHeight: 17, marginBottom: 8 },
+  bmiDesc: { fontSize: 12, lineHeight: 17, marginBottom: 8 },
   bmiScaleRow: {
     flexDirection: "row",
     height: 8,
@@ -612,10 +566,8 @@ const styles = StyleSheet.create({
   bodyInfoCard: {
     marginHorizontal: 16,
     marginBottom: 12,
-    backgroundColor: "#fff",
     borderRadius: 16,
     padding: 16,
-    shadowColor: "#000",
     shadowOpacity: 0.04,
     shadowRadius: 6,
     elevation: 1,
@@ -623,26 +575,22 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#1A1A2E",
     marginBottom: 12,
   },
   bodyInfoRow: { flexDirection: "row", justifyContent: "space-between" },
   bodyInfoItem: { alignItems: "center" },
-  bodyInfoLabel: { fontSize: 11, color: "#9E9E9E", fontWeight: "600" },
+  bodyInfoLabel: { fontSize: 11, fontWeight: "600" },
   bodyInfoValue: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#1A1A2E",
     marginTop: 4,
   },
 
   goalCard: {
     marginHorizontal: 16,
     marginBottom: 12,
-    backgroundColor: "#fff",
     borderRadius: 16,
     padding: 16,
-    shadowColor: "#000",
     shadowOpacity: 0.04,
     shadowRadius: 6,
     elevation: 1,
@@ -650,7 +598,6 @@ const styles = StyleSheet.create({
   goalRow: { flexDirection: "row", gap: 10 },
   goalChip: {
     flex: 1,
-    backgroundColor: "#4CAF50",
     borderRadius: 12,
     paddingVertical: 12,
     alignItems: "center",
@@ -660,10 +607,8 @@ const styles = StyleSheet.create({
   menuCard: {
     marginHorizontal: 16,
     marginBottom: 12,
-    backgroundColor: "#fff",
     borderRadius: 16,
     overflow: "hidden",
-    shadowColor: "#000",
     shadowOpacity: 0.04,
     shadowRadius: 6,
     elevation: 1,
@@ -673,9 +618,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#F5F7FA",
   },
   menuEmoji: { fontSize: 18, marginRight: 14 },
-  menuLabel: { flex: 1, fontSize: 15, color: "#1A1A2E", fontWeight: "500" },
-  menuArrow: { fontSize: 20, color: "#BDBDBD" },
+  menuLabel: { flex: 1, fontSize: 15, fontWeight: "500" },
+  menuArrow: { fontSize: 20 },
 });

@@ -1,5 +1,7 @@
 import { deleteAccount } from "@/constants/api";
+import { Colors } from "@/constants/theme";
 import { useProfile } from "@/contexts/profile-context";
+import { useColorScheme } from "@/hooks/use-color-scheme";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Stack, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -18,53 +20,11 @@ type ThemePreference = "light" | "dark";
 const THEME_PREF_KEY = "theme_preference";
 const LAST_PROFILE_EMAIL_KEY = "last_profile_email";
 
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      <View style={styles.card}>{children}</View>
-    </View>
-  );
-}
-
-function Row({
-  label,
-  value,
-  onPress,
-  danger,
-}: {
-  label: string;
-  value?: string;
-  onPress?: () => void;
-  danger?: boolean;
-}) {
-  return (
-    <TouchableOpacity
-      style={styles.row}
-      onPress={onPress}
-      disabled={!onPress}
-      activeOpacity={0.75}
-    >
-      <Text style={[styles.rowLabel, danger ? styles.rowLabelDanger : null]}>
-        {label}
-      </Text>
-      <View style={styles.rowRight}>
-        {value ? <Text style={styles.rowValue}>{value}</Text> : null}
-        {onPress ? <Text style={styles.rowArrow}>›</Text> : null}
-      </View>
-    </TouchableOpacity>
-  );
-}
-
 export default function SettingsScreen() {
   const router = useRouter();
   const { logout, profile } = useProfile();
+  const colorScheme = useColorScheme() ?? "light";
+  const colors = Colors[colorScheme];
   const [themePreference, setThemePreference] =
     useState<ThemePreference>("light");
   const [isDeleting, setIsDeleting] = useState(false);
@@ -155,112 +115,134 @@ export default function SettingsScreen() {
     <>
       <Stack.Screen options={{ title: "Settings" }} />
       <ScrollView
-        style={styles.container}
+        style={[styles.container, { backgroundColor: colors.screenBackground }]}
         contentContainerStyle={styles.content}
       >
-        <Text style={styles.pageTitle}>Settings</Text>
+        <Text style={[styles.pageTitle, { color: colors.text }]}>Settings</Text>
 
-        <Section title="Appearance">
-          <View style={styles.themeSwitchRow}>
-            <TouchableOpacity
-              style={[
-                styles.themeChip,
-                themePreference === "light" ? styles.themeChipActive : null,
-              ]}
-              onPress={() => applyThemePreference("light")}
-            >
-              <Text
+        {/* Appearance */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.subtitleText }]}>Appearance</Text>
+          <View style={[styles.card, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
+            <View style={styles.themeSwitchRow}>
+              <TouchableOpacity
                 style={[
-                  styles.themeChipText,
-                  themePreference === "light"
-                    ? styles.themeChipTextActive
-                    : null,
+                  styles.themeChip,
+                  { borderColor: colors.border, backgroundColor: colors.inputBackground },
+                  themePreference === "light" && { borderColor: colors.primary, backgroundColor: colors.primaryLight },
                 ]}
+                onPress={() => applyThemePreference("light")}
               >
-                White mode
-              </Text>
+                <Text
+                  style={[
+                    styles.themeChipText,
+                    { color: colors.labelText },
+                    themePreference === "light" && { color: colors.primaryText },
+                  ]}
+                >
+                  White mode
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.themeChip,
+                  { borderColor: colors.border, backgroundColor: colors.inputBackground },
+                  themePreference === "dark" && { borderColor: colors.primary, backgroundColor: colors.primaryLight },
+                ]}
+                onPress={() => applyThemePreference("dark")}
+              >
+                <Text
+                  style={[
+                    styles.themeChipText,
+                    { color: colors.labelText },
+                    themePreference === "dark" && { color: colors.primaryText },
+                  ]}
+                >
+                  Dark mode
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+
+        {/* Personal Information */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.subtitleText }]}>Personal Information</Text>
+          <View style={[styles.card, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
+            <TouchableOpacity
+              style={[styles.row, { borderBottomColor: colors.borderLight }]}
+              onPress={() => router.push("/profile-setup" as any)}
+              activeOpacity={0.75}
+            >
+              <Text style={[styles.rowLabel, { color: colors.text }]}>Edit personal information</Text>
+              <View style={styles.rowRight}>
+                <Text style={[styles.rowValue, { color: colors.subtitleText }]}>Open</Text>
+                <Text style={[styles.rowArrow, { color: colors.secondaryText }]}>&rsaquo;</Text>
+              </View>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.themeChip,
-                themePreference === "dark" ? styles.themeChipActive : null,
-              ]}
-              onPress={() => applyThemePreference("dark")}
-            >
-              <Text
-                style={[
-                  styles.themeChipText,
-                  themePreference === "dark"
-                    ? styles.themeChipTextActive
-                    : null,
-                ]}
+          </View>
+        </View>
+
+        {/* Legal */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.subtitleText }]}>Legal</Text>
+          <View style={[styles.card, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
+            {["Cookie policy", "Personal data protection policy", "Terms and conditions of use"].map((label) => (
+              <TouchableOpacity
+                key={label}
+                style={[styles.row, { borderBottomColor: colors.borderLight }]}
+                onPress={() => openLegal(label)}
+                activeOpacity={0.75}
               >
-                Dark mode
+                <Text style={[styles.rowLabel, { color: colors.text }]}>{label}</Text>
+                <View style={styles.rowRight}>
+                  <Text style={[styles.rowValue, { color: colors.subtitleText }]}>View</Text>
+                  <Text style={[styles.rowArrow, { color: colors.secondaryText }]}>&rsaquo;</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* Account */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.subtitleText }]}>Account</Text>
+          <View style={[styles.card, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
+            <TouchableOpacity
+              style={[styles.row, { borderBottomColor: colors.borderLight }]}
+              onPress={isDeleting ? undefined : confirmDeleteAccount}
+              disabled={isDeleting}
+              activeOpacity={0.75}
+            >
+              <Text style={[styles.rowLabel, { color: colors.dangerText }]}>
+                {isDeleting ? "Deleting account..." : "Delete my account"}
               </Text>
             </TouchableOpacity>
           </View>
-        </Section>
-
-        <Section title="Personal Information">
-          <Row
-            label="Edit personal information"
-            value="Open"
-            onPress={() => router.push("/profile-setup" as any)}
-          />
-        </Section>
-
-        <Section title="Legal">
-          <Row
-            label="Cookie policy"
-            value="View"
-            onPress={() => openLegal("Cookie policy")}
-          />
-          <Row
-            label="Personal data protection policy"
-            value="View"
-            onPress={() => openLegal("Personal data protection policy")}
-          />
-          <Row
-            label="Terms and conditions of use"
-            value="View"
-            onPress={() => openLegal("Terms and conditions of use")}
-          />
-        </Section>
-
-        <Section title="Account">
-          <Row
-            label={isDeleting ? "Deleting account..." : "Delete my account"}
-            danger
-            onPress={isDeleting ? undefined : confirmDeleteAccount}
-          />
-        </Section>
+        </View>
       </ScrollView>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F7FA" },
+  container: { flex: 1 },
   content: { padding: 16, paddingBottom: 30 },
   pageTitle: {
     fontSize: 28,
     fontWeight: "800",
-    color: "#1A1A2E",
     marginBottom: 12,
   },
   section: { marginBottom: 14 },
   sectionTitle: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#6B7280",
     marginBottom: 8,
     marginLeft: 4,
   },
   card: {
-    backgroundColor: "#fff",
     borderRadius: 14,
     overflow: "hidden",
-    shadowColor: "#000",
     shadowOpacity: 0.04,
     shadowRadius: 6,
     elevation: 1,
@@ -272,13 +254,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     borderBottomWidth: 1,
-    borderBottomColor: "#F0F3F7",
   },
-  rowLabel: { fontSize: 14, fontWeight: "600", color: "#1F2937" },
-  rowLabelDanger: { color: "#C62828" },
+  rowLabel: { fontSize: 14, fontWeight: "600" },
   rowRight: { flexDirection: "row", alignItems: "center", gap: 8 },
-  rowValue: { fontSize: 13, color: "#6B7280", fontWeight: "600" },
-  rowArrow: { fontSize: 18, color: "#B0B7C3" },
+  rowValue: { fontSize: 13, fontWeight: "600" },
+  rowArrow: { fontSize: 18 },
   themeSwitchRow: {
     flexDirection: "row",
     gap: 10,
@@ -289,15 +269,8 @@ const styles = StyleSheet.create({
     height: 42,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#D6DCE5",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#F8FAFC",
   },
-  themeChipActive: {
-    borderColor: "#4CAF50",
-    backgroundColor: "#E8F5E9",
-  },
-  themeChipText: { color: "#475467", fontWeight: "700", fontSize: 13 },
-  themeChipTextActive: { color: "#2E7D32" },
+  themeChipText: { fontWeight: "700", fontSize: 13 },
 });
