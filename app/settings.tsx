@@ -89,7 +89,10 @@ export default function SettingsScreen() {
   };
 
   const openLegal = (title: string) => {
-    Alert.alert(title, "This page is a placeholder for now.");
+    router.push({
+      pathname: "/legal",
+      params: { title },
+    } as any);
   };
 
   const confirmDeleteAccount = () => {
