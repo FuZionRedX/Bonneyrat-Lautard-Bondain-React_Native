@@ -300,12 +300,6 @@ export default function ProfileScreen() {
         </View>
         <Text style={styles.name}>{profile.fullName}</Text>
         <Text style={styles.email}>{profile.email}</Text>
-        <TouchableOpacity
-          style={styles.editBtn}
-          onPress={() => router.push("/profile-setup" as any)}
-        >
-          <Text style={styles.editBtnText}>Edit Profile</Text>
-        </TouchableOpacity>
       </View>
 
       <View style={styles.accountCard}>
@@ -389,7 +383,11 @@ export default function ProfileScreen() {
       <View style={styles.menuCard}>
         <MenuItem emoji="🔔" label="Notifications" />
         <MenuItem emoji="🔗" label="Sync Devices" />
-        <MenuItem emoji="⚙️" label="Settings" />
+        <MenuItem
+          emoji="⚙️"
+          label="Settings"
+          onPress={() => router.push("/settings" as any)}
+        />
         <MenuItem
           emoji="❓"
           label="Help & Support"
@@ -552,14 +550,6 @@ const styles = StyleSheet.create({
   avatarText: { fontSize: 24, fontWeight: "800", color: "#fff" },
   name: { fontSize: 20, fontWeight: "800", color: "#1A1A2E" },
   email: { fontSize: 13, color: "#9E9E9E", marginTop: 2 },
-  editBtn: {
-    marginTop: 12,
-    backgroundColor: "#E8F5E9",
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  editBtnText: { color: "#4CAF50", fontWeight: "700", fontSize: 13 },
   accountCard: {
     marginHorizontal: 16,
     marginTop: 12,

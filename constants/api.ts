@@ -54,3 +54,18 @@ export async function loginProfile(
 
   return { status: "connected", profile: data as GetProfileResponse };
 }
+
+export async function deleteAccount(email: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/delete_account.php`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+
+    const data = await res.json();
+    return !!data.success;
+  } catch {
+    return false;
+  }
+}
