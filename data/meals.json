@@ -1,0 +1,333 @@
+{
+  "meals": [
+    {
+      "id": 1,
+      "name": "Oatmeal with Berries",
+      "category": "breakfast",
+      "totalCalories": 350,
+      "calorieBand": "medium",
+      "ingredients": [
+        { "name": "rolled oats", "quantity": "50 g", "calories": 190 },
+        { "name": "skimmed milk", "quantity": "150 ml", "calories": 50 },
+        { "name": "mixed berries", "quantity": "80 g", "calories": 40 },
+        { "name": "honey", "quantity": "1 tsp", "calories": 30 },
+        { "name": "chia seeds", "quantity": "1 tbsp", "calories": 40 }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Greek Yogurt Parfait",
+      "category": "breakfast",
+      "totalCalories": 320,
+      "calorieBand": "medium",
+      "ingredients": [
+        { "name": "low-fat Greek yogurt", "quantity": "170 g", "calories": 140 },
+        { "name": "granola", "quantity": "30 g", "calories": 130 },
+        { "name": "strawberries", "quantity": "50 g", "calories": 15 },
+        { "name": "blueberries", "quantity": "30 g", "calories": 20 },
+        { "name": "honey", "quantity": "1 tsp", "calories": 15 }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Scrambled Eggs on Toast",
+      "category": "breakfast",
+      "totalCalories": 380,
+      "calorieBand": "medium",
+      "ingredients": [
+        { "name": "eggs", "quantity": "2 large", "calories": 140 },
+        { "name": "semi-skimmed milk", "quantity": "30 ml", "calories": 15 },
+        { "name": "wholemeal bread", "quantity": "2 slices", "calories": 180 },
+        { "name": "olive oil spray", "quantity": "1 tsp", "calories": 10 },
+        { "name": "tomato", "quantity": "1 medium", "calories": 35 }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Peanut Butter Banana Toast",
+      "category": "breakfast",
+      "totalCalories": 360,
+      "calorieBand": "medium",
+      "ingredients": [
+        { "name": "wholemeal bread", "quantity": "2 slices", "calories": 180 },
+        { "name": "peanut butter", "quantity": "1 tbsp", "calories": 95 },
+        { "name": "banana", "quantity": "1 small", "calories": 85 }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Smoothie Bowl",
+      "category": "breakfast",
+      "totalCalories": 400,
+      "calorieBand": "medium",
+      "ingredients": [
+        { "name": "frozen berries", "quantity": "100 g", "calories": 50 },
+        { "name": "banana", "quantity": "1 medium", "calories": 105 },
+        { "name": "plain yogurt", "quantity": "150 g", "calories": 120 },
+        { "name": "granola", "quantity": "25 g", "calories": 110 },
+        { "name": "chia seeds", "quantity": "1 tsp", "calories": 15 }
+      ]
+    },
+    {
+      "id": 6,
+      "name": "Avocado Toast with Egg",
+      "category": "breakfast",
+      "totalCalories": 410,
+      "calorieBand": "medium",
+      "ingredients": [
+        { "name": "wholemeal bread", "quantity": "2 slices", "calories": 180 },
+        { "name": "avocado", "quantity": "1/2 medium", "calories": 120 },
+        { "name": "egg", "quantity": "1 large", "calories": 70 },
+        { "name": "olive oil", "quantity": "1 tsp", "calories": 40 }
+      ]
+    },
+
+    {
+      "id": 7,
+      "name": "Grilled Chicken Salad",
+      "category": "lunch",
+      "totalCalories": 420,
+      "calorieBand": "medium",
+      "ingredients": [
+        { "name": "chicken breast", "quantity": "120 g cooked", "calories": 170 },
+        { "name": "mixed salad leaves", "quantity": "60 g", "calories": 15 },
+        { "name": "cherry tomatoes", "quantity": "60 g", "calories": 15 },
+        { "name": "cucumber", "quantity": "50 g", "calories": 8 },
+        { "name": "olive oil", "quantity": "1 tbsp", "calories": 120 },
+        { "name": "balsamic vinegar", "quantity": "1 tbsp", "calories": 10 },
+        { "name": "feta cheese", "quantity": "20 g", "calories": 82 }
+      ]
+    },
+    {
+      "id": 8,
+      "name": "Turkey Sandwich",
+      "category": "lunch",
+      "totalCalories": 430,
+      "calorieBand": "medium",
+      "ingredients": [
+        { "name": "wholemeal bread", "quantity": "2 slices", "calories": 180 },
+        { "name": "sliced turkey breast", "quantity": "80 g", "calories": 90 },
+        { "name": "light mayonnaise", "quantity": "1 tbsp", "calories": 35 },
+        { "name": "lettuce", "quantity": "20 g", "calories": 3 },
+        { "name": "tomato", "quantity": "3 slices", "calories": 10 },
+        { "name": "apple", "quantity": "1 medium", "calories": 112 }
+      ]
+    },
+    {
+      "id": 9,
+      "name": "Quinoa Veggie Bowl",
+      "category": "lunch",
+      "totalCalories": 450,
+      "calorieBand": "medium",
+      "ingredients": [
+        { "name": "quinoa cooked", "quantity": "150 g", "calories": 165 },
+        { "name": "chickpeas cooked", "quantity": "80 g", "calories": 130 },
+        { "name": "broccoli", "quantity": "60 g", "calories": 20 },
+        { "name": "carrot", "quantity": "50 g", "calories": 17 },
+        { "name": "olive oil", "quantity": "1 tbsp", "calories": 120 }
+      ]
+    },
+    {
+      "id": 10,
+      "name": "Tuna Salad Wrap",
+      "category": "lunch",
+      "totalCalories": 410,
+      "calorieBand": "medium",
+      "ingredients": [
+        { "name": "wholemeal tortilla", "quantity": "1 medium", "calories": 150 },
+        { "name": "canned tuna in water", "quantity": "1 small can (80 g drained)", "calories": 90 },
+        { "name": "low-fat yogurt", "quantity": "40 g", "calories": 30 },
+        { "name": "sweetcorn", "quantity": "30 g", "calories": 26 },
+        { "name": "lettuce", "quantity": "20 g", "calories": 3 },
+        { "name": "olive oil", "quantity": "1 tsp", "calories": 40 },
+        { "name": "side salad", "quantity": "50 g", "calories": 20 }
+      ]
+    },
+    {
+      "id": 11,
+      "name": "Lentil Soup with Bread",
+      "category": "lunch",
+      "totalCalories": 430,
+      "calorieBand": "medium",
+      "ingredients": [
+        { "name": "lentil soup", "quantity": "300 ml", "calories": 220 },
+        { "name": "olive oil", "quantity": "1 tsp", "calories": 40 },
+        { "name": "wholemeal bread", "quantity": "1 slice", "calories": 90 },
+        { "name": "side salad", "quantity": "60 g", "calories": 20 },
+        { "name": "apple", "quantity": "1 small", "calories": 60 }
+      ]
+    },
+    {
+      "id": 12,
+      "name": "Chicken and Rice Bowl",
+      "category": "lunch",
+      "totalCalories": 500,
+      "calorieBand": "medium",
+      "ingredients": [
+        { "name": "chicken breast", "quantity": "120 g cooked", "calories": 170 },
+        { "name": "brown rice cooked", "quantity": "150 g", "calories": 195 },
+        { "name": "broccoli", "quantity": "70 g", "calories": 24 },
+        { "name": "carrot", "quantity": "50 g", "calories": 17 },
+        { "name": "olive oil", "quantity": "1 tbsp", "calories": 120 }
+      ]
+    },
+
+    {
+      "id": 13,
+      "name": "Baked Salmon with Veg",
+      "category": "dinner",
+      "totalCalories": 520,
+      "calorieBand": "medium",
+      "ingredients": [
+        { "name": "salmon fillet", "quantity": "130 g", "calories": 260 },
+        { "name": "sweet potato", "quantity": "130 g", "calories": 112 },
+        { "name": "broccoli", "quantity": "80 g", "calories": 27 },
+        { "name": "olive oil", "quantity": "1 tbsp", "calories": 120 },
+        { "name": "lemon juice", "quantity": "1 tbsp", "calories": 5 }
+      ]
+    },
+    {
+      "id": 14,
+      "name": "Stir-fry Chicken and Veg",
+      "category": "dinner",
+      "totalCalories": 500,
+      "calorieBand": "medium",
+      "ingredients": [
+        { "name": "chicken breast", "quantity": "120 g", "calories": 170 },
+        { "name": "mixed stir-fry vegetables", "quantity": "150 g", "calories": 60 },
+        { "name": "soy sauce (reduced salt)", "quantity": "1 tbsp", "calories": 10 },
+        { "name": "olive or rapeseed oil", "quantity": "1 tbsp", "calories": 120 },
+        { "name": "brown rice cooked", "quantity": "130 g", "calories": 170 }
+      ]
+    },
+    {
+      "id": 15,
+      "name": "Veggie Pasta",
+      "category": "dinner",
+      "totalCalories": 490,
+      "calorieBand": "medium",
+      "ingredients": [
+        { "name": "wholewheat pasta dry", "quantity": "70 g", "calories": 250 },
+        { "name": "tomato pasta sauce", "quantity": "100 g", "calories": 60 },
+        { "name": "courgette", "quantity": "60 g", "calories": 10 },
+        { "name": "mushrooms", "quantity": "60 g", "calories": 14 },
+        { "name": "olive oil", "quantity": "1 tbsp", "calories": 120 },
+        { "name": "parmesan", "quantity": "10 g", "calories": 36 }
+      ]
+    },
+    {
+      "id": 16,
+      "name": "Bean Chilli with Rice",
+      "category": "dinner",
+      "totalCalories": 510,
+      "calorieBand": "medium",
+      "ingredients": [
+        { "name": "kidney beans cooked", "quantity": "100 g", "calories": 127 },
+        { "name": "black beans cooked", "quantity": "80 g", "calories": 110 },
+        { "name": "chopped tomatoes", "quantity": "150 g", "calories": 30 },
+        { "name": "onion", "quantity": "40 g", "calories": 16 },
+        { "name": "olive oil", "quantity": "1 tbsp", "calories": 120 },
+        { "name": "brown rice cooked", "quantity": "120 g", "calories": 156 }
+      ]
+    },
+    {
+      "id": 17,
+      "name": "Turkey Meatballs with Spaghetti",
+      "category": "dinner",
+      "totalCalories": 530,
+      "calorieBand": "medium",
+      "ingredients": [
+        { "name": "wholewheat spaghetti dry", "quantity": "70 g", "calories": 250 },
+        { "name": "turkey meatballs cooked", "quantity": "100 g", "calories": 190 },
+        { "name": "tomato sauce", "quantity": "100 g", "calories": 60 },
+        { "name": "olive oil", "quantity": "1 tsp", "calories": 40 },
+        { "name": "parmesan", "quantity": "5 g", "calories": 20 }
+      ]
+    },
+    {
+      "id": 18,
+      "name": "Tofu Stir-fry with Rice",
+      "category": "dinner",
+      "totalCalories": 500,
+      "calorieBand": "medium",
+      "ingredients": [
+        { "name": "firm tofu", "quantity": "100 g", "calories": 120 },
+        { "name": "mixed vegetables", "quantity": "150 g", "calories": 60 },
+        { "name": "soy sauce (reduced salt)", "quantity": "1 tbsp", "calories": 10 },
+        { "name": "sesame oil", "quantity": "1 tbsp", "calories": 120 },
+        { "name": "brown rice cooked", "quantity": "130 g", "calories": 190 }
+      ]
+    },
+
+    {
+      "id": 19,
+      "name": "Apple and Peanut Butter",
+      "category": "snack",
+      "totalCalories": 210,
+      "calorieBand": "low",
+      "ingredients": [
+        { "name": "apple", "quantity": "1 medium", "calories": 112 },
+        { "name": "peanut butter", "quantity": "1 tbsp", "calories": 95 }
+      ]
+    },
+    {
+      "id": 20,
+      "name": "Carrots and Hummus",
+      "category": "snack",
+      "totalCalories": 170,
+      "calorieBand": "low",
+      "ingredients": [
+        { "name": "carrot sticks", "quantity": "80 g", "calories": 35 },
+        { "name": "hummus", "quantity": "40 g", "calories": 135 }
+      ]
+    },
+    {
+      "id": 21,
+      "name": "Mixed Nuts",
+      "category": "snack",
+      "totalCalories": 200,
+      "calorieBand": "low",
+      "ingredients": [
+        { "name": "unsalted mixed nuts", "quantity": "30 g", "calories": 200 }
+      ]
+    },
+    {
+      "id": 22,
+      "name": "Yogurt with Honey",
+      "category": "snack",
+      "totalCalories": 180,
+      "calorieBand": "low",
+      "ingredients": [
+        { "name": "low-fat yogurt", "quantity": "150 g", "calories": 120 },
+        { "name": "honey", "quantity": "1 tsp", "calories": 30 },
+        { "name": "almonds", "quantity": "5 g", "calories": 30 }
+      ]
+    },
+    {
+      "id": 23,
+      "name": "Protein Shake",
+      "category": "snack",
+      "totalCalories": 220,
+      "calorieBand": "low",
+      "ingredients": [
+        { "name": "whey protein powder", "quantity": "1 scoop (30 g)", "calories": 120 },
+        { "name": "semi-skimmed milk", "quantity": "200 ml", "calories": 70 },
+        { "name": "banana", "quantity": "1/2 medium", "calories": 30 }
+      ]
+    },
+    {
+      "id": 24,
+      "name": "Rice Cakes with Cottage Cheese",
+      "category": "snack",
+      "totalCalories": 190,
+      "calorieBand": "low",
+      "ingredients": [
+        { "name": "rice cakes", "quantity": "2 cakes", "calories": 70 },
+        { "name": "low-fat cottage cheese", "quantity": "60 g", "calories": 60 },
+        { "name": "tomato slices", "quantity": "40 g", "calories": 15 },
+        { "name": "cucumber", "quantity": "40 g", "calories": 8 },
+        { "name": "olive oil", "quantity": "1 tsp", "calories": 37 }
+      ]
+    }
+  ]
+}
