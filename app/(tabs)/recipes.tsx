@@ -1,3 +1,4 @@
+import mealsData from '@/data/meals.json';
 import React, { useState } from 'react';
 import {
   ScrollView,
@@ -8,36 +9,61 @@ import {
   View,
 } from 'react-native';
 
-interface Recipe {
-  id: number;
+interface MealIngredient {
   name: string;
-  category: string;
-  kcal: number;
-  time: string;
-  emoji: string;
+  quantity: string;
+  calories: number;
 }
 
-const CATEGORIES = ['All', 'Breakfast', 'Lunch', 'Dinner', 'Snacks'];
+interface Meal {
+  id: number;
+  name: string;
+  category: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  totalCalories: number;
+  calorieBand: string;
+  ingredients: MealIngredient[];
+}
 
-const RECIPES: Recipe[] = [
-  { id: 1, name: 'Avocado Toast & Egg', category: 'Breakfast', kcal: 380, time: '10 min', emoji: '🥑' },
-  { id: 2, name: 'Quinoa Buddha Bowl', category: 'Lunch', kcal: 455, time: '20 min', emoji: '🥗' },
-  { id: 3, name: 'Grilled Salmon & Greens', category: 'Dinner', kcal: 420, time: '25 min', emoji: '🐟' },
-  { id: 4, name: 'Greek Yogurt Parfait', category: 'Breakfast', kcal: 220, time: '5 min', emoji: '🥛' },
-  { id: 5, name: 'Roasted Almonds', category: 'Snacks', kcal: 85, time: '5 min', emoji: '🥜' },
-  { id: 6, name: 'Chicken Caesar Salad', category: 'Lunch', kcal: 390, time: '15 min', emoji: '🥙' },
-  { id: 7, name: 'Pasta Primavera', category: 'Dinner', kcal: 510, time: '30 min', emoji: '🍝' },
-  { id: 8, name: 'Berry Smoothie', category: 'Snacks', kcal: 140, time: '5 min', emoji: '🍓' },
+interface MealsFile {
+  meals: Meal[];
+}
+
+type CategoryFilter = 'all' | Meal['category'];
+
+const CATEGORIES: Array<{ label: string; value: CategoryFilter }> = [
+  { label: 'All', value: 'all' },
+  { label: 'Breakfast', value: 'breakfast' },
+  { label: 'Lunch', value: 'lunch' },
+  { label: 'Dinner', value: 'dinner' },
+  { label: 'Snacks', value: 'snack' },
 ];
+
+const MEALS = (mealsData as MealsFile).meals;
+
+function getMealEmoji(category: Meal['category']) {
+  if (category === 'breakfast') return '🥣';
+  if (category === 'lunch') return '🥗';
+  if (category === 'dinner') return '🍽️';
+  return '🍎';
+}
+
+function toTitleCase(value: string) {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
 
 export default function RecipesScreen() {
   const [search, setSearch] = useState('');
-  const [activeCategory, setActiveCategory] = useState('All');
+  const [activeCategory, setActiveCategory] = useState<CategoryFilter>('all');
 
-  const filtered = RECIPES.filter((r) => {
-    const matchCat = activeCategory === 'All' || r.category === activeCategory;
-    const matchSearch = r.name.toLowerCase().includes(search.toLowerCase());
-    return matchCat && matchSearch;
+  const filtered = MEALS.filter((meal) => {
+    const matchCat = activeCategory === 'all' || meal.category === activeCategory;
+    const ingredientBlob = meal.ingredients
+      .map((ingredient) => ingredient.name)
+      .join(' ')
+      .toLowerCase();
+    const matchSearch = meal.name.toLowerCase().includes(search.toLowerCase());
+    const matchIngredient = ingredientBlob.includes(search.toLowerCase());
+    return matchCat && (matchSearch || matchIngredient);
   });
 
   return (
@@ -69,12 +95,17 @@ export default function RecipesScreen() {
       >
         {CATEGORIES.map((cat) => (
           <TouchableOpacity
-            key={cat}
-            style={[styles.catChip, activeCategory === cat && styles.catChipActive]}
-            onPress={() => setActiveCategory(cat)}
+            key={cat.value}
+            style={[styles.catChip, activeCategory === cat.value && styles.catChipActive]}
+            onPress={() => setActiveCategory(cat.value)}
           >
-            <Text style={[styles.catChipText, activeCategory === cat && styles.catChipTextActive]}>
-              {cat}
+            <Text
+              style={[
+                styles.catChipText,
+                activeCategory === cat.value && styles.catChipTextActive,
+              ]}
+            >
+              {cat.label}
             </Text>
           </TouchableOpacity>
         ))}
@@ -82,19 +113,19 @@ export default function RecipesScreen() {
 
       {/* Recipe List */}
       <View style={styles.list}>
-        {filtered.map((recipe) => (
-          <TouchableOpacity key={recipe.id} style={styles.card}>
+        {filtered.map((meal) => (
+          <TouchableOpacity key={meal.id} style={styles.card}>
             <View style={styles.recipeEmoji}>
-              <Text style={styles.emojiText}>{recipe.emoji}</Text>
+              <Text style={styles.emojiText}>{getMealEmoji(meal.category)}</Text>
             </View>
             <View style={styles.recipeInfo}>
-              <Text style={styles.recipeName}>{recipe.name}</Text>
+              <Text style={styles.recipeName}>{meal.name}</Text>
               <Text style={styles.recipeMeta}>
-                {recipe.category}  •  {recipe.time}  •  {recipe.kcal} kcal
+                {toTitleCase(meal.category)}  •  {meal.ingredients.length} ingredients  •  {toTitleCase(meal.calorieBand)} cal
               </Text>
             </View>
             <View style={styles.kcalBadge}>
-              <Text style={styles.kcalBadgeText}>{recipe.kcal}</Text>
+              <Text style={styles.kcalBadgeText}>{meal.totalCalories}</Text>
               <Text style={styles.kcalBadgeLabel}>kcal</Text>
             </View>
           </TouchableOpacity>

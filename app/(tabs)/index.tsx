@@ -57,6 +57,10 @@ const MEAL_SECTIONS: MealSection[] = [
   },
 ];
 
+function parseProfileNumber(value: string) {
+  return Number.parseFloat(value.replace(",", "."));
+}
+
 function ProgressBar({
   value,
   max,
@@ -86,6 +90,11 @@ export default function PlannerScreen() {
   const consumed = 1340;
   const remaining = dailyTarget - consumed;
   const firstName = profile.fullName.trim().split(/\s+/)[0] || "there";
+  const heightCm = parseProfileNumber(profile.height);
+  const weightKg = parseProfileNumber(profile.weight);
+  const hasValidMetrics = heightCm > 0 && weightKg > 0;
+  const bmi = hasValidMetrics ? weightKg / (heightCm / 100) ** 2 : null;
+  const bmiDisplay = bmi === null ? "--" : bmi.toFixed(1);
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -101,9 +110,43 @@ export default function PlannerScreen() {
           style={styles.bmiBadge}
           onPress={() => router.push("/health-overview" as any)}
         >
-          <Text style={styles.bmiValue}>22.4</Text>
+          <Text style={styles.bmiValue}>{bmiDisplay}</Text>
           <Text style={styles.bmiLabel}>BMI</Text>
         </TouchableOpacity>
+      </View>
+
+      <View style={styles.userInfoCard}>
+        <Text style={styles.userInfoTitle}>Your Profile</Text>
+        <View style={styles.userInfoGrid}>
+          <View style={styles.userInfoItem}>
+            <Text style={styles.userInfoLabel}>Email</Text>
+            <Text style={styles.userInfoValue}>{profile.email || "Not set"}</Text>
+          </View>
+          <View style={styles.userInfoItem}>
+            <Text style={styles.userInfoLabel}>Goal</Text>
+            <Text style={styles.userInfoValue}>{profile.goal || "Not set"}</Text>
+          </View>
+          <View style={styles.userInfoItem}>
+            <Text style={styles.userInfoLabel}>Age</Text>
+            <Text style={styles.userInfoValue}>{profile.age || "--"}</Text>
+          </View>
+          <View style={styles.userInfoItem}>
+            <Text style={styles.userInfoLabel}>Gender</Text>
+            <Text style={styles.userInfoValue}>{profile.gender || "--"}</Text>
+          </View>
+          <View style={styles.userInfoItem}>
+            <Text style={styles.userInfoLabel}>Height</Text>
+            <Text style={styles.userInfoValue}>
+              {profile.height ? `${profile.height} cm` : "--"}
+            </Text>
+          </View>
+          <View style={styles.userInfoItem}>
+            <Text style={styles.userInfoLabel}>Weight</Text>
+            <Text style={styles.userInfoValue}>
+              {profile.weight ? `${profile.weight} kg` : "--"}
+            </Text>
+          </View>
+        </View>
       </View>
 
       {/* Daily Target Card */}
@@ -219,6 +262,44 @@ const styles = StyleSheet.create({
   },
   bmiValue: { fontSize: 20, fontWeight: "800", color: "#4CAF50" },
   bmiLabel: { fontSize: 11, color: "#4CAF50", fontWeight: "600" },
+
+  userInfoCard: {
+    marginHorizontal: 16,
+    marginTop: 12,
+    marginBottom: 4,
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 1,
+  },
+  userInfoTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#1A1A2E",
+    marginBottom: 12,
+  },
+  userInfoGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+  userInfoItem: {
+    width: "48%",
+    backgroundColor: "#F8FAFC",
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  userInfoLabel: { fontSize: 11, color: "#64748B", fontWeight: "700" },
+  userInfoValue: {
+    fontSize: 13,
+    color: "#1A1A2E",
+    fontWeight: "600",
+    marginTop: 3,
+  },
 
   targetCard: {
     margin: 16,
