@@ -25,9 +25,64 @@ type ConnectResult =
   | "not_found"
   | "wrong_password"
   | {
+      // Some API responses include extra metadata alongside the status.
       status: "connected" | "not_found" | "wrong_password";
       wasFirstOpen?: boolean;
     };
+
+type BmiMeta = {
+  label: string;
+  color: string;
+  description: string;
+};
+
+function parseProfileNumber(value: string) {
+  return Number.parseFloat(value.replace(",", "."));
+}
+
+function getBmiMeta(bmi: number | null): BmiMeta {
+  if (bmi === null) {
+    return {
+      label: "N/A",
+      color: "#64748B",
+      description: "Add valid height and weight to calculate your BMI.",
+    };
+  }
+
+  if (bmi < 18.5) {
+    return {
+      label: "UNDERWEIGHT",
+      color: "#2196F3",
+      description:
+        "Your BMI is below the healthy range. Consider consulting a professional about balanced nutrition.",
+    };
+  }
+
+  if (bmi < 25) {
+    return {
+      label: "NORMAL",
+      color: "#4CAF50",
+      description:
+        "Your BMI is in the healthy range. Keep up the balanced diet and regular activity!",
+    };
+  }
+
+  if (bmi < 30) {
+    return {
+      label: "OVERWEIGHT",
+      color: "#FF9800",
+      description:
+        "Your BMI is above the healthy range. Small daily habits can help improve your health trajectory.",
+    };
+  }
+
+  return {
+    label: "OBESE",
+    color: "#F44336",
+    description:
+      "Your BMI is in a high range. Consider speaking with a healthcare professional for a personalized plan.",
+  };
+}
 
 function StatCard({
   label,
@@ -81,7 +136,15 @@ export default function ProfileScreen() {
   const [isConnecting, setIsConnecting] = useState(false);
   const initials = getProfileInitials(profile.fullName);
 
+  const heightCm = parseProfileNumber(profile.height);
+  const weightKg = parseProfileNumber(profile.weight);
+  const hasValidBodyMetrics = heightCm > 0 && weightKg > 0;
+  const bmi = hasValidBodyMetrics ? weightKg / (heightCm / 100) ** 2 : null;
+  const bmiDisplay = bmi === null ? "--" : bmi.toFixed(1);
+  const bmiMeta = getBmiMeta(bmi);
+
   useEffect(() => {
+    // Prefill the email field with the most recently used account.
     AsyncStorage.getItem(LAST_PROFILE_EMAIL_KEY)
       .then((savedEmail) => {
         if (savedEmail) {
@@ -94,6 +157,7 @@ export default function ProfileScreen() {
   }, []);
 
   const handleConnectProfile = async () => {
+    // Normalize inputs to avoid accidental spaces breaking auth.
     const trimmedEmail = emailToConnect.trim();
     const trimmedPassword = passwordToConnect.trim();
 
@@ -114,6 +178,7 @@ export default function ProfileScreen() {
         trimmedEmail,
         trimmedPassword,
       )) as ConnectResult;
+      // Support both legacy string responses and object responses.
       const status = typeof result === "string" ? result : result.status;
 
       if (status === "not_found") {
@@ -135,6 +200,7 @@ export default function ProfileScreen() {
   };
 
   const handleLogout = () => {
+    // Clear only transient login UI state, then reset profile context.
     setPasswordToConnect("");
     setShowPassword(false);
     setConnectError("");
@@ -142,6 +208,7 @@ export default function ProfileScreen() {
   };
 
   if (!hasProcessedInput) {
+    // Unauthenticated state: show login/connect screen.
     return (
       <ScrollView
         style={styles.loginScreen}
@@ -250,6 +317,7 @@ export default function ProfileScreen() {
     );
   }
 
+  // Authenticated state: show profile, stats, and settings.
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Header */}
@@ -288,30 +356,22 @@ export default function ProfileScreen() {
           <Text style={styles.accountLabel}>Email</Text>
           <Text style={styles.accountValue}>{profile.email}</Text>
         </View>
-        <View style={styles.accountRow}>
-          <Text style={styles.accountLabel}>Password</Text>
-          <Text style={styles.accountValue}>
-            {maskPassword(profile.password)}
-          </Text>
-        </View>
       </View>
 
       {/* BMI Card */}
       <View style={styles.bmiCard}>
         <View>
           <Text style={styles.bmiTitle}>BODY MASS INDEX</Text>
-          <Text style={styles.bmiValue}>22.4</Text>
-          <View style={styles.bmiNormalBadge}>
-            <Text style={styles.bmiNormalText}>NORMAL</Text>
+          <Text style={styles.bmiValue}>{bmiDisplay}</Text>
+          <View style={[styles.bmiNormalBadge, { backgroundColor: bmiMeta.color }]}>
+            <Text style={styles.bmiNormalText}>{bmiMeta.label}</Text>
           </View>
         </View>
         <View style={styles.bmiRight}>
-          <Text style={styles.bmiDesc}>
-            Your BMI is in the healthy range. Keep up the balanced diet and
-            regular activity!
-          </Text>
+          <Text style={styles.bmiDesc}>{bmiMeta.description}</Text>
           {/* BMI scale */}
           <View style={styles.bmiScaleRow}>
+            {/* Visual threshold markers for BMI ranges. */}
             {[
               { label: "0", color: "#2196F3" },
               { label: "18.5", color: "#4CAF50" },

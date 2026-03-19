@@ -2,7 +2,7 @@ import { ProfileData } from "@/contexts/profile-context";
 
 export const API_BASE = "http://10.0.2.2/health_app";
 
-export interface GetProfileResponse extends ProfileData {
+export interface GetProfileResponse extends Omit<ProfileData, "password"> {
   wasFirstOpen?: boolean;
 }
 
@@ -35,7 +35,8 @@ export async function loginProfile(
   email: string,
   password: string,
 ): Promise<LoginProfileResponse> {
-  const res = await fetch(`${API_BASE}/login_profile.php`, {
+  // POST to get_profile.php (server verifies password and returns user fields).
+  const res = await fetch(`${API_BASE}/get_profile.php`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
