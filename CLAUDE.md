@@ -23,7 +23,10 @@ No test runner is configured.
 
 ### State Management
 
-Single React Context: `ProfileContext` in `contexts/profile-context.tsx`. Holds all user data (email, password, fullName, age, gender, height, weight, goal). Provides `updateProfile()`, `connectProfileByEmail()`, and `logout()`. Wraps the entire app in `app/_layout.tsx`.
+Two React Contexts, both wrapped in `app/_layout.tsx`:
+
+- **`ProfileContext`** (`contexts/profile-context.tsx`): Holds user data (email, password, fullName, age, gender, height, weight, goal). Provides `updateProfile()`, `connectProfileByEmail()`, and `logout()`.
+- **`MealPlanContext`** (`contexts/meal-plan-context.tsx`): Holds selected meal IDs by category (`selectedByCategory`) and the derived `selectedMeals` list. Shared across Recipes, Planner, and Groceries screens.
 
 ### API Layer
 
@@ -31,7 +34,7 @@ Single React Context: `ProfileContext` in `contexts/profile-context.tsx`. Holds 
 
 ### Data
 
-`data/meals.json` contains 30+ meals with categories, calories, and ingredient breakdowns. Health calculations (BMI, BMR, caloric needs) are computed inline in `app/(tabs)/recipes.tsx`.
+`data/meals.json` contains 30+ meals with categories, calories, and ingredient breakdowns. Health calculations (BMI, BMR, caloric needs) are computed inline in `app/(tabs)/recipes.tsx` and `app/(tabs)/index.tsx` (Planner). Groceries page (`app/(tabs)/groceries.tsx`) derives its ingredient list from the selected meals.
 
 ### Theming
 

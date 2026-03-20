@@ -7,6 +7,7 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 
+import { MealPlanProvider } from "@/contexts/meal-plan-context";
 import { ProfileProvider } from "@/contexts/profile-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 
@@ -19,21 +20,23 @@ export default function RootLayout() {
 
   return (
     <ProfileProvider>
-      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="modal"
-            options={{ presentation: "modal", title: "Modal" }}
-          />
-          <Stack.Screen name="profile-setup" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="health-overview"
-            options={{ headerShown: false }}
-          />
-        </Stack>
-        <StatusBar style="auto" />
-      </ThemeProvider>
+      <MealPlanProvider>
+        <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="modal"
+              options={{ presentation: "modal", title: "Modal" }}
+            />
+            <Stack.Screen name="profile-setup" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="health-overview"
+              options={{ headerShown: false }}
+            />
+          </Stack>
+          <StatusBar style="auto" />
+        </ThemeProvider>
+      </MealPlanProvider>
     </ProfileProvider>
   );
 }

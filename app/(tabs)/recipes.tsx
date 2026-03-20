@@ -1,5 +1,5 @@
 import mealsData from '@/data/meals.json';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -9,29 +9,14 @@ import {
 } from 'react-native';
 
 import { Colors } from '@/constants/theme';
+import { Meal, MealCategory, useMealPlan } from '@/contexts/meal-plan-context';
 import { useProfile } from '@/contexts/profile-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-
-interface MealIngredient {
-  name: string;
-  quantity: string;
-  calories: number;
-}
-
-interface Meal {
-  id: number;
-  name: string;
-  category: 'breakfast' | 'lunch' | 'dinner' | 'snack';
-  totalCalories: number;
-  calorieBand: string;
-  ingredients: MealIngredient[];
-}
 
 interface MealsFile {
   meals: Meal[];
 }
 
-type MealCategory = Meal['category'];
 type Gender = 'male' | 'female' | 'other';
 
 const CATEGORY_ORDER: MealCategory[] = ['breakfast', 'lunch', 'dinner', 'snack'];
@@ -87,7 +72,7 @@ export default function RecipesScreen() {
   const { profile } = useProfile();
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
-  const [selectedByCategory, setSelectedByCategory] = useState<Partial<Record<MealCategory, number[]>>>({});
+  const { selectedByCategory, setSelectedByCategory, selectedMeals } = useMealPlan();
 
   const heightCm = parseProfileNumber(profile.height);
   const weightKg = parseProfileNumber(profile.weight);
@@ -162,15 +147,6 @@ export default function RecipesScreen() {
       return next;
     });
   }, [needsWeightLoss, optionsByCategory]);
-
-  const selectedMeals = useMemo(() => {
-    if (!optionsByCategory) return [] as Meal[];
-
-    return CATEGORY_ORDER.flatMap((category) => {
-      const selectedIds = selectedByCategory[category] ?? [];
-      return optionsByCategory[category].filter((meal) => selectedIds.includes(meal.id));
-    });
-  }, [optionsByCategory, selectedByCategory]);
 
   const finalPlanCalories = selectedMeals.reduce((total, meal) => total + meal.totalCalories, 0);
   const hasMetrics = bmi !== null && bmr !== null && dailyCalories !== null;

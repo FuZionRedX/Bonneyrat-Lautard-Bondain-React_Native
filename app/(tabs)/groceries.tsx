@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -8,47 +8,51 @@ import {
 } from 'react-native';
 
 import { Colors } from '@/constants/theme';
+import { useMealPlan } from '@/contexts/meal-plan-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 interface GroceryItem {
-  id: number;
+  key: string;
   name: string;
   qty: string;
-  category: string;
-  checked: boolean;
+  mealName: string;
 }
 
-const INITIAL_ITEMS: GroceryItem[] = [
-  { id: 1, name: 'Avocado', qty: '3 pcs', category: 'Fruits & Veggies', checked: false },
-  { id: 2, name: 'Eggs', qty: '12 pcs', category: 'Dairy & Eggs', checked: true },
-  { id: 3, name: 'Quinoa', qty: '500g', category: 'Grains', checked: false },
-  { id: 4, name: 'Salmon Fillet', qty: '400g', category: 'Meat & Fish', checked: false },
-  { id: 5, name: 'Baby Spinach', qty: '200g', category: 'Fruits & Veggies', checked: true },
-  { id: 6, name: 'Greek Yogurt', qty: '2 cups', category: 'Dairy & Eggs', checked: false },
-  { id: 7, name: 'Almonds', qty: '150g', category: 'Snacks', checked: false },
-  { id: 8, name: 'Mixed Berries', qty: '250g', category: 'Fruits & Veggies', checked: false },
-  { id: 9, name: 'Whole Grain Bread', qty: '1 loaf', category: 'Grains', checked: false },
-  { id: 10, name: 'Olive Oil', qty: '1 bottle', category: 'Pantry', checked: true },
-];
-
-function groupByCategory(items: GroceryItem[]) {
+function groupByMeal(items: GroceryItem[]) {
   return items.reduce<Record<string, GroceryItem[]>>((acc, item) => {
-    if (!acc[item.category]) acc[item.category] = [];
-    acc[item.category].push(item);
+    if (!acc[item.mealName]) acc[item.mealName] = [];
+    acc[item.mealName].push(item);
     return acc;
   }, {});
 }
 
 export default function GroceriesScreen() {
-  const [items, setItems] = useState<GroceryItem[]>(INITIAL_ITEMS);
+  const { selectedMeals } = useMealPlan();
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
+  const [checkedKeys, setCheckedKeys] = useState<Set<string>>(new Set());
 
-  const toggle = (id: number) =>
-    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, checked: !i.checked } : i)));
+  const items = useMemo<GroceryItem[]>(() => {
+    return selectedMeals.flatMap((meal) =>
+      meal.ingredients.map((ing) => ({
+        key: `${meal.id}-${ing.name}`,
+        name: ing.name,
+        qty: ing.quantity,
+        mealName: meal.name,
+      }))
+    );
+  }, [selectedMeals]);
 
-  const grouped = groupByCategory(items);
-  const checkedCount = items.filter((i) => i.checked).length;
+  const toggle = (key: string) =>
+    setCheckedKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+
+  const grouped = groupByMeal(items);
+  const checkedCount = items.filter((i) => checkedKeys.has(i.key)).length;
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.screenBackground }]} showsVerticalScrollIndicator={false}>
@@ -57,52 +61,69 @@ export default function GroceriesScreen() {
         <View>
           <Text style={[styles.title, { color: colors.text }]}>Groceries</Text>
           <Text style={[styles.subtitle, { color: colors.secondaryText }]}>
-            {checkedCount} / {items.length} items checked
+            {items.length > 0
+              ? `${checkedCount} / ${items.length} items checked`
+              : 'No meals selected yet'}
           </Text>
         </View>
-        <View style={[styles.progressCircle, { backgroundColor: colors.primaryLight, borderColor: colors.primary }]}>
-          <Text style={[styles.progressPct, { color: colors.primary }]}>
-            {Math.round((checkedCount / items.length) * 100)}%
-          </Text>
-        </View>
+        {items.length > 0 && (
+          <View style={[styles.progressCircle, { backgroundColor: colors.primaryLight, borderColor: colors.primary }]}>
+            <Text style={[styles.progressPct, { color: colors.primary }]}>
+              {Math.round((checkedCount / items.length) * 100)}%
+            </Text>
+          </View>
+        )}
       </View>
 
       {/* Progress bar */}
-      <View style={[styles.progressTrackWrap, { backgroundColor: colors.cardBackground }]}>
-        <View style={[styles.progressTrack, { backgroundColor: colors.progressTrack }]}>
-          <View
-            style={[
-              styles.progressFill,
-              { width: `${(checkedCount / items.length) * 100}%` as any, backgroundColor: colors.progressFill },
-            ]}
-          />
+      {items.length > 0 && (
+        <View style={[styles.progressTrackWrap, { backgroundColor: colors.cardBackground }]}>
+          <View style={[styles.progressTrack, { backgroundColor: colors.progressTrack }]}>
+            <View
+              style={[
+                styles.progressFill,
+                { width: `${(checkedCount / items.length) * 100}%` as any, backgroundColor: colors.progressFill },
+              ]}
+            />
+          </View>
         </View>
-      </View>
+      )}
 
-      {/* Grouped Items */}
-      {Object.entries(grouped).map(([category, catItems]) => (
-        <View key={category} style={styles.categorySection}>
-          <Text style={[styles.categoryTitle, { color: colors.secondaryText }]}>{category}</Text>
-          {catItems.map((item) => (
-            <TouchableOpacity
-              key={item.id}
-              style={[styles.itemRow, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}
-              onPress={() => toggle(item.id)}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.checkbox, { borderColor: colors.border }, item.checked && { backgroundColor: colors.primary, borderColor: colors.primary }]}>
-                {item.checked && <Text style={styles.checkmark}>&#10003;</Text>}
-              </View>
-              <View style={styles.itemInfo}>
-                <Text style={[styles.itemName, { color: colors.text }, item.checked && { textDecorationLine: 'line-through', color: colors.secondaryText }]}>
-                  {item.name}
-                </Text>
-                <Text style={[styles.itemQty, { color: colors.secondaryText }]}>{item.qty}</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
+      {/* Grouped by meal */}
+      {items.length > 0 ? (
+        Object.entries(grouped).map(([mealName, mealItems]) => (
+          <View key={mealName} style={styles.categorySection}>
+            <Text style={[styles.categoryTitle, { color: colors.secondaryText }]}>{mealName}</Text>
+            {mealItems.map((item) => {
+              const checked = checkedKeys.has(item.key);
+              return (
+                <TouchableOpacity
+                  key={item.key}
+                  style={[styles.itemRow, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}
+                  onPress={() => toggle(item.key)}
+                  activeOpacity={0.7}
+                >
+                  <View style={[styles.checkbox, { borderColor: colors.border }, checked && { backgroundColor: colors.primary, borderColor: colors.primary }]}>
+                    {checked && <Text style={styles.checkmark}>&#10003;</Text>}
+                  </View>
+                  <View style={styles.itemInfo}>
+                    <Text style={[styles.itemName, { color: colors.text }, checked && { textDecorationLine: 'line-through', color: colors.secondaryText }]}>
+                      {item.name}
+                    </Text>
+                    <Text style={[styles.itemQty, { color: colors.secondaryText }]}>{item.qty}</Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        ))
+      ) : (
+        <View style={styles.emptyCard}>
+          <Text style={[styles.emptyText, { color: colors.secondaryText }]}>
+            Select meals in the Recipes tab to generate your grocery list.
+          </Text>
         </View>
-      ))}
+      )}
 
       <View style={{ height: 20 }} />
     </ScrollView>
@@ -169,4 +190,13 @@ const styles = StyleSheet.create({
   itemInfo: { flex: 1 },
   itemName: { fontSize: 15, fontWeight: '600' },
   itemQty: { fontSize: 12, marginTop: 2 },
+
+  emptyCard: {
+    marginHorizontal: 16,
+    marginTop: 24,
+    borderRadius: 14,
+    padding: 20,
+    alignItems: 'center',
+  },
+  emptyText: { fontSize: 14, textAlign: 'center' },
 });

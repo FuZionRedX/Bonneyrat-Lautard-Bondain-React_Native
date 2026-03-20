@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useMemo } from "react";
 import {
     ScrollView,
     StyleSheet,
@@ -9,58 +9,46 @@ import {
 } from "react-native";
 
 import { Colors } from "@/constants/theme";
+import { MealCategory, useMealPlan } from "@/contexts/meal-plan-context";
 import { useProfile } from "@/contexts/profile-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 
-interface Meal {
-  name: string;
-  detail: string;
-  kcal: number;
-  planned?: boolean;
+const CATEGORY_ORDER: MealCategory[] = ["breakfast", "lunch", "dinner", "snack"];
+const CATEGORY_LABELS: Record<MealCategory, string> = {
+  breakfast: "Breakfast",
+  lunch: "Lunch",
+  dinner: "Dinner",
+  snack: "Snack",
+};
+
+function getMealEmoji(category: MealCategory) {
+  if (category === "breakfast") return "\u{1F963}";
+  if (category === "lunch") return "\u{1F957}";
+  if (category === "dinner") return "\u{1F37D}\uFE0F";
+  return "\u{1F34E}";
 }
 
-interface MealSection {
-  type: string;
-  totalKcal: number;
-  meals: Meal[];
-}
-
-const MEAL_SECTIONS: MealSection[] = [
-  {
-    type: "Breakfast",
-    totalKcal: 380,
-    meals: [
-      {
-        name: "Avocado Toast & Egg",
-        detail: "1 serving - 380 kcal",
-        kcal: 380,
-      },
-    ],
-  },
-  {
-    type: "Lunch",
-    totalKcal: 540,
-    meals: [
-      { name: "Quinoa Buddha Bowl", detail: "1 bowl - 455 kcal", kcal: 455 },
-      { name: "Roasted Almonds", detail: "15 pieces - 85 kcal", kcal: 85 },
-    ],
-  },
-  {
-    type: "Dinner",
-    totalKcal: 0,
-    meals: [
-      {
-        name: "Grilled Salmon & Greens",
-        detail: "1 serving - 420 kcal",
-        kcal: 420,
-        planned: true,
-      },
-    ],
-  },
-];
+type Gender = "male" | "female" | "other";
+const ACTIVITY_FACTOR = 1.35;
+const WEIGHT_LOSS_DEFICIT = 500;
 
 function parseProfileNumber(value: string) {
   return Number.parseFloat(value.replace(",", "."));
+}
+
+function getGender(genderValue: string): Gender {
+  const normalized = genderValue.trim().toLowerCase();
+  if (normalized.startsWith("m")) return "male";
+  if (normalized.startsWith("f")) return "female";
+  return "other";
+}
+
+function calculateBmr(weightKg: number, heightCm: number, ageYears: number, gender: Gender) {
+  if (weightKg <= 0 || heightCm <= 0 || ageYears <= 0) return null;
+  const base = 10 * weightKg + 6.25 * heightCm - 5 * ageYears;
+  if (gender === "male") return base + 5;
+  if (gender === "female") return base - 161;
+  return base - 78;
 }
 
 function ProgressBar({
@@ -90,18 +78,41 @@ function ProgressBar({
 export default function PlannerScreen() {
   const router = useRouter();
   const { profile } = useProfile();
+  const { selectedMeals } = useMealPlan();
   const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
 
-  const dailyTarget = 2000;
-  const consumed = 1340;
-  const remaining = dailyTarget - consumed;
   const firstName = profile.fullName.trim().split(/\s+/)[0] || "there";
   const heightCm = parseProfileNumber(profile.height);
   const weightKg = parseProfileNumber(profile.weight);
+  const ageYears = parseProfileNumber(profile.age);
+  const gender = getGender(profile.gender);
   const hasValidMetrics = heightCm > 0 && weightKg > 0;
   const bmi = hasValidMetrics ? weightKg / (heightCm / 100) ** 2 : null;
   const bmiDisplay = bmi === null ? "--" : bmi.toFixed(1);
+  const bmr = calculateBmr(weightKg, heightCm, ageYears, gender);
+  const needsWeightLoss = bmi !== null && bmi >= 25;
+
+  const dailyTarget = useMemo(() => {
+    if (bmr === null) return 2000;
+    const maintenance = bmr * ACTIVITY_FACTOR;
+    if (!needsWeightLoss) return Math.round(maintenance);
+    return Math.max(Math.round(maintenance - WEIGHT_LOSS_DEFICIT), 1200);
+  }, [bmr, needsWeightLoss]);
+
+  const mealSections = useMemo(() => {
+    return CATEGORY_ORDER.map((category) => {
+      const meals = selectedMeals.filter((m) => m.category === category);
+      const totalKcal = meals.reduce((sum, m) => sum + m.totalCalories, 0);
+      return { category, label: CATEGORY_LABELS[category], totalKcal, meals };
+    });
+  }, [selectedMeals]);
+
+  const totalPlanned = selectedMeals.reduce((sum, m) => sum + m.totalCalories, 0);
+  const isOverLimit = totalPlanned > dailyTarget;
+  const remaining = Math.max(dailyTarget - totalPlanned, 0);
+  const excess = totalPlanned - dailyTarget;
+  const hasMealPlan = selectedMeals.length > 0;
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.screenBackground }]} showsVerticalScrollIndicator={false}>
@@ -132,80 +143,99 @@ export default function PlannerScreen() {
         </View>
         <View style={styles.targetRow}>
           <Text style={[styles.targetConsumed, { color: colors.secondaryText }]}>
-            CALORIES CONSUMED{"\n"}
+            CALORIES PLANNED{"\n"}
             <Text style={[styles.targetConsumedValue, { color: colors.text }]}>
-              {consumed.toLocaleString()} / {dailyTarget.toLocaleString()}
+              {totalPlanned.toLocaleString()} / {dailyTarget.toLocaleString()}
             </Text>
           </Text>
-          <Text style={[styles.remainingBadge, { color: colors.primary, backgroundColor: colors.primaryLight }]}>{remaining} remaining</Text>
+          <Text
+            style={[
+              styles.remainingBadge,
+              isOverLimit
+                ? { color: colors.danger, backgroundColor: "#FDECEA" }
+                : { color: colors.primary, backgroundColor: colors.primaryLight },
+            ]}
+          >
+            {isOverLimit ? `${excess} over limit` : `${remaining} remaining`}
+          </Text>
         </View>
-        <ProgressBar value={consumed} max={dailyTarget} color={colors.primary} trackColor={colors.progressTrack} />
+        <ProgressBar
+          value={totalPlanned}
+          max={dailyTarget}
+          color={isOverLimit ? colors.danger : colors.primary}
+          trackColor={colors.progressTrack}
+        />
+        {isOverLimit && (
+          <Text style={styles.overLimitAlert}>
+            You are {excess} kcal above your daily target. Consider removing some meals.
+          </Text>
+        )}
       </View>
 
-      {/* Meal Sections */}
-      {MEAL_SECTIONS.map((section) => (
-        <View key={section.type} style={[styles.mealSection, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
-          <View style={styles.mealSectionHeader}>
-            <Text style={[styles.mealSectionTitle, { color: colors.text }]}>{section.type}</Text>
-            {section.totalKcal > 0 && (
-              <Text style={[styles.mealSectionKcal, { color: colors.secondaryText }]}>
-                {section.totalKcal} kcal
+      {/* Meal Sections from user selections */}
+      {hasMealPlan ? (
+        mealSections.map((section) => (
+          <View key={section.category} style={[styles.mealSection, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
+            <View style={styles.mealSectionHeader}>
+              <Text style={[styles.mealSectionTitle, { color: colors.text }]}>
+                {getMealEmoji(section.category)} {section.label}
+              </Text>
+              {section.totalKcal > 0 && (
+                <Text style={[styles.mealSectionKcal, { color: colors.secondaryText }]}>
+                  {section.totalKcal} kcal
+                </Text>
+              )}
+            </View>
+            {section.meals.length > 0 ? (
+              section.meals.map((meal) => (
+                <View key={meal.id} style={styles.mealRow}>
+                  <View style={[styles.mealIcon, { backgroundColor: colors.chipBackground }]}>
+                    <Text style={styles.mealIconText}>{getMealEmoji(meal.category)}</Text>
+                  </View>
+                  <View style={styles.mealInfo}>
+                    <Text style={[styles.mealName, { color: colors.text }]}>{meal.name}</Text>
+                    <Text style={[styles.mealDetail, { color: colors.secondaryText }]}>
+                      {meal.ingredients.length} ingredients - {meal.totalCalories} kcal
+                    </Text>
+                  </View>
+                </View>
+              ))
+            ) : (
+              <Text style={[styles.mealDetail, { color: colors.secondaryText, paddingVertical: 4 }]}>
+                No {section.label.toLowerCase()} selected
               </Text>
             )}
-            {section.meals[0]?.planned && (
-              <Text style={[styles.plannedBadge, { color: colors.secondaryText }]}>Planned</Text>
-            )}
           </View>
-          {section.meals.map((meal) => (
-            <View key={meal.name} style={styles.mealRow}>
-              <View style={[styles.mealIcon, { backgroundColor: colors.chipBackground }]}>
-                <Text style={styles.mealIconText}></Text>
-              </View>
-              <View style={styles.mealInfo}>
-                <Text style={[styles.mealName, { color: colors.text }]}>{meal.name}</Text>
-                <Text style={[styles.mealDetail, { color: colors.secondaryText }]}>{meal.detail}</Text>
-              </View>
-              <TouchableOpacity style={styles.mealEditBtn}>
-                <Text style={[styles.mealEditText, { color: colors.secondaryText }]}></Text>
-              </TouchableOpacity>
-            </View>
-          ))}
-        </View>
-      ))}
-
-      {/* Daily Goals */}
-      <View style={[styles.goalsCard, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
-        <Text style={[styles.goalsTitle, { color: colors.text }]}>Daily Goals</Text>
-        <View style={styles.goalRow}>
-          <Text style={[styles.goalLabel, { color: colors.tertiaryText }]}>Steps</Text>
-          <Text style={[styles.goalValue, { color: colors.secondaryText }]}>7,500 / 10,000</Text>
-        </View>
-        <ProgressBar value={7500} max={10000} color={colors.info} trackColor={colors.progressTrack} />
-        <View style={[styles.goalRow, { marginTop: 12 }]}>
-          <Text style={[styles.goalLabel, { color: colors.tertiaryText }]}>Active Minutes</Text>
-          <Text style={[styles.goalValue, { color: colors.secondaryText }]}>28 / 45</Text>
-        </View>
-        <ProgressBar value={28} max={45} color={colors.warning} trackColor={colors.progressTrack} />
-        <View style={[styles.goalRow, { marginTop: 12 }]}>
-          <Text style={[styles.goalLabel, { color: colors.tertiaryText }]}>Calories Burned</Text>
-          <Text style={[styles.goalValue, { color: colors.secondaryText }]}>420 / 600</Text>
-        </View>
-        <ProgressBar value={420} max={600} color={colors.danger} trackColor={colors.progressTrack} />
-      </View>
-
-      {/* Ready for lunch recommendation */}
-      <View style={[styles.recommendCard, { backgroundColor: colors.darkCard, shadowColor: colors.shadow }]}>
-        <View>
-          <Text style={[styles.recommendTitle, { color: colors.darkCardText }]}>Ready for lunch?</Text>
-          <Text style={[styles.recommendSub, { color: colors.darkCardSubtext }]}>
-            Follow your personalised nutrition plan to maintain your BMI goal.
+        ))
+      ) : (
+        <View style={[styles.mealSection, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
+          <Text style={[styles.mealSectionTitle, { color: colors.text, marginBottom: 6 }]}>
+            No meals planned yet
           </Text>
-          <Text style={[styles.recommendNote, { color: colors.primary }]}>3 meals tailored for you</Text>
+          <Text style={[styles.mealDetail, { color: colors.secondaryText }]}>
+            Go to the Recipes tab to select your meals
+          </Text>
         </View>
-        <TouchableOpacity style={[styles.recommendBtn, { backgroundColor: colors.primary }]}>
-          <Text style={styles.recommendBtnText}>See Meal Plan </Text>
-        </TouchableOpacity>
-      </View>
+      )}
+
+      {/* Recommendation card */}
+      {!hasMealPlan && (
+        <View style={[styles.recommendCard, { backgroundColor: colors.darkCard, shadowColor: colors.shadow }]}>
+          <View>
+            <Text style={[styles.recommendTitle, { color: colors.darkCardText }]}>Ready for lunch?</Text>
+            <Text style={[styles.recommendSub, { color: colors.darkCardSubtext }]}>
+              Follow your personalised nutrition plan to maintain your BMI goal.
+            </Text>
+            <Text style={[styles.recommendNote, { color: colors.primary }]}>Meals tailored for you</Text>
+          </View>
+          <TouchableOpacity
+            style={[styles.recommendBtn, { backgroundColor: colors.primary }]}
+            onPress={() => router.push("/(tabs)/recipes" as any)}
+          >
+            <Text style={styles.recommendBtnText}>See Meal Plan</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <View style={{ height: 20 }} />
     </ScrollView>
@@ -269,6 +299,12 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 8,
   },
+  overLimitAlert: {
+    marginTop: 10,
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#D32F2F",
+  },
   progressTrack: {
     height: 8,
     borderRadius: 4,
@@ -293,7 +329,6 @@ const styles = StyleSheet.create({
   },
   mealSectionTitle: { fontSize: 15, fontWeight: "700" },
   mealSectionKcal: { fontSize: 13, fontWeight: "600" },
-  plannedBadge: { fontSize: 12, fontStyle: "italic" },
   mealRow: { flexDirection: "row", alignItems: "center", marginBottom: 8 },
   mealIcon: {
     width: 40,
@@ -307,31 +342,6 @@ const styles = StyleSheet.create({
   mealInfo: { flex: 1 },
   mealName: { fontSize: 14, fontWeight: "600" },
   mealDetail: { fontSize: 12, marginTop: 2 },
-  mealEditBtn: { padding: 6 },
-  mealEditText: { fontSize: 16 },
-
-  goalsCard: {
-    marginHorizontal: 16,
-    marginBottom: 12,
-    borderRadius: 16,
-    padding: 16,
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 1,
-  },
-  goalsTitle: {
-    fontSize: 15,
-    fontWeight: "700",
-    marginBottom: 12,
-  },
-  goalRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 6,
-  },
-  goalLabel: { fontSize: 13, fontWeight: "600" },
-  goalValue: { fontSize: 13 },
-
   recommendCard: {
     marginHorizontal: 16,
     marginBottom: 12,

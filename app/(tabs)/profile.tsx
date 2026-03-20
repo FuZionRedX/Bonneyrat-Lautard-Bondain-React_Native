@@ -380,7 +380,6 @@ export default function ProfileScreen() {
       {/* Menu */}
       <View style={[styles.menuCard, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
         <MenuItem emoji={'\u{1F514}'} label="Notifications" colors={colors} />
-        <MenuItem emoji={'\u{1F517}'} label="Sync Devices" colors={colors} />
         <MenuItem
           emoji={'\u2699\uFE0F'}
           label="Settings"
