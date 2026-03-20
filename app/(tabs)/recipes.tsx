@@ -87,7 +87,7 @@ export default function RecipesScreen() {
   const { profile } = useProfile();
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
-  const [selectedByCategory, setSelectedByCategory] = useState<Partial<Record<MealCategory, number>>>({});
+  const [selectedByCategory, setSelectedByCategory] = useState<Partial<Record<MealCategory, number[]>>>({});
 
   const heightCm = parseProfileNumber(profile.height);
   const weightKg = parseProfileNumber(profile.weight);
@@ -151,11 +151,11 @@ export default function RecipesScreen() {
     }
 
     setSelectedByCategory((previous) => {
-      const next: Partial<Record<MealCategory, number>> = { ...previous };
+      const next: Partial<Record<MealCategory, number[]>> = { ...previous };
 
       CATEGORY_ORDER.forEach((category) => {
-        if (!next[category] && optionsByCategory[category][0]) {
-          next[category] = optionsByCategory[category][0].id;
+        if ((!next[category] || next[category].length === 0) && optionsByCategory[category][0]) {
+          next[category] = [optionsByCategory[category][0].id];
         }
       });
 
@@ -166,10 +166,10 @@ export default function RecipesScreen() {
   const selectedMeals = useMemo(() => {
     if (!optionsByCategory) return [] as Meal[];
 
-    return CATEGORY_ORDER.map((category) => {
-      const selectedId = selectedByCategory[category];
-      return optionsByCategory[category].find((meal) => meal.id === selectedId) ?? null;
-    }).filter((meal): meal is Meal => meal !== null);
+    return CATEGORY_ORDER.flatMap((category) => {
+      const selectedIds = selectedByCategory[category] ?? [];
+      return optionsByCategory[category].filter((meal) => selectedIds.includes(meal.id));
+    });
   }, [optionsByCategory, selectedByCategory]);
 
   const finalPlanCalories = selectedMeals.reduce((total, meal) => total + meal.totalCalories, 0);
@@ -179,7 +179,7 @@ export default function RecipesScreen() {
   const adviceText = !hasMetrics
     ? 'Add age, height, weight, and gender in your profile to generate a personalized meal plan.'
     : needsWeightLoss
-      ? 'You should aim to lose weight. Choose one option per category to build your daily plan.'
+      ? 'You should aim to lose weight. Choose one or more options per category to build your daily plan.'
       : 'You do not currently need to lose weight. Continue with your current meal plan.';
 
   return (
@@ -234,7 +234,8 @@ export default function RecipesScreen() {
               </Text>
 
               {optionsByCategory[category].map((meal) => {
-                const selected = selectedByCategory[category] === meal.id;
+                const selectedIds = selectedByCategory[category] ?? [];
+                const selected = selectedIds.includes(meal.id);
 
                 return (
                   <TouchableOpacity
@@ -245,10 +246,13 @@ export default function RecipesScreen() {
                       selected && { borderColor: colors.primary, backgroundColor: colors.selectedBackground },
                     ]}
                     onPress={() =>
-                      setSelectedByCategory((previous) => ({
-                        ...previous,
-                        [category]: meal.id,
-                      }))
+                      setSelectedByCategory((previous) => {
+                        const prev = previous[category] ?? [];
+                        const next = prev.includes(meal.id)
+                          ? prev.filter((id) => id !== meal.id)
+                          : [...prev, meal.id];
+                        return { ...previous, [category]: next };
+                      })
                     }
                   >
                     <View style={styles.optionInfo}>
