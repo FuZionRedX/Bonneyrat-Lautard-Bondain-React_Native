@@ -1,6 +1,7 @@
 # TODO
 
 ## Completed
+
 - [x] Allow multi-select per category in Recipes screen
   - [x] Change `selectedByCategory` state from single ID to array of IDs per category
   - [x] Toggle selection on tap (add/remove from array)
@@ -19,3 +20,10 @@
   - [x] Group ingredients by meal name
   - [x] Checkbox state for marking items as bought
   - [x] Empty state when no meals selected
+
+## In Progress
+
+- [x] Add browser-aware API base URL for database access
+  - [x] Detect web platform and use browser-reachable backend URL
+  - [x] Keep Android emulator default URL for native builds
+  - [x] Validate TypeScript/lint after API-layer changes
