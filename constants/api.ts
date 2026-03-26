@@ -75,6 +75,43 @@ export async function loginProfile(
   return { status: "connected", profile: data as GetProfileResponse };
 }
 
+export interface MealHistoryEntry {
+  meal_ids: Record<string, number[]>;
+  saved_at: string;
+}
+
+export async function saveMealHistory(
+  email: string,
+  mealIds: Record<string, number[]>,
+): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/save_meal_history.php`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, meal_ids: mealIds }),
+    });
+    const data = await res.json();
+    return !!data.success;
+  } catch {
+    return false;
+  }
+}
+
+export async function getMealHistory(
+  email: string,
+): Promise<MealHistoryEntry[]> {
+  try {
+    const res = await fetch(
+      `${API_BASE}/get_meal_history.php?email=${encodeURIComponent(email)}`,
+    );
+    const data = await res.json();
+    if (!Array.isArray(data)) return [];
+    return data as MealHistoryEntry[];
+  } catch {
+    return [];
+  }
+}
+
 export async function deleteAccount(email: string): Promise<boolean> {
   try {
     const res = await fetch(`${API_BASE}/delete_account.php`, {

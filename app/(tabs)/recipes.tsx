@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 
 import { Colors } from '@/constants/theme';
+import { getMealHistory, saveMealHistory } from '@/constants/api';
 import { Meal, MealCategory, useMealPlan } from '@/contexts/meal-plan-context';
 import { useProfile } from '@/contexts/profile-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -78,22 +79,32 @@ function getCombinations<T>(arr: T[], size: number): T[][] {
   return [...withFirst, ...withoutFirst];
 }
 
-// Finds the subset of meals (1–maxSize) whose total calories is closest to target
-function findBestCombo(meals: Meal[], target: number, maxSize = 3): Meal[] {
-  let best: Meal[] = [];
-  let bestDiff = Infinity;
+// Finds the subset of meals (1–maxSize) closest to target, avoiding recently-used combos.
+// recentlySeen: list of sorted meal-id arrays used in the past 7 days for this category.
+// Strategy: prefer an unused combo, falling back to the best calorie match if all were used.
+function findBestCombo(meals: Meal[], target: number, recentlySeen: number[][], maxSize = 3): Meal[] {
+  type Candidate = { combo: Meal[]; diff: number; usedRecently: boolean };
+  const candidates: Candidate[] = [];
 
   for (let size = 1; size <= Math.min(maxSize, meals.length); size++) {
     for (const combo of getCombinations(meals, size)) {
       const total = combo.reduce((s, m) => s + m.totalCalories, 0);
       const diff = Math.abs(total - target);
-      if (diff < bestDiff) {
-        bestDiff = diff;
-        best = combo;
-      }
+      const ids = combo.map((m) => m.id).sort((a, b) => a - b);
+      const usedRecently = recentlySeen.some(
+        (used) => used.length === ids.length && used.every((id, i) => id === ids[i]),
+      );
+      candidates.push({ combo, diff, usedRecently });
     }
   }
-  return best;
+
+  // Prefer unused combos; among equals sort by calorie accuracy
+  candidates.sort((a, b) => {
+    if (a.usedRecently !== b.usedRecently) return a.usedRecently ? 1 : -1;
+    return a.diff - b.diff;
+  });
+
+  return candidates[0]?.combo ?? [];
 }
 
 export default function RecipesScreen() {
@@ -103,6 +114,26 @@ export default function RecipesScreen() {
   const { selectedByCategory, setSelectedByCategory, selectedMeals } = useMealPlan();
 
   const [expandedCategories, setExpandedCategories] = useState<Set<MealCategory>>(new Set());
+  // Per-category list of sorted meal-id arrays used in the last 7 days
+  const [recentHistory, setRecentHistory] = useState<Record<MealCategory, number[][]>>({
+    breakfast: [], lunch: [], dinner: [], snack: [],
+  });
+
+  useEffect(() => {
+    if (!profile.email) return;
+    getMealHistory(profile.email).then((entries) => {
+      const history: Record<MealCategory, number[][]> = {
+        breakfast: [], lunch: [], dinner: [], snack: [],
+      };
+      for (const entry of entries) {
+        for (const cat of CATEGORY_ORDER) {
+          const ids = (entry.meal_ids[cat] ?? []).slice().sort((a: number, b: number) => a - b);
+          if (ids.length > 0) history[cat].push(ids);
+        }
+      }
+      setRecentHistory(history);
+    });
+  }, [profile.email]);
 
   const heightCm = parseProfileNumber(profile.height);
   const weightKg = parseProfileNumber(profile.weight);
@@ -139,14 +170,14 @@ export default function RecipesScreen() {
     }, { breakfast: [], lunch: [], dinner: [], snack: [] });
   }, []);
 
-  // Best combo per category: tries all subsets of 1–3 meals, picks closest total to the calorie target
+  // Best combo per category: tries all subsets of 1–3 meals, avoids recently-used combos
   const suggestedCombo = useMemo(() => {
     if (!categoryTargets) return null;
     return CATEGORY_ORDER.reduce<Record<MealCategory, Meal[]>>((acc, category) => {
-      acc[category] = findBestCombo(allMealsByCategory[category], categoryTargets[category]);
+      acc[category] = findBestCombo(allMealsByCategory[category], categoryTargets[category], recentHistory[category]);
       return acc;
     }, { breakfast: [], lunch: [], dinner: [], snack: [] });
-  }, [categoryTargets, allMealsByCategory]);
+  }, [categoryTargets, allMealsByCategory, recentHistory]);
 
   const suggestedComboCalories = useMemo(() => {
     if (!suggestedCombo) return 0;
@@ -177,6 +208,9 @@ export default function RecipesScreen() {
       next[category] = suggestedCombo[category].map((m) => m.id);
     });
     setSelectedByCategory(next);
+    if (profile.email) {
+      saveMealHistory(profile.email, next as Record<string, number[]>);
+    }
   }
 
   function toggleCategory(category: MealCategory) {
