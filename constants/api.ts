@@ -1,6 +1,26 @@
 import { ProfileData } from "@/contexts/profile-context";
+import { Platform } from "react-native";
 
-export const API_BASE = "http://10.0.2.2/health_app";
+const NATIVE_DEFAULT_API_BASE = "http://10.0.2.2/health_app";
+
+function resolveWebApiBase() {
+  const envWebBase = process.env.EXPO_PUBLIC_WEB_API_BASE_URL;
+  if (envWebBase && envWebBase.trim().length > 0) {
+    return envWebBase;
+  }
+
+  if (typeof window !== "undefined" && window.location?.hostname) {
+    // Expo web runs on a different port than Apache/PHP; use same host on default web port.
+    return `${window.location.protocol}//${window.location.hostname}/health_app`;
+  }
+
+  return "/health_app";
+}
+
+export const API_BASE =
+  Platform.OS === "web"
+    ? resolveWebApiBase()
+    : process.env.EXPO_PUBLIC_API_BASE_URL || NATIVE_DEFAULT_API_BASE;
 
 export interface GetProfileResponse extends Omit<ProfileData, "password"> {
   wasFirstOpen?: boolean;
