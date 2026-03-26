@@ -1,4 +1,4 @@
-import { deleteAccount } from "@/constants/api";
+import { deleteAccount, saveProfile } from "@/constants/api";
 import { Colors } from "@/constants/theme";
 import { useProfile } from "@/contexts/profile-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
@@ -22,7 +22,7 @@ const LAST_PROFILE_EMAIL_KEY = "last_profile_email";
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { logout, profile } = useProfile();
+  const { logout, profile, updateProfile } = useProfile();
   const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
   const [themePreference, setThemePreference] =
@@ -30,6 +30,19 @@ export default function SettingsScreen() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
+    if (profile.email) {
+      const connectedPreference: ThemePreference = profile.darkMode
+        ? "dark"
+        : "light";
+
+      setThemePreference(connectedPreference);
+      Appearance.setColorScheme(connectedPreference);
+      AsyncStorage.setItem(THEME_PREF_KEY, connectedPreference).catch(() => {
+        /* no-op */
+      });
+      return;
+    }
+
     AsyncStorage.getItem(THEME_PREF_KEY)
       .then((savedPreference: string | null) => {
         if (savedPreference === "light" || savedPreference === "dark") {
@@ -40,12 +53,32 @@ export default function SettingsScreen() {
       .catch(() => {
         /* no-op */
       });
-  }, []);
+  }, [profile.darkMode, profile.email]);
 
   const applyThemePreference = async (nextPreference: ThemePreference) => {
     setThemePreference(nextPreference);
     Appearance.setColorScheme(nextPreference);
     await AsyncStorage.setItem(THEME_PREF_KEY, nextPreference);
+
+    if (!profile.email) {
+      return;
+    }
+
+    const nextProfile = {
+      ...profile,
+      darkMode: nextPreference === "dark",
+    };
+
+    updateProfile(nextProfile);
+
+    try {
+      await saveProfile(nextProfile);
+    } catch {
+      Alert.alert(
+        "Sync failed",
+        "Theme changed locally, but we could not save dark mode to the server.",
+      );
+    }
   };
 
   const openLegal = (title: string) => {
@@ -122,14 +155,30 @@ export default function SettingsScreen() {
 
         {/* Appearance */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.subtitleText }]}>Appearance</Text>
-          <View style={[styles.card, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
+          <Text style={[styles.sectionTitle, { color: colors.subtitleText }]}>
+            Appearance
+          </Text>
+          <View
+            style={[
+              styles.card,
+              {
+                backgroundColor: colors.cardBackground,
+                shadowColor: colors.shadow,
+              },
+            ]}
+          >
             <View style={styles.themeSwitchRow}>
               <TouchableOpacity
                 style={[
                   styles.themeChip,
-                  { borderColor: colors.border, backgroundColor: colors.inputBackground },
-                  themePreference === "light" && { borderColor: colors.primary, backgroundColor: colors.primaryLight },
+                  {
+                    borderColor: colors.border,
+                    backgroundColor: colors.inputBackground,
+                  },
+                  themePreference === "light" && {
+                    borderColor: colors.primary,
+                    backgroundColor: colors.primaryLight,
+                  },
                 ]}
                 onPress={() => applyThemePreference("light")}
               >
@@ -137,7 +186,9 @@ export default function SettingsScreen() {
                   style={[
                     styles.themeChipText,
                     { color: colors.labelText },
-                    themePreference === "light" && { color: colors.primaryText },
+                    themePreference === "light" && {
+                      color: colors.primaryText,
+                    },
                   ]}
                 >
                   White mode
@@ -146,8 +197,14 @@ export default function SettingsScreen() {
               <TouchableOpacity
                 style={[
                   styles.themeChip,
-                  { borderColor: colors.border, backgroundColor: colors.inputBackground },
-                  themePreference === "dark" && { borderColor: colors.primary, backgroundColor: colors.primaryLight },
+                  {
+                    borderColor: colors.border,
+                    backgroundColor: colors.inputBackground,
+                  },
+                  themePreference === "dark" && {
+                    borderColor: colors.primary,
+                    backgroundColor: colors.primaryLight,
+                  },
                 ]}
                 onPress={() => applyThemePreference("dark")}
               >
@@ -167,17 +224,35 @@ export default function SettingsScreen() {
 
         {/* Personal Information */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.subtitleText }]}>Personal Information</Text>
-          <View style={[styles.card, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
+          <Text style={[styles.sectionTitle, { color: colors.subtitleText }]}>
+            Personal Information
+          </Text>
+          <View
+            style={[
+              styles.card,
+              {
+                backgroundColor: colors.cardBackground,
+                shadowColor: colors.shadow,
+              },
+            ]}
+          >
             <TouchableOpacity
               style={[styles.row, { borderBottomColor: colors.borderLight }]}
               onPress={() => router.push("/profile-setup" as any)}
               activeOpacity={0.75}
             >
-              <Text style={[styles.rowLabel, { color: colors.text }]}>Edit personal information</Text>
+              <Text style={[styles.rowLabel, { color: colors.text }]}>
+                Edit personal information
+              </Text>
               <View style={styles.rowRight}>
-                <Text style={[styles.rowValue, { color: colors.subtitleText }]}>Open</Text>
-                <Text style={[styles.rowArrow, { color: colors.secondaryText }]}>&rsaquo;</Text>
+                <Text style={[styles.rowValue, { color: colors.subtitleText }]}>
+                  Open
+                </Text>
+                <Text
+                  style={[styles.rowArrow, { color: colors.secondaryText }]}
+                >
+                  &rsaquo;
+                </Text>
               </View>
             </TouchableOpacity>
           </View>
@@ -185,19 +260,43 @@ export default function SettingsScreen() {
 
         {/* Legal */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.subtitleText }]}>Legal</Text>
-          <View style={[styles.card, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
-            {["Cookie policy", "Personal data protection policy", "Terms and conditions of use"].map((label) => (
+          <Text style={[styles.sectionTitle, { color: colors.subtitleText }]}>
+            Legal
+          </Text>
+          <View
+            style={[
+              styles.card,
+              {
+                backgroundColor: colors.cardBackground,
+                shadowColor: colors.shadow,
+              },
+            ]}
+          >
+            {[
+              "Cookie policy",
+              "Personal data protection policy",
+              "Terms and conditions of use",
+            ].map((label) => (
               <TouchableOpacity
                 key={label}
                 style={[styles.row, { borderBottomColor: colors.borderLight }]}
                 onPress={() => openLegal(label)}
                 activeOpacity={0.75}
               >
-                <Text style={[styles.rowLabel, { color: colors.text }]}>{label}</Text>
+                <Text style={[styles.rowLabel, { color: colors.text }]}>
+                  {label}
+                </Text>
                 <View style={styles.rowRight}>
-                  <Text style={[styles.rowValue, { color: colors.subtitleText }]}>View</Text>
-                  <Text style={[styles.rowArrow, { color: colors.secondaryText }]}>&rsaquo;</Text>
+                  <Text
+                    style={[styles.rowValue, { color: colors.subtitleText }]}
+                  >
+                    View
+                  </Text>
+                  <Text
+                    style={[styles.rowArrow, { color: colors.secondaryText }]}
+                  >
+                    &rsaquo;
+                  </Text>
                 </View>
               </TouchableOpacity>
             ))}
@@ -206,8 +305,18 @@ export default function SettingsScreen() {
 
         {/* Account */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.subtitleText }]}>Account</Text>
-          <View style={[styles.card, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
+          <Text style={[styles.sectionTitle, { color: colors.subtitleText }]}>
+            Account
+          </Text>
+          <View
+            style={[
+              styles.card,
+              {
+                backgroundColor: colors.cardBackground,
+                shadowColor: colors.shadow,
+              },
+            ]}
+          >
             <TouchableOpacity
               style={[styles.row, { borderBottomColor: colors.borderLight }]}
               onPress={isDeleting ? undefined : confirmDeleteAccount}
