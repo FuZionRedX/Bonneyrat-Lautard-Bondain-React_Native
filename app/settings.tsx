@@ -36,7 +36,7 @@ export default function SettingsScreen() {
         : "light";
 
       setThemePreference(connectedPreference);
-      Appearance.setColorScheme(connectedPreference);
+      Appearance.setColorScheme?.(connectedPreference);
       AsyncStorage.setItem(THEME_PREF_KEY, connectedPreference).catch(() => {
         /* no-op */
       });
@@ -47,7 +47,7 @@ export default function SettingsScreen() {
       .then((savedPreference: string | null) => {
         if (savedPreference === "light" || savedPreference === "dark") {
           setThemePreference(savedPreference);
-          Appearance.setColorScheme(savedPreference);
+          Appearance.setColorScheme?.(savedPreference);
         }
       })
       .catch(() => {
@@ -57,7 +57,7 @@ export default function SettingsScreen() {
 
   const applyThemePreference = async (nextPreference: ThemePreference) => {
     setThemePreference(nextPreference);
-    Appearance.setColorScheme(nextPreference);
+    Appearance.setColorScheme?.(nextPreference);
     await AsyncStorage.setItem(THEME_PREF_KEY, nextPreference);
 
     if (!profile.email) {
