@@ -28,7 +28,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 
     $stmt = $conn->prepare("
-        SELECT email, password, full_name, age, gender, height, weight, goal
+        SELECT email, password, full_name, age, gender, height, weight, goal, dark_mode
         FROM users
         WHERE email = ?
         LIMIT 1
@@ -67,7 +67,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         "gender" => $row["gender"],
         "height" => (string)$row["height"],
         "weight" => (string)$row["weight"],
-        "goal" => $row["goal"]
+        "goal" => $row["goal"],
+        "darkMode" => ((int)($row["dark_mode"] ?? 0)) === 1
     ]);
     exit;
 }
@@ -80,7 +81,7 @@ if ($email === "") {
 }
 
 $stmt = $conn->prepare("
-    SELECT email, full_name, age, gender, height, weight, goal
+    SELECT email, full_name, age, gender, height, weight, goal, dark_mode
     FROM users
     WHERE email = ?
     LIMIT 1
@@ -101,6 +102,7 @@ echo json_encode([
     "gender" => $row["gender"],
     "height" => (string)$row["height"],
     "weight" => (string)$row["weight"],
-    "goal" => $row["goal"]
+    "goal" => $row["goal"],
+    "darkMode" => ((int)($row["dark_mode"] ?? 0)) === 1
 ]);
 ?>

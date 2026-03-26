@@ -1,10 +1,10 @@
 import { loginProfile } from "@/constants/api";
 import React, {
-  createContext,
-  ReactNode,
-  useContext,
-  useMemo,
-  useState,
+    createContext,
+    ReactNode,
+    useContext,
+    useMemo,
+    useState,
 } from "react";
 
 export interface ProfileData {
@@ -16,6 +16,7 @@ export interface ProfileData {
   height: string;
   weight: string;
   goal: string;
+  darkMode: boolean;
 }
 
 const defaultProfile: ProfileData = {
@@ -27,6 +28,7 @@ const defaultProfile: ProfileData = {
   height: "",
   weight: "",
   goal: "",
+  darkMode: false,
 };
 
 interface ProfileContextValue {

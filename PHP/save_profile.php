@@ -21,6 +21,7 @@ $gender = trim($data["gender"] ?? "");
 $height = trim((string)($data["height"] ?? ""));
 $weight = trim((string)($data["weight"] ?? ""));
 $goal = trim($data["goal"] ?? "");
+$darkmode = !empty($data["darkMode"]) ? 1 : 0;
 
 if ($email === "" || $plainPassword === "") {
     echo json_encode(["success" => false, "error" => "missing_fields"]);
@@ -30,8 +31,8 @@ if ($email === "" || $plainPassword === "") {
 $hashedPassword = password_hash($plainPassword, PASSWORD_DEFAULT);
 
 $stmt = $conn->prepare(
-    "INSERT INTO users (email, password, full_name, age, gender, height, weight, goal)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    "INSERT INTO users (email, password, full_name, age, gender, height, weight, goal, dark_mode)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON DUPLICATE KEY UPDATE
        password=VALUES(password),
        full_name=VALUES(full_name),
@@ -39,11 +40,12 @@ $stmt = $conn->prepare(
        gender=VALUES(gender),
        height=VALUES(height),
        weight=VALUES(weight),
-       goal=VALUES(goal)"
+        goal=VALUES(goal),
+       dark_mode=VALUES(dark_mode)
 );
 
 $stmt->bind_param(
-    "sssissss",
+        "sssissssi",
     $email,
     $hashedPassword,
     $fullName,
@@ -51,7 +53,8 @@ $stmt->bind_param(
     $gender,
     $height,
     $weight,
-    $goal
+    $goal,
+    $darkmode
 );
 
 $ok = $stmt->execute();
