@@ -1,5 +1,5 @@
 import mealsData from '@/data/meals.json';
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -68,11 +68,41 @@ function calculateBmr(weightKg: number, heightCm: number, ageYears: number, gend
   return base - 78;
 }
 
+// Returns all combinations of `size` elements from `arr`
+function getCombinations<T>(arr: T[], size: number): T[][] {
+  if (size === 0) return [[]];
+  if (arr.length < size) return [];
+  const [first, ...rest] = arr;
+  const withFirst = getCombinations(rest, size - 1).map((c) => [first, ...c]);
+  const withoutFirst = getCombinations(rest, size);
+  return [...withFirst, ...withoutFirst];
+}
+
+// Finds the subset of meals (1–maxSize) whose total calories is closest to target
+function findBestCombo(meals: Meal[], target: number, maxSize = 3): Meal[] {
+  let best: Meal[] = [];
+  let bestDiff = Infinity;
+
+  for (let size = 1; size <= Math.min(maxSize, meals.length); size++) {
+    for (const combo of getCombinations(meals, size)) {
+      const total = combo.reduce((s, m) => s + m.totalCalories, 0);
+      const diff = Math.abs(total - target);
+      if (diff < bestDiff) {
+        bestDiff = diff;
+        best = combo;
+      }
+    }
+  }
+  return best;
+}
+
 export default function RecipesScreen() {
   const { profile } = useProfile();
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
   const { selectedByCategory, setSelectedByCategory, selectedMeals } = useMealPlan();
+
+  const [expandedCategories, setExpandedCategories] = useState<Set<MealCategory>>(new Set());
 
   const heightCm = parseProfileNumber(profile.height);
   const weightKg = parseProfileNumber(profile.weight);
@@ -89,64 +119,77 @@ export default function RecipesScreen() {
     if (!needsWeightLoss) {
       return Math.round(maintenance);
     }
-
     const target = Math.round(maintenance - WEIGHT_LOSS_DEFICIT);
     return Math.max(target, 1200);
   }, [bmr, needsWeightLoss]);
 
   const categoryTargets = useMemo(() => {
     if (dailyCalories === null) return null;
-
     return CATEGORY_ORDER.reduce<Record<MealCategory, number>>((acc, category) => {
       acc[category] = Math.round(dailyCalories * CALORIE_SPLIT[category]);
       return acc;
-    }, {
-      breakfast: 0,
-      lunch: 0,
-      dinner: 0,
-      snack: 0,
-    });
+    }, { breakfast: 0, lunch: 0, dinner: 0, snack: 0 });
   }, [dailyCalories]);
 
-  const optionsByCategory = useMemo(() => {
-    if (!categoryTargets) return null;
-
+  // All meals grouped by category (no slice — full list for dropdowns)
+  const allMealsByCategory = useMemo(() => {
     return CATEGORY_ORDER.reduce<Record<MealCategory, Meal[]>>((acc, category) => {
-      const target = categoryTargets[category];
-      const options = MEALS
-        .filter((meal) => meal.category === category)
-        .sort(
-          (a, b) =>
-            Math.abs(a.totalCalories - target) - Math.abs(b.totalCalories - target),
-        )
-        .slice(0, 4);
-      acc[category] = options;
+      acc[category] = MEALS.filter((m) => m.category === category);
       return acc;
-    }, {
-      breakfast: [],
-      lunch: [],
-      dinner: [],
-      snack: [],
-    });
-  }, [categoryTargets]);
+    }, { breakfast: [], lunch: [], dinner: [], snack: [] });
+  }, []);
+
+  // Best combo per category: tries all subsets of 1–3 meals, picks closest total to the calorie target
+  const suggestedCombo = useMemo(() => {
+    if (!categoryTargets) return null;
+    return CATEGORY_ORDER.reduce<Record<MealCategory, Meal[]>>((acc, category) => {
+      acc[category] = findBestCombo(allMealsByCategory[category], categoryTargets[category]);
+      return acc;
+    }, { breakfast: [], lunch: [], dinner: [], snack: [] });
+  }, [categoryTargets, allMealsByCategory]);
+
+  const suggestedComboCalories = useMemo(() => {
+    if (!suggestedCombo) return 0;
+    return CATEGORY_ORDER.reduce(
+      (total, cat) => total + suggestedCombo[cat].reduce((s, m) => s + m.totalCalories, 0),
+      0,
+    );
+  }, [suggestedCombo]);
 
   useEffect(() => {
-    if (!needsWeightLoss || !optionsByCategory) {
-      return;
-    }
+    if (!needsWeightLoss || !suggestedCombo) return;
 
     setSelectedByCategory((previous) => {
       const next: Partial<Record<MealCategory, number[]>> = { ...previous };
-
       CATEGORY_ORDER.forEach((category) => {
-        if ((!next[category] || next[category].length === 0) && optionsByCategory[category][0]) {
-          next[category] = [optionsByCategory[category][0].id];
+        if (!next[category] || next[category]!.length === 0) {
+          next[category] = suggestedCombo[category].map((m) => m.id);
         }
       });
-
       return next;
     });
-  }, [needsWeightLoss, optionsByCategory]);
+  }, [needsWeightLoss, suggestedCombo]);
+
+  function applySuggestedCombo() {
+    if (!suggestedCombo) return;
+    const next: Partial<Record<MealCategory, number[]>> = {};
+    CATEGORY_ORDER.forEach((category) => {
+      next[category] = suggestedCombo[category].map((m) => m.id);
+    });
+    setSelectedByCategory(next);
+  }
+
+  function toggleCategory(category: MealCategory) {
+    setExpandedCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(category)) {
+        next.delete(category);
+      } else {
+        next.add(category);
+      }
+      return next;
+    });
+  }
 
   const finalPlanCalories = selectedMeals.reduce((total, meal) => total + meal.totalCalories, 0);
   const hasMetrics = bmi !== null && bmr !== null && dailyCalories !== null;
@@ -188,8 +231,55 @@ export default function RecipesScreen() {
         </View>
       )}
 
-      {needsWeightLoss && categoryTargets && optionsByCategory && (
+      {needsWeightLoss && categoryTargets && suggestedCombo && (
         <>
+          {/* Suggested combo card */}
+          <View style={[styles.suggestedCard, { backgroundColor: colors.darkCard, shadowColor: colors.shadow }]}>
+            <View style={styles.suggestedHeader}>
+              <View>
+                <Text style={[styles.suggestedTitle, { color: colors.darkCardText }]}>Suggested Combo</Text>
+                <Text style={[styles.suggestedSubtitle, { color: colors.darkCardSubtext }]}>
+                  Best match for your {dailyCalories} kcal target
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={[styles.applyButton, { backgroundColor: colors.primary }]}
+                onPress={applySuggestedCombo}
+              >
+                <Text style={styles.applyButtonText}>Apply</Text>
+              </TouchableOpacity>
+            </View>
+
+            {CATEGORY_ORDER.map((category) => {
+              const meals = suggestedCombo[category];
+              if (!meals.length) return null;
+              const categoryTotal = meals.reduce((s, m) => s + m.totalCalories, 0);
+              return (
+                <View key={category} style={[styles.suggestedCategoryBlock, { borderBottomColor: 'rgba(255,255,255,0.08)' }]}>
+                  <View style={styles.suggestedCategoryHeader}>
+                    <Text style={styles.suggestedEmoji}>{getMealEmoji(category)}</Text>
+                    <Text style={[styles.suggestedCategoryLabel, { color: colors.darkCardSubtext }]}>
+                      {CATEGORY_LABELS[category]} · target {categoryTargets[category]} kcal
+                    </Text>
+                    <Text style={styles.suggestedMealKcal}>{categoryTotal} kcal</Text>
+                  </View>
+                  {meals.map((meal) => (
+                    <View key={meal.id} style={styles.suggestedRow}>
+                      <Text style={[styles.suggestedMealName, { color: colors.darkCardText }]}>{meal.name}</Text>
+                      <Text style={[styles.suggestedMealSub, { color: colors.darkCardSubtext }]}>{meal.totalCalories} kcal</Text>
+                    </View>
+                  ))}
+                </View>
+              );
+            })}
+
+            <View style={[styles.suggestedTotal, { borderTopColor: 'rgba(255,255,255,0.15)' }]}>
+              <Text style={[styles.suggestedTotalLabel, { color: colors.darkCardText }]}>Total</Text>
+              <Text style={styles.suggestedTotalValue}>{suggestedComboCalories} kcal</Text>
+            </View>
+          </View>
+
+          {/* Calorie split */}
           <View style={[styles.splitCard, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
             <Text style={[styles.splitTitle, { color: colors.text }]}>Calorie Split Across 4 Meals</Text>
             {CATEGORY_ORDER.map((category) => (
@@ -200,50 +290,89 @@ export default function RecipesScreen() {
             ))}
           </View>
 
-          {CATEGORY_ORDER.map((category) => (
-            <View key={category} style={[styles.categoryCard, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
-              <Text style={[styles.categoryTitle, { color: colors.text }]}>
-                {getMealEmoji(category)} {CATEGORY_LABELS[category]} Options
-              </Text>
-              <Text style={[styles.categoryHint, { color: colors.secondaryText }]}>
-                Target: {categoryTargets[category]} kcal
-              </Text>
+          {/* Category dropdowns */}
+          {CATEGORY_ORDER.map((category) => {
+            const isExpanded = expandedCategories.has(category);
+            const meals = allMealsByCategory[category];
+            const selectedIds = selectedByCategory[category] ?? [];
+            const selectedInCategory = meals.filter((m) => selectedIds.includes(m.id));
 
-              {optionsByCategory[category].map((meal) => {
-                const selectedIds = selectedByCategory[category] ?? [];
-                const selected = selectedIds.includes(meal.id);
+            return (
+              <View key={category} style={[styles.categoryCard, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
+                <TouchableOpacity
+                  style={styles.dropdownHeader}
+                  onPress={() => toggleCategory(category)}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.dropdownHeaderLeft}>
+                    <Text style={[styles.categoryTitle, { color: colors.text }]}>
+                      {getMealEmoji(category)} {CATEGORY_LABELS[category]}
+                    </Text>
+                    <Text style={[styles.categoryHint, { color: colors.secondaryText }]}>
+                      Target: {categoryTargets[category]} kcal · {meals.length} options
+                    </Text>
+                  </View>
+                  <Text style={[styles.dropdownChevron, { color: colors.secondaryText }]}>
+                    {isExpanded ? '▲' : '▼'}
+                  </Text>
+                </TouchableOpacity>
 
-                return (
-                  <TouchableOpacity
-                    key={meal.id}
-                    style={[
-                      styles.optionCard,
-                      { borderColor: colors.border, backgroundColor: colors.cardBackground },
-                      selected && { borderColor: colors.primary, backgroundColor: colors.selectedBackground },
-                    ]}
-                    onPress={() =>
-                      setSelectedByCategory((previous) => {
-                        const prev = previous[category] ?? [];
-                        const next = prev.includes(meal.id)
-                          ? prev.filter((id) => id !== meal.id)
-                          : [...prev, meal.id];
-                        return { ...previous, [category]: next };
-                      })
-                    }
-                  >
-                    <View style={styles.optionInfo}>
-                      <Text style={[styles.optionName, { color: colors.text }]}>{meal.name}</Text>
-                      <Text style={[styles.optionMeta, { color: colors.secondaryText }]}>
-                        {meal.ingredients.length} ingredients - {meal.calorieBand}
-                      </Text>
-                    </View>
-                    <Text style={[styles.optionKcal, { color: colors.primary }]}>{meal.totalCalories} kcal</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          ))}
+                {/* Selected preview when collapsed */}
+                {!isExpanded && selectedInCategory.length > 0 && (
+                  <View style={[styles.selectedPreview, { borderTopColor: colors.borderLight }]}>
+                    {selectedInCategory.map((meal) => (
+                      <View key={meal.id} style={styles.selectedPreviewRow}>
+                        <Text style={[styles.selectedPreviewName, { color: colors.primary }]} numberOfLines={1}>
+                          {meal.name}
+                        </Text>
+                        <Text style={[styles.selectedPreviewKcal, { color: colors.primary }]}>{meal.totalCalories} kcal</Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
 
+                {/* Expanded list */}
+                {isExpanded && (
+                  <View style={[styles.dropdownList, { borderTopColor: colors.borderLight }]}>
+                    {meals.map((meal) => {
+                      const selected = selectedIds.includes(meal.id);
+                      return (
+                        <TouchableOpacity
+                          key={meal.id}
+                          style={[
+                            styles.optionCard,
+                            { borderColor: colors.border, backgroundColor: colors.cardBackground },
+                            selected && { borderColor: colors.primary, backgroundColor: colors.selectedBackground },
+                          ]}
+                          onPress={() =>
+                            setSelectedByCategory((previous) => {
+                              const prev = previous[category] ?? [];
+                              const next = prev.includes(meal.id)
+                                ? prev.filter((id) => id !== meal.id)
+                                : [...prev, meal.id];
+                              return { ...previous, [category]: next };
+                            })
+                          }
+                        >
+                          <View style={styles.optionInfo}>
+                            <Text style={[styles.optionName, { color: colors.text }]}>{meal.name}</Text>
+                            <Text style={[styles.optionMeta, { color: colors.secondaryText }]}>
+                              {meal.ingredients.length} ingredients · {meal.calorieBand}
+                            </Text>
+                          </View>
+                          <Text style={[styles.optionKcal, { color: selected ? colors.primary : colors.tertiaryText }]}>
+                            {meal.totalCalories} kcal
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                )}
+              </View>
+            );
+          })}
+
+          {/* Final plan summary */}
           <View style={[styles.finalPlanCard, { backgroundColor: colors.darkCard }]}>
             <Text style={[styles.finalPlanTitle, { color: colors.darkCardText }]}>Final Daily Meal Plan</Text>
             {selectedMeals.map((meal) => (
@@ -316,6 +445,61 @@ const styles = StyleSheet.create({
   maintainTitle: { fontSize: 14, fontWeight: '700', marginBottom: 4 },
   maintainText: { fontSize: 13 },
 
+  // Suggested combo card
+  suggestedCard: {
+    marginHorizontal: 16,
+    marginBottom: 12,
+    borderRadius: 14,
+    padding: 14,
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  suggestedHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  suggestedTitle: { fontSize: 15, fontWeight: '800' },
+  suggestedSubtitle: { fontSize: 12, marginTop: 2 },
+  applyButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  applyButtonText: { color: '#fff', fontWeight: '700', fontSize: 13 },
+  suggestedCategoryBlock: {
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+  },
+  suggestedCategoryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  suggestedCategoryLabel: { flex: 1, fontSize: 11, marginLeft: 6 },
+  suggestedEmoji: { fontSize: 16 },
+  suggestedRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingLeft: 22,
+    marginBottom: 3,
+  },
+  suggestedMealName: { fontSize: 13, fontWeight: '700', flex: 1, paddingRight: 8 },
+  suggestedMealSub: { fontSize: 12 },
+  suggestedMealKcal: { color: '#86EFAC', fontSize: 13, fontWeight: '700' },
+  suggestedTotal: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingTop: 10,
+    borderTopWidth: 1,
+    marginTop: 2,
+  },
+  suggestedTotalLabel: { fontWeight: '700', fontSize: 14 },
+  suggestedTotalValue: { color: '#86EFAC', fontWeight: '800', fontSize: 14 },
+
   splitCard: {
     marginHorizontal: 16,
     marginBottom: 12,
@@ -335,17 +519,44 @@ const styles = StyleSheet.create({
   splitLabel: { fontSize: 13 },
   splitValue: { fontSize: 13, fontWeight: '700' },
 
+  // Category dropdown
   categoryCard: {
     marginHorizontal: 16,
     marginBottom: 12,
     borderRadius: 14,
-    padding: 14,
     shadowOpacity: 0.04,
     shadowRadius: 6,
     elevation: 1,
+    overflow: 'hidden',
   },
+  dropdownHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 14,
+  },
+  dropdownHeaderLeft: { flex: 1 },
+  dropdownChevron: { fontSize: 12, marginLeft: 8 },
   categoryTitle: { fontSize: 15, fontWeight: '700' },
-  categoryHint: { fontSize: 12, marginTop: 2, marginBottom: 10 },
+  categoryHint: { fontSize: 12, marginTop: 2 },
+  selectedPreview: {
+    paddingHorizontal: 14,
+    paddingBottom: 12,
+    borderTopWidth: 1,
+  },
+  selectedPreviewRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingTop: 8,
+  },
+  selectedPreviewName: { fontSize: 13, fontWeight: '600', flex: 1, paddingRight: 8 },
+  selectedPreviewKcal: { fontSize: 13, fontWeight: '700' },
+  dropdownList: {
+    paddingHorizontal: 10,
+    paddingBottom: 10,
+    borderTopWidth: 1,
+    paddingTop: 8,
+  },
 
   optionCard: {
     borderRadius: 12,
