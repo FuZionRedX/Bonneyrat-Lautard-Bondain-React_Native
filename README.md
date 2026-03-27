@@ -1,50 +1,110 @@
-# Welcome to your Expo app 👋
+<p align="center">
+  <img src="https://img.shields.io/badge/Expo-54-blue?logo=expo" alt="Expo SDK 54" />
+  <img src="https://img.shields.io/badge/React_Native-0.81-61DAFB?logo=react" alt="React Native" />
+  <img src="https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Platform-Android%20%7C%20iOS%20%7C%20Web-green" alt="Platforms" />
+</p>
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+# NutriPlan - Meal Planning App
 
-## Get started
+A health and fitness meal planning app that provides **personalized nutrition recommendations** based on BMI & BMR calculations. Plan your meals, manage your groceries, and track your weekly eating habits — all in one place.
 
-1. Install dependencies
+---
 
-   ```bash
-   npm install
-   ```
+## Features
 
-2. Start the app
+| Feature | Description |
+|---------|-------------|
+| **Planner** | Daily meal overview with calorie tracking and over-limit alerts |
+| **Recipes** | Smart meal suggestions based on your health profile (BMI/BMR) |
+| **Groceries** | Auto-generated shopping list from your selected meals |
+| **Profile** | Personal health data, goals, and app settings |
+| **Meal History** | Weekly history of planned and past meals |
+| **Week Planning** | Apply a suggested combo for the entire week in one tap |
+| **Dark Mode** | Full light/dark theme support with persistent preference |
 
-   ```bash
-   npx expo start
-   ```
+## Tech Stack
 
-In the output, you'll find options to open the app in a
+- **Framework:** [Expo SDK 54](https://expo.dev) + [Expo Router](https://docs.expo.dev/router/introduction/) (file-based routing)
+- **Language:** TypeScript (strict mode)
+- **State:** React Context API (`ProfileContext`, `MealPlanContext`)
+- **Backend:** PHP REST API with MySQL
+- **Storage:** AsyncStorage for local preferences
+- **Styling:** Inline `StyleSheet.create()` with theme system
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Project Structure
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+app/
+  (tabs)/
+    index.tsx          # Planner screen
+    recipes.tsx        # Recipes & meal suggestions
+    groceries.tsx      # Grocery list
+    profile.tsx        # User profile
+  meal-history.tsx     # Weekly meal history
+  health-overview.tsx  # BMI/BMR details
+  profile-setup.tsx    # Onboarding flow
+  settings.tsx         # App settings
+contexts/
+  profile-context.tsx  # User data & auth state
+  meal-plan-context.tsx# Shared meal selections
+constants/
+  api.ts               # API layer (PHP backend)
+  theme.ts             # Light & dark color tokens
+data/
+  meals.json           # 30+ meals with ingredients & calories
+PHP/
+  save_meal_history.php
+  get_meal_history.php
+  ...                  # Profile CRUD & auth endpoints
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Getting Started
 
-## Learn more
+### Prerequisites
 
-To learn more about developing your project with Expo, look at the following resources:
+- [Node.js](https://nodejs.org/) (LTS)
+- [Expo CLI](https://docs.expo.dev/get-started/installation/)
+- PHP server with MySQL (e.g. XAMPP) for the backend
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### Installation
 
-## Join the community
+```bash
+# Clone the repository
+git clone https://github.com/FuZionRedX/Bonneyrat-Lautard-Bondain-React_Native.git
+cd Bonneyrat-Lautard-Bondain-React_Native
 
-Join our community of developers creating universal apps.
+# Install dependencies
+npm install
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+# Start the dev server
+npm start
+```
+
+### Running on a specific platform
+
+```bash
+npm run android   # Android emulator
+npm run ios       # iOS simulator
+npm run web       # Browser
+```
+
+### Backend Setup
+
+1. Import the SQL schema into your MySQL database
+2. Place the `PHP/` files in your web server's document root (e.g. `htdocs/health_app/`)
+3. Update `PHP/config.php` with your database credentials
+
+## Team
+
+| Name | GitHub |
+|------|--------|
+| Olivier Bonneyrat | [@FuZionRedX](https://github.com/FuZionRedX) |
+| Victor Bondain | [@VictorB](https://github.com/VictorB) |
+| Romain Lautard | [@rominou007](https://github.com/rominou007) |
+
+---
+
+<p align="center">
+  Built with <b>Expo</b> & <b>React Native</b> for the ECE Paris Application Development course.
+</p>
