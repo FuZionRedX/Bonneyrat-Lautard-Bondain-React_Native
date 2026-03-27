@@ -1,6 +1,7 @@
 import mealsData from '@/data/meals.json';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,6 +14,7 @@ import { getMealHistory, saveMealHistory } from '@/constants/api';
 import { Meal, MealCategory, useMealPlan } from '@/contexts/meal-plan-context';
 import { useProfile } from '@/contexts/profile-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useRouter } from 'expo-router';
 
 interface MealsFile {
   meals: Meal[];
@@ -79,40 +81,107 @@ function getCombinations<T>(arr: T[], size: number): T[][] {
   return [...withFirst, ...withoutFirst];
 }
 
-// Finds the subset of meals (1–maxSize) closest to target, avoiding recently-used combos.
-// recentlySeen: list of sorted meal-id arrays used in the past 7 days for this category.
-// Strategy: prefer an unused combo, falling back to the best calorie match if all were used.
-function findBestCombo(meals: Meal[], target: number, recentlySeen: number[][], maxSize = 3): Meal[] {
-  type Candidate = { combo: Meal[]; diff: number; usedRecently: boolean };
-  const candidates: Candidate[] = [];
+type CategorCandidate = { combo: Meal[]; calories: number; usedRecently: boolean };
+
+// Returns top candidate combos for a single category, keeping at most ~10 options.
+function findCategoryCandidates(
+  meals: Meal[],
+  target: number,
+  recentlySeen: number[][],
+  maxSize = 3,
+): CategorCandidate[] {
+  const raw: CategorCandidate[] = [];
 
   for (let size = 1; size <= Math.min(maxSize, meals.length); size++) {
     for (const combo of getCombinations(meals, size)) {
-      const total = combo.reduce((s, m) => s + m.totalCalories, 0);
-      const diff = Math.abs(total - target);
+      const calories = combo.reduce((s, m) => s + m.totalCalories, 0);
       const ids = combo.map((m) => m.id).sort((a, b) => a - b);
       const usedRecently = recentlySeen.some(
         (used) => used.length === ids.length && used.every((id, i) => id === ids[i]),
       );
-      candidates.push({ combo, diff, usedRecently });
+      raw.push({ combo, calories, usedRecently });
     }
   }
 
-  // Prefer unused combos; among equals sort by calorie accuracy
-  candidates.sort((a, b) => {
-    if (a.usedRecently !== b.usedRecently) return a.usedRecently ? 1 : -1;
-    return a.diff - b.diff;
-  });
+  // Best under-target (highest calories first) + a few over-target fallbacks
+  const under = raw
+    .filter((c) => c.calories <= target)
+    .sort((a, b) => {
+      if (a.usedRecently !== b.usedRecently) return a.usedRecently ? 1 : -1;
+      return b.calories - a.calories;
+    })
+    .slice(0, 8);
+  const over = raw
+    .filter((c) => c.calories > target)
+    .sort((a, b) => a.calories - b.calories)
+    .slice(0, 2);
 
-  return candidates[0]?.combo ?? [];
+  return [...under, ...over];
+}
+
+// Finds the best combination across all 4 categories that maximises total calories
+// without exceeding the daily limit, preferring unused combos.
+function findBestGlobalCombo(
+  allMealsByCategory: Record<MealCategory, Meal[]>,
+  categoryTargets: Record<MealCategory, number>,
+  dailyLimit: number,
+  recentHistory: Record<MealCategory, number[][]>,
+): Record<MealCategory, Meal[]> {
+  const perCategory = CATEGORY_ORDER.map((cat) =>
+    findCategoryCandidates(allMealsByCategory[cat], categoryTargets[cat], recentHistory[cat]),
+  );
+
+  let best: { result: Record<MealCategory, Meal[]>; total: number; recentCount: number } | null = null;
+
+  for (const a of perCategory[0]) {
+    for (const b of perCategory[1]) {
+      const ab = a.calories + b.calories;
+      if (ab > dailyLimit) continue;
+      for (const c of perCategory[2]) {
+        const abc = ab + c.calories;
+        if (abc > dailyLimit) continue;
+        for (const d of perCategory[3]) {
+          const total = abc + d.calories;
+          if (total > dailyLimit) continue;
+          const recentCount = [a, b, c, d].filter((x) => x.usedRecently).length;
+          if (
+            !best ||
+            recentCount < best.recentCount ||
+            (recentCount === best.recentCount && total > best.total)
+          ) {
+            best = {
+              result: {
+                breakfast: a.combo,
+                lunch: b.combo,
+                dinner: c.combo,
+                snack: d.combo,
+              },
+              total,
+              recentCount,
+            };
+          }
+        }
+      }
+    }
+  }
+
+  if (best) return best.result;
+
+  // Fallback: pick per-category best independently
+  return CATEGORY_ORDER.reduce<Record<MealCategory, Meal[]>>((acc, cat, i) => {
+    acc[cat] = perCategory[i][0]?.combo ?? [];
+    return acc;
+  }, { breakfast: [], lunch: [], dinner: [], snack: [] });
 }
 
 export default function RecipesScreen() {
+  const router = useRouter();
   const { profile } = useProfile();
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
   const { selectedByCategory, setSelectedByCategory, selectedMeals } = useMealPlan();
 
+  const [showApplyModal, setShowApplyModal] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<Set<MealCategory>>(new Set());
   // Per-category list of sorted meal-id arrays used in the last 7 days
   const [recentHistory, setRecentHistory] = useState<Record<MealCategory, number[][]>>({
@@ -170,14 +239,11 @@ export default function RecipesScreen() {
     }, { breakfast: [], lunch: [], dinner: [], snack: [] });
   }, []);
 
-  // Best combo per category: tries all subsets of 1–3 meals, avoids recently-used combos
+  // Best combo across all 4 categories: maximises total calories without exceeding daily limit
   const suggestedCombo = useMemo(() => {
-    if (!categoryTargets) return null;
-    return CATEGORY_ORDER.reduce<Record<MealCategory, Meal[]>>((acc, category) => {
-      acc[category] = findBestCombo(allMealsByCategory[category], categoryTargets[category], recentHistory[category]);
-      return acc;
-    }, { breakfast: [], lunch: [], dinner: [], snack: [] });
-  }, [categoryTargets, allMealsByCategory, recentHistory]);
+    if (!categoryTargets || !dailyCalories) return null;
+    return findBestGlobalCombo(allMealsByCategory, categoryTargets, dailyCalories, recentHistory);
+  }, [categoryTargets, dailyCalories, allMealsByCategory, recentHistory]);
 
   const suggestedComboCalories = useMemo(() => {
     if (!suggestedCombo) return 0;
@@ -211,6 +277,7 @@ export default function RecipesScreen() {
     if (profile.email) {
       saveMealHistory(profile.email, next as Record<string, number[]>);
     }
+    setShowApplyModal(true);
   }
 
   function toggleCategory(category: MealCategory) {
@@ -236,6 +303,7 @@ export default function RecipesScreen() {
       : 'You do not currently need to lose weight. Continue with your current meal plan.';
 
   return (
+    <>
     <ScrollView style={[styles.container, { backgroundColor: colors.screenBackground }]} showsVerticalScrollIndicator={false}>
       <View style={[styles.header, { backgroundColor: colors.cardBackground }]}>
         <Text style={[styles.title, { color: colors.text }]}>Recipes</Text>
@@ -313,16 +381,23 @@ export default function RecipesScreen() {
             </View>
           </View>
 
-          {/* Calorie split */}
-          <View style={[styles.splitCard, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
-            <Text style={[styles.splitTitle, { color: colors.text }]}>Calorie Split Across 4 Meals</Text>
-            {CATEGORY_ORDER.map((category) => (
-              <View key={category} style={[styles.splitRow, { borderBottomColor: colors.borderLight }]}>
-                <Text style={[styles.splitLabel, { color: colors.labelText }]}>{CATEGORY_LABELS[category]}</Text>
-                <Text style={[styles.splitValue, { color: colors.text }]}>{categoryTargets[category]} kcal</Text>
-              </View>
-            ))}
-          </View>
+          {/* Meal history link */}
+          <TouchableOpacity
+            style={[styles.historyButton, { backgroundColor: colors.primary }]}
+            onPress={() => router.push('/meal-history')}
+          >
+            <Text style={styles.historyButtonText}>View Meal History</Text>
+          </TouchableOpacity>
+
+          {/* Clear all selections */}
+          {selectedMeals.length > 0 && (
+            <TouchableOpacity
+              style={[styles.clearButton, { borderColor: colors.border }]}
+              onPress={() => setSelectedByCategory({})}
+            >
+              <Text style={[styles.clearButtonText, { color: colors.secondaryText }]}>Unselect All</Text>
+            </TouchableOpacity>
+          )}
 
           {/* Category dropdowns */}
           {CATEGORY_ORDER.map((category) => {
@@ -440,6 +515,25 @@ export default function RecipesScreen() {
 
       <View style={{ height: 20 }} />
     </ScrollView>
+
+    <Modal visible={showApplyModal} transparent animationType="fade" onRequestClose={() => setShowApplyModal(false)}>
+      <View style={styles.modalOverlay}>
+        <View style={[styles.modalCard, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
+          <Text style={[styles.modalIcon]}>&#10003;</Text>
+          <Text style={[styles.modalTitle, { color: colors.text }]}>Combo Applied</Text>
+          <Text style={[styles.modalMessage, { color: colors.secondaryText }]}>
+            The suggested meal plan has been applied to your daily plan.
+          </Text>
+          <TouchableOpacity
+            style={[styles.modalButton, { backgroundColor: colors.primary }]}
+            onPress={() => setShowApplyModal(false)}
+          >
+            <Text style={styles.modalButtonText}>OK</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+    </>
   );
 }
 
@@ -478,6 +572,25 @@ const styles = StyleSheet.create({
   },
   maintainTitle: { fontSize: 14, fontWeight: '700', marginBottom: 4 },
   maintainText: { fontSize: 13 },
+
+  historyButton: {
+    marginHorizontal: 16,
+    marginBottom: 12,
+    paddingVertical: 10,
+    borderRadius: 10,
+    alignItems: 'center' as const,
+  },
+  historyButtonText: { color: '#fff', fontSize: 14, fontWeight: '700' },
+
+  clearButton: {
+    marginHorizontal: 16,
+    marginBottom: 12,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center' as const,
+  },
+  clearButtonText: { fontSize: 14, fontWeight: '600' },
 
   // Suggested combo card
   suggestedCard: {
@@ -533,25 +646,6 @@ const styles = StyleSheet.create({
   },
   suggestedTotalLabel: { fontWeight: '700', fontSize: 14 },
   suggestedTotalValue: { color: '#86EFAC', fontWeight: '800', fontSize: 14 },
-
-  splitCard: {
-    marginHorizontal: 16,
-    marginBottom: 12,
-    borderRadius: 14,
-    padding: 14,
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 1,
-  },
-  splitTitle: { fontSize: 15, fontWeight: '700', marginBottom: 8 },
-  splitRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 6,
-    borderBottomWidth: 1,
-  },
-  splitLabel: { fontSize: 13 },
-  splitValue: { fontSize: 13, fontWeight: '700' },
 
   // Category dropdown
   categoryCard: {
@@ -632,4 +726,35 @@ const styles = StyleSheet.create({
     padding: 14,
   },
   empty: { textAlign: 'center', fontSize: 14 },
+
+  // Apply modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 30,
+  },
+  modalCard: {
+    width: '100%',
+    borderRadius: 18,
+    padding: 24,
+    alignItems: 'center',
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  modalIcon: {
+    fontSize: 40,
+    color: '#4CAF50',
+    marginBottom: 12,
+  },
+  modalTitle: { fontSize: 18, fontWeight: '800', marginBottom: 8 },
+  modalMessage: { fontSize: 14, textAlign: 'center', lineHeight: 20, marginBottom: 20 },
+  modalButton: {
+    paddingHorizontal: 32,
+    paddingVertical: 10,
+    borderRadius: 20,
+  },
+  modalButtonText: { color: '#fff', fontWeight: '700', fontSize: 14 },
 });

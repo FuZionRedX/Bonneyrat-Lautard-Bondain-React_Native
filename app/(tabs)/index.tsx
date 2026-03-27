@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router";
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Alert,
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -128,19 +128,18 @@ export default function PlannerScreen() {
   const excess = totalPlanned - dailyTarget;
   const hasMealPlan = selectedMeals.length > 0;
   const wasOverLimitRef = useRef(false);
+  const [showOverLimitModal, setShowOverLimitModal] = useState(false);
 
   useEffect(() => {
     if (isOverLimit && !wasOverLimitRef.current) {
-      Alert.alert(
-        "Daily limit exceeded",
-        `You are ${excess} kcal above your target. Consider removing some meals.`,
-      );
+      setShowOverLimitModal(true);
     }
 
     wasOverLimitRef.current = isOverLimit;
   }, [excess, isOverLimit]);
 
   return (
+    <>
     <ScrollView
       style={[styles.container, { backgroundColor: colors.screenBackground }]}
       showsVerticalScrollIndicator={false}
@@ -348,6 +347,25 @@ export default function PlannerScreen() {
 
       <View style={{ height: 20 }} />
     </ScrollView>
+
+    <Modal visible={showOverLimitModal} transparent animationType="fade" onRequestClose={() => setShowOverLimitModal(false)}>
+      <View style={styles.modalOverlay}>
+        <View style={[styles.modalCard, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
+          <Text style={styles.modalIcon}>&#9888;</Text>
+          <Text style={[styles.modalTitle, { color: colors.text }]}>Daily limit exceeded</Text>
+          <Text style={[styles.modalMessage, { color: colors.secondaryText }]}>
+            You are {excess} kcal above your target. Consider removing some meals.
+          </Text>
+          <TouchableOpacity
+            style={[styles.modalButton, { backgroundColor: "#D32F2F" }]}
+            onPress={() => setShowOverLimitModal(false)}
+          >
+            <Text style={styles.modalButtonText}>OK</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+    </>
   );
 }
 
@@ -481,4 +499,35 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   recommendBtnText: { color: "#fff", fontWeight: "700", fontSize: 15 },
+
+  // Over-limit modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 30,
+  },
+  modalCard: {
+    width: "100%",
+    borderRadius: 18,
+    padding: 24,
+    alignItems: "center",
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  modalIcon: {
+    fontSize: 40,
+    color: "#D32F2F",
+    marginBottom: 12,
+  },
+  modalTitle: { fontSize: 18, fontWeight: "800", marginBottom: 8 },
+  modalMessage: { fontSize: 14, textAlign: "center", lineHeight: 20, marginBottom: 20 },
+  modalButton: {
+    paddingHorizontal: 32,
+    paddingVertical: 10,
+    borderRadius: 20,
+  },
+  modalButtonText: { color: "#fff", fontWeight: "700", fontSize: 14 },
 });
