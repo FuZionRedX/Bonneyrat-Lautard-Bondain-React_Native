@@ -94,10 +94,15 @@ function MenuItem({
   colors: typeof Colors.light;
 }) {
   return (
-    <TouchableOpacity style={[styles.menuItem, { borderBottomColor: colors.borderLight }]} onPress={onPress}>
+    <TouchableOpacity
+      style={[styles.menuItem, { borderBottomColor: colors.borderLight }]}
+      onPress={onPress}
+    >
       <Text style={styles.menuEmoji}>{emoji}</Text>
       <Text style={[styles.menuLabel, { color: colors.text }]}>{label}</Text>
-      <Text style={[styles.menuArrow, { color: colors.secondaryText }]}>&rsaquo;</Text>
+      <Text style={[styles.menuArrow, { color: colors.secondaryText }]}>
+        &rsaquo;
+      </Text>
     </TouchableOpacity>
   );
 }
@@ -187,7 +192,10 @@ export default function ProfileScreen() {
     // Unauthenticated state: show login/connect screen.
     return (
       <ScrollView
-        style={[styles.loginScreen, { backgroundColor: colors.loginBarBackground }]}
+        style={[
+          styles.loginScreen,
+          { backgroundColor: colors.loginBarBackground },
+        ]}
         contentContainerStyle={styles.loginContent}
       >
         <View
@@ -201,11 +209,15 @@ export default function ProfileScreen() {
           ]}
         >
           <Text style={[styles.loginBack, { color: colors.text }]}>&larr;</Text>
-          <Text style={[styles.loginBrand, { color: colors.text }]}>VitalSync</Text>
+          <Text style={[styles.loginBrand, { color: colors.text }]}>
+            VitalSync
+          </Text>
           <View style={{ width: 24 }} />
         </View>
 
-        <View style={[styles.heroBlock, { backgroundColor: colors.heroBackground }]}>
+        <View
+          style={[styles.heroBlock, { backgroundColor: colors.heroBackground }]}
+        >
           <Image
             source={require("@/assets/images/splash-icon.png")}
             style={styles.heroImage}
@@ -214,14 +226,28 @@ export default function ProfileScreen() {
         </View>
 
         <View style={styles.loginPanel}>
-          <Text style={[styles.loginTitle, { color: colors.text }]}>Welcome</Text>
+          <Text style={[styles.loginTitle, { color: colors.text }]}>
+            Welcome
+          </Text>
           <Text style={[styles.loginSubtitle, { color: colors.labelText }]}>
             Log in to sync your health goals and track your diet.
           </Text>
 
-          <Text style={[styles.inputLabel, { color: colors.tertiaryText }]}>EMAIL</Text>
-          <View style={[styles.inputShell, { borderColor: colors.selectedBorder, backgroundColor: colors.loginInputBackground }]}>
-            <Text style={[styles.inputIcon, { color: colors.placeholderText }]}>{'\u2709'}</Text>
+          <Text style={[styles.inputLabel, { color: colors.tertiaryText }]}>
+            EMAIL
+          </Text>
+          <View
+            style={[
+              styles.inputShell,
+              {
+                borderColor: colors.selectedBorder,
+                backgroundColor: colors.loginInputBackground,
+              },
+            ]}
+          >
+            <Text style={[styles.inputIcon, { color: colors.placeholderText }]}>
+              {"\u2709"}
+            </Text>
             <TextInput
               style={[styles.loginInput, { color: colors.text }]}
               placeholder="name@example.com"
@@ -233,9 +259,21 @@ export default function ProfileScreen() {
             />
           </View>
 
-          <Text style={[styles.inputLabel, { color: colors.tertiaryText }]}>PASSWORD</Text>
-          <View style={[styles.inputShell, { borderColor: colors.selectedBorder, backgroundColor: colors.loginInputBackground }]}>
-            <Text style={[styles.inputIcon, { color: colors.placeholderText }]}>{'\u{1F512}'}</Text>
+          <Text style={[styles.inputLabel, { color: colors.tertiaryText }]}>
+            PASSWORD
+          </Text>
+          <View
+            style={[
+              styles.inputShell,
+              {
+                borderColor: colors.selectedBorder,
+                backgroundColor: colors.loginInputBackground,
+              },
+            ]}
+          >
+            <Text style={[styles.inputIcon, { color: colors.placeholderText }]}>
+              {"\u{1F512}"}
+            </Text>
             <TextInput
               style={[styles.loginInput, { color: colors.text }]}
               placeholder="Enter your password"
@@ -256,22 +294,36 @@ export default function ProfileScreen() {
           </View>
 
           <TouchableOpacity style={styles.forgotBtn}>
-            <Text style={[styles.forgotText, { color: colors.primary }]}>Forgot Password?</Text>
+            <Text style={[styles.forgotText, { color: colors.primary }]}>
+              Forgot Password?
+            </Text>
           </TouchableOpacity>
 
           {connectError ? (
-            <Text style={[styles.loginError, { color: colors.dangerText }]}>{connectError}</Text>
+            <Text style={[styles.loginError, { color: colors.dangerText }]}>
+              {connectError}
+            </Text>
           ) : null}
 
           <TouchableOpacity
-            style={[styles.loginButton, { backgroundColor: colors.loginButtonBackground }]}
+            style={[
+              styles.loginButton,
+              { backgroundColor: colors.loginButtonBackground },
+            ]}
             onPress={handleConnectProfile}
             disabled={isConnecting}
           >
             {isConnecting ? (
               <ActivityIndicator color={colors.loginButtonText} />
             ) : (
-              <Text style={[styles.loginButtonText, { color: colors.loginButtonText }]}>Log In</Text>
+              <Text
+                style={[
+                  styles.loginButtonText,
+                  { color: colors.loginButtonText },
+                ]}
+              >
+                Log In
+              </Text>
             )}
           </TouchableOpacity>
 
@@ -281,8 +333,12 @@ export default function ProfileScreen() {
             style={styles.signupRow}
             onPress={() => router.push("/profile-setup" as any)}
           >
-            <Text style={[styles.signupMuted, { color: colors.labelText }]}>Don&apos;t have an account? </Text>
-            <Text style={[styles.signupLink, { color: colors.primary }]}>Sign Up</Text>
+            <Text style={[styles.signupMuted, { color: colors.labelText }]}>
+              Don&apos;t have an account?{" "}
+            </Text>
+            <Text style={[styles.signupLink, { color: colors.primary }]}>
+              Sign Up
+            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -291,33 +347,74 @@ export default function ProfileScreen() {
 
   // Authenticated state: show profile, stats, and settings.
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.screenBackground }]} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: colors.screenBackground }]}
+      showsVerticalScrollIndicator={false}
+    >
       {/* Header */}
       <View style={[styles.header, { backgroundColor: colors.cardBackground }]}>
         <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
           <Text style={styles.avatarText}>{initials}</Text>
         </View>
-        <Text style={[styles.name, { color: colors.text }]}>{profile.fullName}</Text>
-        <Text style={[styles.email, { color: colors.secondaryText }]}>{profile.email}</Text>
+        <Text style={[styles.name, { color: colors.text }]}>
+          {profile.fullName}
+        </Text>
+        <Text style={[styles.email, { color: colors.secondaryText }]}>
+          {profile.email}
+        </Text>
       </View>
 
-      <View style={[styles.accountCard, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Account Information</Text>
-        <View style={[styles.accountRow, { borderBottomColor: colors.borderLight }]}>
-          <Text style={[styles.accountLabel, { color: colors.secondaryText }]}>Name</Text>
-          <Text style={[styles.accountValue, { color: colors.text }]}>{profile.fullName}</Text>
+      <View
+        style={[
+          styles.accountCard,
+          {
+            backgroundColor: colors.cardBackground,
+            shadowColor: colors.shadow,
+          },
+        ]}
+      >
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>
+          Account Information
+        </Text>
+        <View
+          style={[styles.accountRow, { borderBottomColor: colors.borderLight }]}
+        >
+          <Text style={[styles.accountLabel, { color: colors.secondaryText }]}>
+            Name
+          </Text>
+          <Text style={[styles.accountValue, { color: colors.text }]}>
+            {profile.fullName}
+          </Text>
         </View>
-        <View style={[styles.accountRow, { borderBottomColor: colors.borderLight }]}>
-          <Text style={[styles.accountLabel, { color: colors.secondaryText }]}>Email</Text>
-          <Text style={[styles.accountValue, { color: colors.text }]}>{profile.email}</Text>
+        <View
+          style={[styles.accountRow, { borderBottomColor: colors.borderLight }]}
+        >
+          <Text style={[styles.accountLabel, { color: colors.secondaryText }]}>
+            Email
+          </Text>
+          <Text style={[styles.accountValue, { color: colors.text }]}>
+            {profile.email}
+          </Text>
         </View>
       </View>
 
       {/* BMI Card */}
-      <View style={[styles.bmiCard, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
+      <View
+        style={[
+          styles.bmiCard,
+          {
+            backgroundColor: colors.cardBackground,
+            shadowColor: colors.shadow,
+          },
+        ]}
+      >
         <View>
-          <Text style={[styles.bmiTitle, { color: colors.secondaryText }]}>BODY MASS INDEX</Text>
-          <Text style={[styles.bmiValue, { color: colors.text }]}>{bmiDisplay}</Text>
+          <Text style={[styles.bmiTitle, { color: colors.secondaryText }]}>
+            BODY MASS INDEX
+          </Text>
+          <Text style={[styles.bmiValue, { color: colors.text }]}>
+            {bmiDisplay}
+          </Text>
           <View
             style={[styles.bmiNormalBadge, { backgroundColor: bmiMeta.color }]}
           >
@@ -325,7 +422,9 @@ export default function ProfileScreen() {
           </View>
         </View>
         <View style={styles.bmiRight}>
-          <Text style={[styles.bmiDesc, { color: colors.tertiaryText }]}>{bmiMeta.description}</Text>
+          <Text style={[styles.bmiDesc, { color: colors.tertiaryText }]}>
+            {bmiMeta.description}
+          </Text>
           {/* BMI scale */}
           <View style={styles.bmiScaleRow}>
             {[
@@ -345,54 +444,112 @@ export default function ProfileScreen() {
       </View>
 
       {/* Body Info */}
-      <View style={[styles.bodyInfoCard, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Body Information</Text>
+      <View
+        style={[
+          styles.bodyInfoCard,
+          {
+            backgroundColor: colors.cardBackground,
+            shadowColor: colors.shadow,
+          },
+        ]}
+      >
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>
+          Body Information
+        </Text>
         <View style={styles.bodyInfoRow}>
           <View style={styles.bodyInfoItem}>
-            <Text style={[styles.bodyInfoLabel, { color: colors.secondaryText }]}>Age</Text>
-            <Text style={[styles.bodyInfoValue, { color: colors.text }]}>{profile.age}</Text>
+            <Text
+              style={[styles.bodyInfoLabel, { color: colors.secondaryText }]}
+            >
+              Age
+            </Text>
+            <Text style={[styles.bodyInfoValue, { color: colors.text }]}>
+              {profile.age}
+            </Text>
           </View>
           <View style={styles.bodyInfoItem}>
-            <Text style={[styles.bodyInfoLabel, { color: colors.secondaryText }]}>Gender</Text>
-            <Text style={[styles.bodyInfoValue, { color: colors.text }]}>{profile.gender}</Text>
+            <Text
+              style={[styles.bodyInfoLabel, { color: colors.secondaryText }]}
+            >
+              Gender
+            </Text>
+            <Text style={[styles.bodyInfoValue, { color: colors.text }]}>
+              {profile.gender}
+            </Text>
           </View>
           <View style={styles.bodyInfoItem}>
-            <Text style={[styles.bodyInfoLabel, { color: colors.secondaryText }]}>Height</Text>
-            <Text style={[styles.bodyInfoValue, { color: colors.text }]}>{profile.height} cm</Text>
+            <Text
+              style={[styles.bodyInfoLabel, { color: colors.secondaryText }]}
+            >
+              Height
+            </Text>
+            <Text style={[styles.bodyInfoValue, { color: colors.text }]}>
+              {profile.height} cm
+            </Text>
           </View>
           <View style={styles.bodyInfoItem}>
-            <Text style={[styles.bodyInfoLabel, { color: colors.secondaryText }]}>Weight</Text>
-            <Text style={[styles.bodyInfoValue, { color: colors.text }]}>{profile.weight} kg</Text>
+            <Text
+              style={[styles.bodyInfoLabel, { color: colors.secondaryText }]}
+            >
+              Weight
+            </Text>
+            <Text style={[styles.bodyInfoValue, { color: colors.text }]}>
+              {profile.weight} kg
+            </Text>
           </View>
         </View>
       </View>
 
       {/* Primary Goal */}
-      <View style={[styles.goalCard, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Primary Goal</Text>
+      <View
+        style={[
+          styles.goalCard,
+          {
+            backgroundColor: colors.cardBackground,
+            shadowColor: colors.shadow,
+          },
+        ]}
+      >
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>
+          Primary Goal
+        </Text>
         <View style={styles.goalRow}>
-          <TouchableOpacity style={[styles.goalChip, { backgroundColor: colors.primary }]}>
+          <TouchableOpacity
+            style={[styles.goalChip, { backgroundColor: colors.primary }]}
+          >
             <Text style={styles.goalChipText}>{profile.goal}</Text>
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Menu */}
-      <View style={[styles.menuCard, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
-        <MenuItem emoji={'\u{1F514}'} label="Notifications" colors={colors} />
+      <View
+        style={[
+          styles.menuCard,
+          {
+            backgroundColor: colors.cardBackground,
+            shadowColor: colors.shadow,
+          },
+        ]}
+      >
         <MenuItem
-          emoji={'\u2699\uFE0F'}
+          emoji={"\u2699\uFE0F"}
           label="Settings"
           onPress={() => router.push("/settings" as any)}
           colors={colors}
         />
         <MenuItem
-          emoji={'\u2753'}
+          emoji={"\u2753"}
           label="Help & Support"
           onPress={() => router.push("/help-support" as any)}
           colors={colors}
         />
-        <MenuItem emoji={'\u{1F6AA}'} label="Log Out" onPress={handleLogout} colors={colors} />
+        <MenuItem
+          emoji={"\u{1F6AA}"}
+          label="Log Out"
+          onPress={handleLogout}
+          colors={colors}
+        />
       </View>
 
       <View style={{ height: 20 }} />
