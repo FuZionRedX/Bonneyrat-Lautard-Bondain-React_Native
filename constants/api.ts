@@ -83,12 +83,15 @@ export interface MealHistoryEntry {
 export async function saveMealHistory(
   email: string,
   mealIds: Record<string, number[]>,
+  savedAt?: string,
 ): Promise<boolean> {
   try {
+    const payload: Record<string, unknown> = { email, meal_ids: mealIds };
+    if (savedAt) payload.saved_at = savedAt;
     const res = await fetch(`${API_BASE}/save_meal_history.php`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, meal_ids: mealIds }),
+      body: JSON.stringify(payload),
     });
     const data = await res.json();
     return !!data.success;

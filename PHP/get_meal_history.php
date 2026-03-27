@@ -18,7 +18,7 @@ if ($email === "") {
     exit;
 }
 
-// Fetch entries from the last 7 days
+// Fetch entries from the last 7 days + any future planned entries
 $stmt = $conn->prepare(
     "SELECT meal_ids, saved_at
      FROM meal_history

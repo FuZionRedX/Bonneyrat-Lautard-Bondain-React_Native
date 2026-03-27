@@ -13,8 +13,9 @@ require "config.php";
 
 $data = json_decode(file_get_contents("php://input"), true);
 
-$email   = trim($data["email"]    ?? "");
-$mealIds = $data["meal_ids"] ?? null;
+$email    = trim($data["email"]    ?? "");
+$mealIds  = $data["meal_ids"] ?? null;
+$savedAt  = trim($data["saved_at"] ?? "");
 
 if ($email === "" || $mealIds === null) {
     echo json_encode(["success" => false, "error" => "missing_fields"]);
@@ -23,10 +24,17 @@ if ($email === "" || $mealIds === null) {
 
 $mealIdsJson = json_encode($mealIds);
 
-$stmt = $conn->prepare(
-    "INSERT INTO meal_history (user_email, meal_ids) VALUES (?, ?)"
-);
-$stmt->bind_param("ss", $email, $mealIdsJson);
+if ($savedAt !== "") {
+    $stmt = $conn->prepare(
+        "INSERT INTO meal_history (user_email, meal_ids, saved_at) VALUES (?, ?, ?)"
+    );
+    $stmt->bind_param("sss", $email, $mealIdsJson, $savedAt);
+} else {
+    $stmt = $conn->prepare(
+        "INSERT INTO meal_history (user_email, meal_ids) VALUES (?, ?)"
+    );
+    $stmt->bind_param("ss", $email, $mealIdsJson);
+}
 $ok = $stmt->execute();
 
 echo json_encode(["success" => $ok]);

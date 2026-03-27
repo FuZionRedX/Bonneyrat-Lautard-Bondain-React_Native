@@ -182,6 +182,8 @@ export default function RecipesScreen() {
   const { selectedByCategory, setSelectedByCategory, selectedMeals } = useMealPlan();
 
   const [showApplyModal, setShowApplyModal] = useState(false);
+  const [showWeekConfirm, setShowWeekConfirm] = useState(false);
+  const [showWeekModal, setShowWeekModal] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<Set<MealCategory>>(new Set());
   // Per-category list of sorted meal-id arrays used in the last 7 days
   const [recentHistory, setRecentHistory] = useState<Record<MealCategory, number[][]>>({
@@ -280,6 +282,35 @@ export default function RecipesScreen() {
     setShowApplyModal(true);
   }
 
+  function confirmApplyForWeek() {
+    if (!suggestedCombo || !profile.email) return;
+    setShowWeekConfirm(false);
+
+    const next: Partial<Record<MealCategory, number[]>> = {};
+    CATEGORY_ORDER.forEach((category) => {
+      next[category] = suggestedCombo[category].map((m) => m.id);
+    });
+    setSelectedByCategory(next);
+
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0 = Sunday
+    const daysUntilSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
+
+    const saves: Promise<boolean>[] = [];
+    for (let i = 0; i <= daysUntilSunday; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      const dateStr = `${y}-${m}-${d}`;
+      saves.push(saveMealHistory(profile.email, next as Record<string, number[]>, dateStr));
+    }
+    Promise.all(saves).then(() => {
+      setShowWeekModal(true);
+    });
+  }
+
   function toggleCategory(category: MealCategory) {
     setExpandedCategories((prev) => {
       const next = new Set(prev);
@@ -344,12 +375,20 @@ export default function RecipesScreen() {
                   Best match for your {dailyCalories} kcal target
                 </Text>
               </View>
-              <TouchableOpacity
-                style={[styles.applyButton, { backgroundColor: colors.primary }]}
-                onPress={applySuggestedCombo}
-              >
-                <Text style={styles.applyButtonText}>Apply</Text>
-              </TouchableOpacity>
+              <View style={styles.applyButtons}>
+                <TouchableOpacity
+                  style={[styles.applyButton, { backgroundColor: colors.primary }]}
+                  onPress={applySuggestedCombo}
+                >
+                  <Text style={styles.applyButtonText}>Apply</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.applyWeekButton, { borderColor: colors.primary }]}
+                  onPress={() => setShowWeekConfirm(true)}
+                >
+                  <Text style={[styles.applyWeekButtonText, { color: colors.primary }]}>Week</Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
             {CATEGORY_ORDER.map((category) => {
@@ -533,6 +572,50 @@ export default function RecipesScreen() {
         </View>
       </View>
     </Modal>
+
+    <Modal visible={showWeekConfirm} transparent animationType="fade" onRequestClose={() => setShowWeekConfirm(false)}>
+      <View style={styles.modalOverlay}>
+        <View style={[styles.modalCard, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
+          <Text style={[styles.modalIcon]}>&#128197;</Text>
+          <Text style={[styles.modalTitle, { color: colors.text }]}>Apply for the week?</Text>
+          <Text style={[styles.modalMessage, { color: colors.secondaryText }]}>
+            This will save the suggested meal plan for every day from today through Sunday.
+          </Text>
+          <View style={styles.modalButtonRow}>
+            <TouchableOpacity
+              style={[styles.modalCancelButton, { borderColor: colors.border }]}
+              onPress={() => setShowWeekConfirm(false)}
+            >
+              <Text style={[styles.modalCancelButtonText, { color: colors.secondaryText }]}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.modalButton, { backgroundColor: colors.primary }]}
+              onPress={confirmApplyForWeek}
+            >
+              <Text style={styles.modalButtonText}>Confirm</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+
+    <Modal visible={showWeekModal} transparent animationType="fade" onRequestClose={() => setShowWeekModal(false)}>
+      <View style={styles.modalOverlay}>
+        <View style={[styles.modalCard, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
+          <Text style={[styles.modalIcon]}>&#128197;</Text>
+          <Text style={[styles.modalTitle, { color: colors.text }]}>Week Plan Applied</Text>
+          <Text style={[styles.modalMessage, { color: colors.secondaryText }]}>
+            The suggested meal plan has been saved for every day from today through Sunday.
+          </Text>
+          <TouchableOpacity
+            style={[styles.modalButton, { backgroundColor: colors.primary }]}
+            onPress={() => setShowWeekModal(false)}
+          >
+            <Text style={styles.modalButtonText}>OK</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
     </>
   );
 }
@@ -615,7 +698,15 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
   },
+  applyButtons: { flexDirection: 'row', gap: 8 },
   applyButtonText: { color: '#fff', fontWeight: '700', fontSize: 13 },
+  applyWeekButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1.5,
+  },
+  applyWeekButtonText: { fontWeight: '700', fontSize: 13 },
   suggestedCategoryBlock: {
     paddingVertical: 10,
     borderBottomWidth: 1,
@@ -757,4 +848,12 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   modalButtonText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+  modalButtonRow: { flexDirection: 'row', gap: 12 },
+  modalCancelButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  modalCancelButtonText: { fontWeight: '700', fontSize: 14 },
 });
