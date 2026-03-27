@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Platform-Android%20%7C%20iOS%20%7C%20Web-green" alt="Platforms" />
 </p>
 
-# NutriPlan - Meal Planning App
+# VitalSync - Meal Planning App
 
 A health and fitness meal planning app that provides **personalized nutrition recommendations** based on BMI & BMR calculations. Plan your meals, manage your groceries, and track your weekly eating habits — all in one place.
 
@@ -35,28 +35,28 @@ A health and fitness meal planning app that provides **personalized nutrition re
 ## Project Structure
 
 ```
-app/
-  (tabs)/
-    index.tsx          # Planner screen
-    recipes.tsx        # Recipes & meal suggestions
-    groceries.tsx      # Grocery list
-    profile.tsx        # User profile
-  meal-history.tsx     # Weekly meal history
-  health-overview.tsx  # BMI/BMR details
-  profile-setup.tsx    # Onboarding flow
-  settings.tsx         # App settings
-contexts/
-  profile-context.tsx  # User data & auth state
-  meal-plan-context.tsx# Shared meal selections
-constants/
-  api.ts               # API layer (PHP backend)
-  theme.ts             # Light & dark color tokens
-data/
-  meals.json           # 30+ meals with ingredients & calories
-PHP/
-  save_meal_history.php
-  get_meal_history.php
-  ...                  # Profile CRUD & auth endpoints
+📁 app/
+├── 📂 (tabs)/
+│   ├── index.tsx              # Planner screen
+│   ├── recipes.tsx            # Recipes & meal suggestions
+│   ├── groceries.tsx          # Grocery list
+│   └── profile.tsx            # User profile
+├── meal-history.tsx           # Weekly meal history
+├── health-overview.tsx        # BMI/BMR details
+├── profile-setup.tsx          # Onboarding flow
+└── settings.tsx               # App settings
+📁 contexts/
+├── profile-context.tsx        # User data & auth state
+└── meal-plan-context.tsx      # Shared meal selections
+📁 constants/
+├── api.ts                     # API layer (PHP backend)
+└── theme.ts                   # Light & dark color tokens
+📁 data/
+└── meals.json                 # 30+ meals with ingredients & calories
+📁 PHP/
+├── save_meal_history.php      # Save daily/weekly plans
+├── get_meal_history.php       # Fetch meal history
+└── ...                        # Profile CRUD & auth endpoints
 ```
 
 ## Getting Started
