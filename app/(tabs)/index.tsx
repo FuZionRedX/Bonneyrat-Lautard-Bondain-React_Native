@@ -1,11 +1,12 @@
 import { useRouter } from "expo-router";
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 import { Colors } from "@/constants/theme";
@@ -13,7 +14,12 @@ import { MealCategory, useMealPlan } from "@/contexts/meal-plan-context";
 import { useProfile } from "@/contexts/profile-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 
-const CATEGORY_ORDER: MealCategory[] = ["breakfast", "lunch", "dinner", "snack"];
+const CATEGORY_ORDER: MealCategory[] = [
+  "breakfast",
+  "lunch",
+  "dinner",
+  "snack",
+];
 const CATEGORY_LABELS: Record<MealCategory, string> = {
   breakfast: "Breakfast",
   lunch: "Lunch",
@@ -43,7 +49,12 @@ function getGender(genderValue: string): Gender {
   return "other";
 }
 
-function calculateBmr(weightKg: number, heightCm: number, ageYears: number, gender: Gender) {
+function calculateBmr(
+  weightKg: number,
+  heightCm: number,
+  ageYears: number,
+  gender: Gender,
+) {
   if (weightKg <= 0 || heightCm <= 0 || ageYears <= 0) return null;
   const base = 10 * weightKg + 6.25 * heightCm - 5 * ageYears;
   if (gender === "male") return base + 5;
@@ -108,18 +119,38 @@ export default function PlannerScreen() {
     });
   }, [selectedMeals]);
 
-  const totalPlanned = selectedMeals.reduce((sum, m) => sum + m.totalCalories, 0);
+  const totalPlanned = selectedMeals.reduce(
+    (sum, m) => sum + m.totalCalories,
+    0,
+  );
   const isOverLimit = totalPlanned > dailyTarget;
   const remaining = Math.max(dailyTarget - totalPlanned, 0);
   const excess = totalPlanned - dailyTarget;
   const hasMealPlan = selectedMeals.length > 0;
+  const wasOverLimitRef = useRef(false);
+
+  useEffect(() => {
+    if (isOverLimit && !wasOverLimitRef.current) {
+      Alert.alert(
+        "Daily limit exceeded",
+        `You are ${excess} kcal above your target. Consider removing some meals.`,
+      );
+    }
+
+    wasOverLimitRef.current = isOverLimit;
+  }, [excess, isOverLimit]);
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.screenBackground }]} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: colors.screenBackground }]}
+      showsVerticalScrollIndicator={false}
+    >
       {/* Header */}
       <View style={[styles.header, { backgroundColor: colors.cardBackground }]}>
         <View>
-          <Text style={[styles.greeting, { color: colors.text }]}>Good morning, {firstName} </Text>
+          <Text style={[styles.greeting, { color: colors.text }]}>
+            Good morning, {firstName}{" "}
+          </Text>
           <Text style={[styles.subGreeting, { color: colors.secondaryText }]}>
             Let&apos;s track your nutrition today
           </Text>
@@ -128,21 +159,35 @@ export default function PlannerScreen() {
           style={[styles.bmiBadge, { backgroundColor: colors.primaryLight }]}
           onPress={() => router.push("/health-overview" as any)}
         >
-          <Text style={[styles.bmiValue, { color: colors.primary }]}>{bmiDisplay}</Text>
+          <Text style={[styles.bmiValue, { color: colors.primary }]}>
+            {bmiDisplay}
+          </Text>
           <Text style={[styles.bmiLabel, { color: colors.primary }]}>BMI</Text>
         </TouchableOpacity>
       </View>
 
       {/* Daily Target Card */}
-      <View style={[styles.targetCard, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
+      <View
+        style={[
+          styles.targetCard,
+          {
+            backgroundColor: colors.cardBackground,
+            shadowColor: colors.shadow,
+          },
+        ]}
+      >
         <View style={styles.targetHeader}>
-          <Text style={[styles.targetTitle, { color: colors.secondaryText }]}>DAILY TARGET</Text>
+          <Text style={[styles.targetTitle, { color: colors.secondaryText }]}>
+            DAILY TARGET
+          </Text>
           <Text style={[styles.targetKcal, { color: colors.text }]}>
             {dailyTarget.toLocaleString()} kcal
           </Text>
         </View>
         <View style={styles.targetRow}>
-          <Text style={[styles.targetConsumed, { color: colors.secondaryText }]}>
+          <Text
+            style={[styles.targetConsumed, { color: colors.secondaryText }]}
+          >
             CALORIES PLANNED{"\n"}
             <Text style={[styles.targetConsumedValue, { color: colors.text }]}>
               {totalPlanned.toLocaleString()} / {dailyTarget.toLocaleString()}
@@ -153,7 +198,10 @@ export default function PlannerScreen() {
               styles.remainingBadge,
               isOverLimit
                 ? { color: colors.danger, backgroundColor: "#FDECEA" }
-                : { color: colors.primary, backgroundColor: colors.primaryLight },
+                : {
+                    color: colors.primary,
+                    backgroundColor: colors.primaryLight,
+                  },
             ]}
           >
             {isOverLimit ? `${excess} over limit` : `${remaining} remaining`}
@@ -167,7 +215,8 @@ export default function PlannerScreen() {
         />
         {isOverLimit && (
           <Text style={styles.overLimitAlert}>
-            You are {excess} kcal above your daily target. Consider removing some meals.
+            You are {excess} kcal above your daily target. Consider removing
+            some meals.
           </Text>
         )}
       </View>
@@ -175,13 +224,27 @@ export default function PlannerScreen() {
       {/* Meal Sections from user selections */}
       {hasMealPlan ? (
         mealSections.map((section) => (
-          <View key={section.category} style={[styles.mealSection, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
+          <View
+            key={section.category}
+            style={[
+              styles.mealSection,
+              {
+                backgroundColor: colors.cardBackground,
+                shadowColor: colors.shadow,
+              },
+            ]}
+          >
             <View style={styles.mealSectionHeader}>
               <Text style={[styles.mealSectionTitle, { color: colors.text }]}>
                 {getMealEmoji(section.category)} {section.label}
               </Text>
               {section.totalKcal > 0 && (
-                <Text style={[styles.mealSectionKcal, { color: colors.secondaryText }]}>
+                <Text
+                  style={[
+                    styles.mealSectionKcal,
+                    { color: colors.secondaryText },
+                  ]}
+                >
                   {section.totalKcal} kcal
                 </Text>
               )}
@@ -189,27 +252,60 @@ export default function PlannerScreen() {
             {section.meals.length > 0 ? (
               section.meals.map((meal) => (
                 <View key={meal.id} style={styles.mealRow}>
-                  <View style={[styles.mealIcon, { backgroundColor: colors.chipBackground }]}>
-                    <Text style={styles.mealIconText}>{getMealEmoji(meal.category)}</Text>
+                  <View
+                    style={[
+                      styles.mealIcon,
+                      { backgroundColor: colors.chipBackground },
+                    ]}
+                  >
+                    <Text style={styles.mealIconText}>
+                      {getMealEmoji(meal.category)}
+                    </Text>
                   </View>
                   <View style={styles.mealInfo}>
-                    <Text style={[styles.mealName, { color: colors.text }]}>{meal.name}</Text>
-                    <Text style={[styles.mealDetail, { color: colors.secondaryText }]}>
-                      {meal.ingredients.length} ingredients - {meal.totalCalories} kcal
+                    <Text style={[styles.mealName, { color: colors.text }]}>
+                      {meal.name}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.mealDetail,
+                        { color: colors.secondaryText },
+                      ]}
+                    >
+                      {meal.ingredients.length} ingredients -{" "}
+                      {meal.totalCalories} kcal
                     </Text>
                   </View>
                 </View>
               ))
             ) : (
-              <Text style={[styles.mealDetail, { color: colors.secondaryText, paddingVertical: 4 }]}>
+              <Text
+                style={[
+                  styles.mealDetail,
+                  { color: colors.secondaryText, paddingVertical: 4 },
+                ]}
+              >
                 No {section.label.toLowerCase()} selected
               </Text>
             )}
           </View>
         ))
       ) : (
-        <View style={[styles.mealSection, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
-          <Text style={[styles.mealSectionTitle, { color: colors.text, marginBottom: 6 }]}>
+        <View
+          style={[
+            styles.mealSection,
+            {
+              backgroundColor: colors.cardBackground,
+              shadowColor: colors.shadow,
+            },
+          ]}
+        >
+          <Text
+            style={[
+              styles.mealSectionTitle,
+              { color: colors.text, marginBottom: 6 },
+            ]}
+          >
             No meals planned yet
           </Text>
           <Text style={[styles.mealDetail, { color: colors.secondaryText }]}>
@@ -220,13 +316,26 @@ export default function PlannerScreen() {
 
       {/* Recommendation card */}
       {!hasMealPlan && (
-        <View style={[styles.recommendCard, { backgroundColor: colors.darkCard, shadowColor: colors.shadow }]}>
+        <View
+          style={[
+            styles.recommendCard,
+            { backgroundColor: colors.darkCard, shadowColor: colors.shadow },
+          ]}
+        >
           <View>
-            <Text style={[styles.recommendTitle, { color: colors.darkCardText }]}>Ready for lunch?</Text>
-            <Text style={[styles.recommendSub, { color: colors.darkCardSubtext }]}>
+            <Text
+              style={[styles.recommendTitle, { color: colors.darkCardText }]}
+            >
+              Ready for lunch?
+            </Text>
+            <Text
+              style={[styles.recommendSub, { color: colors.darkCardSubtext }]}
+            >
               Follow your personalised nutrition plan to maintain your BMI goal.
             </Text>
-            <Text style={[styles.recommendNote, { color: colors.primary }]}>Meals tailored for you</Text>
+            <Text style={[styles.recommendNote, { color: colors.primary }]}>
+              Meals tailored for you
+            </Text>
           </View>
           <TouchableOpacity
             style={[styles.recommendBtn, { backgroundColor: colors.primary }]}

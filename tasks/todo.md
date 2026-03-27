@@ -20,6 +20,9 @@
   - [x] Group ingredients by meal name
   - [x] Checkbox state for marking items as bought
   - [x] Empty state when no meals selected
+- [x] Trigger notification when over-limit alert activates
+  - [x] Detect transition into over-limit state in Planner
+  - [x] Show one-time in-app notification per activation event
 
 ## In Progress
 
