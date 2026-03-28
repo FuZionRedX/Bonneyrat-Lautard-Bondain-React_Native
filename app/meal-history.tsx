@@ -9,7 +9,8 @@ import {
 } from 'react-native';
 
 import { getMealHistory, MealHistoryEntry } from '@/constants/api';
-import { Meal, MealCategory } from '@/contexts/meal-plan-context';
+import { CATEGORY_LABELS, CATEGORY_ORDER, getMealEmoji } from '@/constants/meals';
+import { Meal } from '@/contexts/meal-plan-context';
 import { useProfile } from '@/contexts/profile-context';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -20,21 +21,6 @@ interface MealsFile {
 
 const MEALS = (mealsData as MealsFile).meals;
 const MEALS_BY_ID = new Map(MEALS.map((m) => [m.id, m]));
-
-const CATEGORY_ORDER: MealCategory[] = ['breakfast', 'lunch', 'dinner', 'snack'];
-const CATEGORY_LABELS: Record<MealCategory, string> = {
-  breakfast: 'Breakfast',
-  lunch: 'Lunch',
-  dinner: 'Dinner',
-  snack: 'Snack',
-};
-
-function getMealEmoji(category: MealCategory) {
-  if (category === 'breakfast') return '\u{1F963}';
-  if (category === 'lunch') return '\u{1F957}';
-  if (category === 'dinner') return '\u{1F37D}\uFE0F';
-  return '\u{1F34E}';
-}
 
 function formatDate(dateStr: string) {
   const d = new Date(dateStr);
@@ -67,9 +53,8 @@ export default function MealHistoryScreen() {
       .finally(() => setLoading(false));
   }, [profile.email]);
 
-  const todayKey = toDateKey(new Date().toISOString());
-
   const { futureEntries, pastEntries } = useMemo(() => {
+    const todayKey = toDateKey(new Date().toISOString());
     const sorted = [...history].sort(
       (a, b) => new Date(b.saved_at).getTime() - new Date(a.saved_at).getTime(),
     );
@@ -85,9 +70,9 @@ export default function MealHistoryScreen() {
     // Future: nearest day first (ascending)
     future.sort((a, b) => new Date(a.saved_at).getTime() - new Date(b.saved_at).getTime());
     return { futureEntries: future, pastEntries: past };
-  }, [history, todayKey]);
+  }, [history]);
 
-  function renderDayCard(entry: MealHistoryEntry, index: number, isFuture: boolean) {
+  function renderDayCard(entry: MealHistoryEntry, isFuture: boolean) {
     const dayTotal = CATEGORY_ORDER.reduce((sum, cat) => {
       const ids = entry.meal_ids[cat] ?? [];
       return sum + ids.reduce((s, id) => s + (MEALS_BY_ID.get(id)?.totalCalories ?? 0), 0);
@@ -95,7 +80,7 @@ export default function MealHistoryScreen() {
 
     return (
       <View
-        key={`${entry.saved_at}-${index}`}
+        key={entry.saved_at}
         style={[
           styles.dayCard,
           { backgroundColor: colors.cardBackground, shadowColor: colors.shadow },
@@ -177,7 +162,7 @@ export default function MealHistoryScreen() {
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors.secondaryText }]}>Upcoming</Text>
           </View>
-          {futureEntries.map((entry, i) => renderDayCard(entry, i, true))}
+          {futureEntries.map((entry) => renderDayCard(entry, true))}
         </>
       )}
 
@@ -193,7 +178,7 @@ export default function MealHistoryScreen() {
       )}
 
       {/* Past / today entries */}
-      {!loading && pastEntries.map((entry, i) => renderDayCard(entry, i, false))}
+      {!loading && pastEntries.map((entry) => renderDayCard(entry, false))}
 
       <View style={{ height: 20 }} />
     </ScrollView>

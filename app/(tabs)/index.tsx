@@ -10,29 +10,10 @@ import {
 } from "react-native";
 
 import { Colors } from "@/constants/theme";
+import { CATEGORY_LABELS, CATEGORY_ORDER, getMealEmoji } from "@/constants/meals";
 import { MealCategory, useMealPlan } from "@/contexts/meal-plan-context";
 import { useProfile } from "@/contexts/profile-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
-
-const CATEGORY_ORDER: MealCategory[] = [
-  "breakfast",
-  "lunch",
-  "dinner",
-  "snack",
-];
-const CATEGORY_LABELS: Record<MealCategory, string> = {
-  breakfast: "Breakfast",
-  lunch: "Lunch",
-  dinner: "Dinner",
-  snack: "Snack",
-};
-
-function getMealEmoji(category: MealCategory) {
-  if (category === "breakfast") return "\u{1F963}";
-  if (category === "lunch") return "\u{1F957}";
-  if (category === "dinner") return "\u{1F37D}\uFE0F";
-  return "\u{1F34E}";
-}
 
 type Gender = "male" | "female" | "other";
 const ACTIVITY_FACTOR = 1.35;
@@ -500,7 +481,6 @@ const styles = StyleSheet.create({
   },
   recommendBtnText: { color: "#fff", fontWeight: "700", fontSize: 15 },
 
-  // Over-limit modal
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",

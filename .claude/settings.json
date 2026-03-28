@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc -l \"/c/Users/fuzio/Desktop/School_Work/ECE/B2-London/Application-Development/Bonneyrat-Lautard-Bondain-React_Native/app/\\(tabs\\)/recipes.tsx\")",
+      "Bash(grep -r \"CATEGORY_ORDER\\\\|CATEGORY_LABELS\\\\|getMealEmoji\" /c/Users/fuzio/Desktop/School_Work/ECE/B2-London/Application-Development/Bonneyrat-Lautard-Bondain-React_Native/app --include=*.tsx --include=*.ts)",
+      "Bash(grep -r \"formatDate\\\\|toDateKey\" /c/Users/fuzio/Desktop/School_Work/ECE/B2-London/Application-Development/Bonneyrat-Lautard-Bondain-React_Native/app --include=*.tsx --include=*.ts)",
+      "Bash(grep -r \"MealsFile\\\\|findBestGlobalCombo\\\\|findCategoryCandidates\" /c/Users/fuzio/Desktop/School_Work/ECE/B2-London/Application-Development/Bonneyrat-Lautard-Bondain-React_Native/app --include=*.tsx --include=*.ts)"
+    ]
+  }
+}

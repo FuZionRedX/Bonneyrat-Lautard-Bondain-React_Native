@@ -11,6 +11,7 @@ import {
 
 import { Colors } from '@/constants/theme';
 import { getMealHistory, saveMealHistory } from '@/constants/api';
+import { CATEGORY_LABELS, CATEGORY_ORDER, getMealEmoji } from '@/constants/meals';
 import { Meal, MealCategory, useMealPlan } from '@/contexts/meal-plan-context';
 import { useProfile } from '@/contexts/profile-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -22,13 +23,6 @@ interface MealsFile {
 
 type Gender = 'male' | 'female' | 'other';
 
-const CATEGORY_ORDER: MealCategory[] = ['breakfast', 'lunch', 'dinner', 'snack'];
-const CATEGORY_LABELS: Record<MealCategory, string> = {
-  breakfast: 'Breakfast',
-  lunch: 'Lunch',
-  dinner: 'Dinner',
-  snack: 'Snack',
-};
 const CALORIE_SPLIT: Record<MealCategory, number> = {
   breakfast: 0.25,
   lunch: 0.35,
@@ -39,13 +33,6 @@ const ACTIVITY_FACTOR = 1.35;
 const WEIGHT_LOSS_DEFICIT = 500;
 
 const MEALS = (mealsData as MealsFile).meals;
-
-function getMealEmoji(category: MealCategory) {
-  if (category === 'breakfast') return '\u{1F963}';
-  if (category === 'lunch') return '\u{1F957}';
-  if (category === 'dinner') return '\u{1F37D}\uFE0F';
-  return '\u{1F34E}';
-}
 
 function parseProfileNumber(value: string) {
   return Number.parseFloat(value.replace(',', '.'));
@@ -267,7 +254,7 @@ export default function RecipesScreen() {
       });
       return next;
     });
-  }, [needsWeightLoss, suggestedCombo]);
+  }, [needsWeightLoss, suggestedCombo, setSelectedByCategory]);
 
   function applySuggestedCombo() {
     if (!suggestedCombo) return;
@@ -306,9 +293,7 @@ export default function RecipesScreen() {
       const dateStr = `${y}-${m}-${d}`;
       saves.push(saveMealHistory(profile.email, next as Record<string, number[]>, dateStr));
     }
-    Promise.all(saves).then(() => {
-      setShowWeekModal(true);
-    });
+    Promise.all(saves).finally(() => setShowWeekModal(true));
   }
 
   function toggleCategory(category: MealCategory) {
@@ -661,7 +646,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     paddingVertical: 10,
     borderRadius: 10,
-    alignItems: 'center' as const,
+    alignItems: 'center',
   },
   historyButtonText: { color: '#fff', fontSize: 14, fontWeight: '700' },
 
@@ -671,11 +656,10 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 10,
     borderWidth: 1,
-    alignItems: 'center' as const,
+    alignItems: 'center',
   },
   clearButtonText: { fontSize: 14, fontWeight: '600' },
 
-  // Suggested combo card
   suggestedCard: {
     marginHorizontal: 16,
     marginBottom: 12,
@@ -738,7 +722,6 @@ const styles = StyleSheet.create({
   suggestedTotalLabel: { fontWeight: '700', fontSize: 14 },
   suggestedTotalValue: { color: '#86EFAC', fontWeight: '800', fontSize: 14 },
 
-  // Category dropdown
   categoryCard: {
     marginHorizontal: 16,
     marginBottom: 12,
@@ -818,7 +801,6 @@ const styles = StyleSheet.create({
   },
   empty: { textAlign: 'center', fontSize: 14 },
 
-  // Apply modal
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
