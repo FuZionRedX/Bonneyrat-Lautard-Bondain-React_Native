@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -31,6 +32,13 @@ export default function GroceriesScreen() {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
   const [checkedKeys, setCheckedKeys] = useState<Set<string>>(new Set());
+  const [dismissed, setDismissed] = useState(false);
+  const [showClearModal, setShowClearModal] = useState(false);
+
+  useEffect(() => {
+    setDismissed(false);
+    setCheckedKeys(new Set());
+  }, [selectedMeals]);
 
   const items = useMemo<GroceryItem[]>(() => {
     return selectedMeals.flatMap((meal) =>
@@ -51,82 +59,116 @@ export default function GroceriesScreen() {
       return next;
     });
 
-  const grouped = groupByMeal(items);
-  const checkedCount = items.filter((i) => checkedKeys.has(i.key)).length;
+  const visibleItems = dismissed ? [] : items;
+  const grouped = groupByMeal(visibleItems);
+  const checkedCount = visibleItems.filter((i) => checkedKeys.has(i.key)).length;
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.screenBackground }]} showsVerticalScrollIndicator={false}>
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.cardBackground }]}>
-        <View>
-          <Text style={[styles.title, { color: colors.text }]}>Groceries</Text>
-          <Text style={[styles.subtitle, { color: colors.secondaryText }]}>
-            {items.length > 0
-              ? `${checkedCount} / ${items.length} items checked`
-              : 'No meals selected yet'}
-          </Text>
+    <>
+      <ScrollView style={[styles.container, { backgroundColor: colors.screenBackground }]} showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View style={[styles.header, { backgroundColor: colors.cardBackground }]}>
+          <View>
+            <Text style={[styles.title, { color: colors.text }]}>Groceries</Text>
+            <Text style={[styles.subtitle, { color: colors.secondaryText }]}>
+              {visibleItems.length > 0
+                ? `${checkedCount} / ${visibleItems.length} items checked`
+                : 'No meals selected yet'}
+            </Text>
+          </View>
+          {visibleItems.length > 0 && (
+            <View style={styles.headerRight}>
+              <View style={[styles.progressCircle, { backgroundColor: colors.primaryLight, borderColor: colors.primary }]}>
+                <Text style={[styles.progressPct, { color: colors.primary }]}>
+                  {Math.round((checkedCount / visibleItems.length) * 100)}%
+                </Text>
+              </View>
+              <TouchableOpacity style={[styles.clearBtn, { backgroundColor: '#FF5252' }]} onPress={() => setShowClearModal(true)}>
+                <Text style={styles.clearBtnText}>Done</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
-        {items.length > 0 && (
-          <View style={[styles.progressCircle, { backgroundColor: colors.primaryLight, borderColor: colors.primary }]}>
-            <Text style={[styles.progressPct, { color: colors.primary }]}>
-              {Math.round((checkedCount / items.length) * 100)}%
+
+        {/* Progress bar */}
+        {visibleItems.length > 0 && (
+          <View style={[styles.progressTrackWrap, { backgroundColor: colors.cardBackground }]}>
+            <View style={[styles.progressTrack, { backgroundColor: colors.progressTrack }]}>
+              <View
+                style={[
+                  styles.progressFill,
+                  { width: `${(checkedCount / visibleItems.length) * 100}%` as any, backgroundColor: colors.progressFill },
+                ]}
+              />
+            </View>
+          </View>
+        )}
+
+        {/* Grouped by meal */}
+        {visibleItems.length > 0 ? (
+          Object.entries(grouped).map(([mealName, mealItems]) => (
+            <View key={mealName} style={styles.categorySection}>
+              <Text style={[styles.categoryTitle, { color: colors.secondaryText }]}>{mealName}</Text>
+              {mealItems.map((item) => {
+                const checked = checkedKeys.has(item.key);
+                return (
+                  <TouchableOpacity
+                    key={item.key}
+                    style={[styles.itemRow, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}
+                    onPress={() => toggle(item.key)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[styles.checkbox, { borderColor: colors.border }, checked && { backgroundColor: colors.primary, borderColor: colors.primary }]}>
+                      {checked && <Text style={styles.checkmark}>&#10003;</Text>}
+                    </View>
+                    <View style={styles.itemInfo}>
+                      <Text style={[styles.itemName, { color: colors.text }, checked && { textDecorationLine: 'line-through', color: colors.secondaryText }]}>
+                        {item.name}
+                      </Text>
+                      <Text style={[styles.itemQty, { color: colors.secondaryText }]}>{item.qty}</Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          ))
+        ) : (
+          <View style={styles.emptyCard}>
+            <Text style={[styles.emptyText, { color: colors.secondaryText }]}>
+              Select meals in the Recipes tab to generate your grocery list.
             </Text>
           </View>
         )}
-      </View>
 
-      {/* Progress bar */}
-      {items.length > 0 && (
-        <View style={[styles.progressTrackWrap, { backgroundColor: colors.cardBackground }]}>
-          <View style={[styles.progressTrack, { backgroundColor: colors.progressTrack }]}>
-            <View
-              style={[
-                styles.progressFill,
-                { width: `${(checkedCount / items.length) * 100}%` as any, backgroundColor: colors.progressFill },
-              ]}
-            />
+        <View style={{ height: 20 }} />
+      </ScrollView>
+
+      <Modal visible={showClearModal} transparent animationType="fade" onRequestClose={() => setShowClearModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
+            <Text style={styles.modalIcon}>&#10003;</Text>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>All done shopping?</Text>
+            <Text style={[styles.modalMessage, { color: colors.secondaryText }]}>
+              This will clear your grocery list. Your meal plan will not be affected.
+            </Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, { backgroundColor: colors.progressTrack }]}
+                onPress={() => setShowClearModal(false)}
+              >
+                <Text style={[styles.modalButtonText, { color: colors.text }]}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, { backgroundColor: '#FF5252' }]}
+                onPress={() => { setDismissed(true); setShowClearModal(false); }}
+              >
+                <Text style={styles.modalButtonText}>Clear</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
-      )}
-
-      {/* Grouped by meal */}
-      {items.length > 0 ? (
-        Object.entries(grouped).map(([mealName, mealItems]) => (
-          <View key={mealName} style={styles.categorySection}>
-            <Text style={[styles.categoryTitle, { color: colors.secondaryText }]}>{mealName}</Text>
-            {mealItems.map((item) => {
-              const checked = checkedKeys.has(item.key);
-              return (
-                <TouchableOpacity
-                  key={item.key}
-                  style={[styles.itemRow, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}
-                  onPress={() => toggle(item.key)}
-                  activeOpacity={0.7}
-                >
-                  <View style={[styles.checkbox, { borderColor: colors.border }, checked && { backgroundColor: colors.primary, borderColor: colors.primary }]}>
-                    {checked && <Text style={styles.checkmark}>&#10003;</Text>}
-                  </View>
-                  <View style={styles.itemInfo}>
-                    <Text style={[styles.itemName, { color: colors.text }, checked && { textDecorationLine: 'line-through', color: colors.secondaryText }]}>
-                      {item.name}
-                    </Text>
-                    <Text style={[styles.itemQty, { color: colors.secondaryText }]}>{item.qty}</Text>
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        ))
-      ) : (
-        <View style={styles.emptyCard}>
-          <Text style={[styles.emptyText, { color: colors.secondaryText }]}>
-            Select meals in the Recipes tab to generate your grocery list.
-          </Text>
-        </View>
-      )}
-
-      <View style={{ height: 20 }} />
-    </ScrollView>
+      </Modal>
+    </>
   );
 }
 
@@ -199,4 +241,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyText: { fontSize: 14, textAlign: 'center' },
+
+  headerRight: { alignItems: 'center', gap: 8 },
+  clearBtn: { borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
+  clearBtnText: { color: '#fff', fontSize: 12, fontWeight: '700' },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 30,
+  },
+  modalCard: {
+    width: '100%',
+    borderRadius: 18,
+    padding: 24,
+    alignItems: 'center',
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  modalIcon: { fontSize: 40, color: '#4CAF50', marginBottom: 12 },
+  modalTitle: { fontSize: 18, fontWeight: '800', marginBottom: 8 },
+  modalMessage: { fontSize: 14, textAlign: 'center', lineHeight: 20, marginBottom: 20 },
+  modalButtons: { flexDirection: 'row', gap: 12 },
+  modalButton: { paddingHorizontal: 28, paddingVertical: 10, borderRadius: 20 },
+  modalButtonText: { color: '#fff', fontWeight: '700', fontSize: 14 },
 });
