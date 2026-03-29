@@ -30,32 +30,20 @@ if ($email === "" || $plainPassword === "") {
 
 $hashedPassword = password_hash($plainPassword, PASSWORD_DEFAULT);
 
-$stmt = $conn->prepare(
-    "INSERT INTO users (email, password, full_name, age, gender, height, weight, goal, dark_mode)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-     ON DUPLICATE KEY UPDATE
-       password=VALUES(password),
-       full_name=VALUES(full_name),
-       age=VALUES(age),
-       gender=VALUES(gender),
-       height=VALUES(height),
-       weight=VALUES(weight),
-        goal=VALUES(goal),
-       dark_mode=VALUES(dark_mode)
-);
+$sql = "INSERT INTO users (email, password, full_name, age, gender, height, weight, goal, dark_mode)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+          password = VALUES(password),
+          full_name = VALUES(full_name),
+          age = VALUES(age),
+          gender = VALUES(gender),
+          height = VALUES(height),
+          weight = VALUES(weight),
+          goal = VALUES(goal),
+          dark_mode = VALUES(dark_mode)";
 
-$stmt->bind_param(
-        "sssissssi",
-    $email,
-    $hashedPassword,
-    $fullName,
-    $age,
-    $gender,
-    $height,
-    $weight,
-    $goal,
-    $darkmode
-);
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("sssissssi", $email, $hashedPassword, $fullName, $age, $gender, $height, $weight, $goal, $darkmode);
 
 $ok = $stmt->execute();
 echo json_encode(["success" => $ok]);
