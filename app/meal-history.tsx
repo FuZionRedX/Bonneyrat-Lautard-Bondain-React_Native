@@ -1,10 +1,12 @@
 import mealsData from '@/data/meals.json';
+import { Stack, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 
@@ -36,6 +38,7 @@ function toDateKey(dateStr: string) {
 }
 
 export default function MealHistoryScreen() {
+  const router = useRouter();
   const { profile } = useProfile();
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
@@ -139,8 +142,12 @@ export default function MealHistoryScreen() {
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.screenBackground }]} showsVerticalScrollIndicator={false}>
+      <Stack.Screen options={{ headerShown: false }} />
       {/* Header */}
       <View style={[styles.header, { backgroundColor: colors.cardBackground }]}>
+        <TouchableOpacity onPress={() => router.back()} style={{ paddingRight: 12 }}>
+          <Text style={{ fontSize: 22, color: colors.text }}>←</Text>
+        </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.text }]}>Meal History</Text>
       </View>
 
@@ -189,6 +196,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
 
   header: {
+    flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingTop: 56,

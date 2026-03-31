@@ -115,6 +115,7 @@ export default function ProfileScreen() {
   const { connectProfileByEmail, hasProcessedInput, logout, profile } =
     useProfile();
   const [emailToConnect, setEmailToConnect] = useState("");
+  const [emailError, setEmailError] = useState("");
   const [passwordToConnect, setPasswordToConnect] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [connectError, setConnectError] = useState("");
@@ -145,9 +146,17 @@ export default function ProfileScreen() {
     const enteredPassword = passwordToConnect;
 
     if (!trimmedEmail) {
-      setConnectError("Enter your email to connect your profile.");
+      setEmailError("Enter your email to connect your profile.");
       return;
     }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      setEmailError("Enter a valid email address (e.g. name@example.com).");
+      return;
+    }
+
+    setEmailError("");
 
     if (!enteredPassword.trim()) {
       setConnectError("Enter your password to connect your profile.");
@@ -219,7 +228,7 @@ export default function ProfileScreen() {
           style={[styles.heroBlock, { backgroundColor: colors.heroBackground }]}
         >
           <Image
-            source={require("@/assets/images/splash-icon.png")}
+            source={require("@/assets/images/LOGO.png")}
             style={styles.heroImage}
             resizeMode="contain"
           />
@@ -253,11 +262,19 @@ export default function ProfileScreen() {
               placeholder="name@example.com"
               placeholderTextColor={colors.placeholderText}
               value={emailToConnect}
-              onChangeText={setEmailToConnect}
+              onChangeText={(text) => {
+                setEmailToConnect(text);
+                if (emailError) setEmailError("");
+              }}
               autoCapitalize="none"
               keyboardType="email-address"
             />
           </View>
+          {emailError ? (
+            <Text style={[styles.loginError, { color: colors.dangerText }]}>
+              {emailError}
+            </Text>
+          ) : null}
 
           <Text style={[styles.inputLabel, { color: colors.tertiaryText }]}>
             PASSWORD
@@ -575,7 +592,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  heroImage: { width: 145, height: 145, opacity: 0.95 },
+  heroImage: { width: 330, height: 330, opacity: 0.95 },
   loginPanel: {
     flex: 1,
     paddingHorizontal: 22,

@@ -81,11 +81,41 @@ export default function ProfileSetupScreen() {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<ProfileData>(profile);
   const [statusMessage, setStatusMessage] = useState("");
+  const [ageError, setAgeError] = useState("");
+  const [heightError, setHeightError] = useState("");
+  const [weightError, setWeightError] = useState("");
 
   const set = (key: keyof ProfileData) => (value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }));
 
   const next = async () => {
+    if (step === 2) {
+      const age = parseInt(form.age, 10);
+      if (!form.age.trim() || isNaN(age) || age <= 0) {
+        setAgeError("Please enter a valid age.");
+        return;
+      }
+      if (age < 18) {
+        setAgeError("You must be at least 18 years old.");
+        return;
+      }
+      setAgeError("");
+
+      const height = parseFloat(form.height);
+      if (!form.height.trim() || isNaN(height) || height <= 0) {
+        setHeightError("Please enter a valid height.");
+        return;
+      }
+      setHeightError("");
+
+      const weight = parseFloat(form.weight);
+      if (!form.weight.trim() || isNaN(weight) || weight <= 0) {
+        setWeightError("Please enter a valid weight.");
+        return;
+      }
+      setWeightError("");
+    }
+
     if (step < 3) {
       setStatusMessage("");
       setStep((s) => s + 1);
@@ -185,10 +215,15 @@ export default function ProfileSetupScreen() {
                     label="Age"
                     placeholder="25"
                     value={form.age}
-                    onChangeText={set("age")}
+                    onChangeText={(v) => { set("age")(v); if (ageError) setAgeError(""); }}
                     keyboardType="numeric"
                     colors={colors}
                   />
+                  {ageError ? (
+                    <Text style={{ color: colors.dangerText, fontSize: 12, marginTop: 2 }}>
+                      {ageError}
+                    </Text>
+                  ) : null}
                 </View>
                 <View style={{ flex: 1, marginLeft: 12 }}>
                   <Text style={[styles.fieldLabel, { color: colors.tertiaryText }]}>Gender</Text>
@@ -224,20 +259,30 @@ export default function ProfileSetupScreen() {
                     label="Height (cm)"
                     placeholder="180"
                     value={form.height}
-                    onChangeText={set("height")}
+                    onChangeText={(v) => { set("height")(v); if (heightError) setHeightError(""); }}
                     keyboardType="numeric"
                     colors={colors}
                   />
+                  {heightError ? (
+                    <Text style={{ color: colors.dangerText, fontSize: 12, marginTop: 2 }}>
+                      {heightError}
+                    </Text>
+                  ) : null}
                 </View>
                 <View style={{ flex: 1, marginLeft: 12 }}>
                   <InputField
                     label="Weight (kg)"
                     placeholder="75"
                     value={form.weight}
-                    onChangeText={set("weight")}
+                    onChangeText={(v) => { set("weight")(v); if (weightError) setWeightError(""); }}
                     keyboardType="numeric"
                     colors={colors}
                   />
+                  {weightError ? (
+                    <Text style={{ color: colors.dangerText, fontSize: 12, marginTop: 2 }}>
+                      {weightError}
+                    </Text>
+                  ) : null}
                 </View>
               </View>
             </>
