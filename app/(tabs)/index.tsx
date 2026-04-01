@@ -11,7 +11,7 @@ import {
 
 import { Colors } from "@/constants/theme";
 import { CATEGORY_LABELS, CATEGORY_ORDER, getMealEmoji } from "@/constants/meals";
-import { MealCategory, useMealPlan } from "@/contexts/meal-plan-context";
+import { useMealPlan } from "@/contexts/meal-plan-context";
 import { useProfile } from "@/contexts/profile-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 
@@ -135,15 +135,14 @@ export default function PlannerScreen() {
             Let&apos;s track your nutrition today
           </Text>
         </View>
-        <TouchableOpacity
+        <View
           style={[styles.bmiBadge, { backgroundColor: colors.primaryLight }]}
-          onPress={() => router.push("/health-overview" as any)}
         >
           <Text style={[styles.bmiValue, { color: colors.primary }]}>
             {bmiDisplay}
           </Text>
           <Text style={[styles.bmiLabel, { color: colors.primary }]}>BMI</Text>
-        </TouchableOpacity>
+        </View>
       </View>
 
       {/* Daily Target Card */}
