@@ -344,7 +344,6 @@ export default function ProfileScreen() {
             )}
           </TouchableOpacity>
 
-          {/* Social login options removed as requested */}
 
           <TouchableOpacity
             style={styles.signupRow}
@@ -531,11 +530,11 @@ export default function ProfileScreen() {
           Primary Goal
         </Text>
         <View style={styles.goalRow}>
-          <TouchableOpacity
+          <View
             style={[styles.goalChip, { backgroundColor: colors.primary }]}
           >
             <Text style={styles.goalChipText}>{profile.goal}</Text>
-          </TouchableOpacity>
+          </View>
         </View>
       </View>
 
