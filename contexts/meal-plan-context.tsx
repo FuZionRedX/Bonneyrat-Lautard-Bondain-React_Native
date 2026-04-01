@@ -24,6 +24,7 @@ export interface Meal {
 
 export type MealCategory = Meal["category"];
 
+// Defines the canonical display and iteration order for meal categories across all screens
 const CATEGORY_ORDER: MealCategory[] = [
   "breakfast",
   "lunch",

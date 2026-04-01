@@ -62,6 +62,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         setProfile(nextProfile);
         setHasProcessedInput(true);
       },
+      // Password is stored in profile state so it can be re-submitted on next login
+      // (the API requires it for authentication; it is never persisted to disk).
       connectProfileByEmail: async (email: string, password: string) => {
         const result = await loginProfile(email, password);
 
@@ -108,6 +110,7 @@ export function useProfile() {
 export function getProfileInitials(fullName: string) {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
 
+  // "NA" (Not Available) is the placeholder shown in the avatar when no name is set
   if (parts.length === 0) {
     return "NA";
   }

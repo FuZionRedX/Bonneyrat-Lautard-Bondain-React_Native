@@ -3,6 +3,8 @@ import { Platform } from "react-native";
 
 const NATIVE_DEFAULT_API_BASE = "http://10.0.2.2/health_app";
 
+// On web, the PHP backend runs on the same host but a different port than Expo's dev server.
+// EXPO_PUBLIC_WEB_API_BASE_URL overrides this for staging/production deployments.
 function resolveWebApiBase() {
   const envWebBase = process.env.EXPO_PUBLIC_WEB_API_BASE_URL;
   if (envWebBase && envWebBase.trim().length > 0) {
@@ -55,7 +57,6 @@ export async function loginProfile(
   email: string,
   password: string,
 ): Promise<LoginProfileResponse> {
-  // POST to get_profile.php (server verifies password and returns user fields).
   const res = await fetch(`${API_BASE}/get_profile.php`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

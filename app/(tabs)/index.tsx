@@ -16,7 +16,9 @@ import { useProfile } from "@/contexts/profile-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 
 type Gender = "male" | "female" | "other";
+// Sedentary-to-lightly-active multiplier applied to BMR (Mifflin-St Jeor)
 const ACTIVITY_FACTOR = 1.35;
+// Daily kcal deficit required to lose ~0.5 kg/week (standard clinical guideline)
 const WEIGHT_LOSS_DEFICIT = 500;
 
 function parseProfileNumber(value: string) {
@@ -111,6 +113,8 @@ export default function PlannerScreen() {
   const wasOverLimitRef = useRef(false);
   const [showOverLimitModal, setShowOverLimitModal] = useState(false);
 
+  // Show the over-limit modal only on the transition into over-limit (not on every re-render).
+  // wasOverLimitRef tracks the previous state so the modal fires exactly once per breach.
   useEffect(() => {
     if (isOverLimit && !wasOverLimitRef.current) {
       setShowOverLimitModal(true);
@@ -125,7 +129,6 @@ export default function PlannerScreen() {
       style={[styles.container, { backgroundColor: colors.screenBackground }]}
       showsVerticalScrollIndicator={false}
     >
-      {/* Header */}
       <View style={[styles.header, { backgroundColor: colors.cardBackground }]}>
         <View>
           <Text style={[styles.greeting, { color: colors.text }]}>
@@ -145,7 +148,6 @@ export default function PlannerScreen() {
         </View>
       </View>
 
-      {/* Daily Target Card */}
       <View
         style={[
           styles.targetCard,
@@ -200,7 +202,6 @@ export default function PlannerScreen() {
         )}
       </View>
 
-      {/* Meal Sections from user selections */}
       {hasMealPlan ? (
         mealSections.map((section) => (
           <View
@@ -293,7 +294,6 @@ export default function PlannerScreen() {
         </View>
       )}
 
-      {/* Recommendation card */}
       {!hasMealPlan && (
         <View
           style={[

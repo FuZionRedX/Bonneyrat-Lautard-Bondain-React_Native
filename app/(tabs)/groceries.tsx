@@ -66,7 +66,6 @@ export default function GroceriesScreen() {
   return (
     <>
       <ScrollView style={[styles.container, { backgroundColor: colors.screenBackground }]} showsVerticalScrollIndicator={false}>
-        {/* Header */}
         <View style={[styles.header, { backgroundColor: colors.cardBackground }]}>
           <View>
             <Text style={[styles.title, { color: colors.text }]}>Groceries</Text>
@@ -90,7 +89,6 @@ export default function GroceriesScreen() {
           )}
         </View>
 
-        {/* Progress bar */}
         {visibleItems.length > 0 && (
           <View style={[styles.progressTrackWrap, { backgroundColor: colors.cardBackground }]}>
             <View style={[styles.progressTrack, { backgroundColor: colors.progressTrack }]}>
@@ -104,7 +102,6 @@ export default function GroceriesScreen() {
           </View>
         )}
 
-        {/* Grouped by meal */}
         {visibleItems.length > 0 ? (
           Object.entries(grouped).map(([mealName, mealItems]) => (
             <View key={mealName} style={styles.categorySection}>

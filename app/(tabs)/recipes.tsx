@@ -29,7 +29,9 @@ const CALORIE_SPLIT: Record<MealCategory, number> = {
   dinner: 0.3,
   snack: 0.1,
 };
+// Sedentary-to-lightly-active multiplier applied to BMR (Mifflin-St Jeor)
 const ACTIVITY_FACTOR = 1.35;
+// Daily kcal deficit required to lose ~0.5 kg/week (standard clinical guideline)
 const WEIGHT_LOSS_DEFICIT = 500;
 
 const MEALS = (mealsData as MealsFile).meals;
@@ -228,7 +230,6 @@ export default function RecipesScreen() {
     }, { breakfast: [], lunch: [], dinner: [], snack: [] });
   }, []);
 
-  // Best combo across all 4 categories: maximises total calories without exceeding daily limit
   const suggestedCombo = useMemo(() => {
     if (!categoryTargets || !dailyCalories) return null;
     return findBestGlobalCombo(allMealsByCategory, categoryTargets, dailyCalories, recentHistory);
@@ -351,7 +352,6 @@ export default function RecipesScreen() {
 
       {needsWeightLoss && categoryTargets && suggestedCombo && (
         <>
-          {/* Suggested combo card */}
           <View style={[styles.suggestedCard, { backgroundColor: colors.darkCard, shadowColor: colors.shadow }]}>
             <View style={styles.suggestedHeader}>
               <View>
@@ -405,7 +405,6 @@ export default function RecipesScreen() {
             </View>
           </View>
 
-          {/* Meal history link */}
           <TouchableOpacity
             style={[styles.historyButton, { backgroundColor: colors.primary }]}
             onPress={() => router.push('/meal-history')}
@@ -413,7 +412,6 @@ export default function RecipesScreen() {
             <Text style={styles.historyButtonText}>View Meal History</Text>
           </TouchableOpacity>
 
-          {/* Clear all selections */}
           {selectedMeals.length > 0 && (
             <TouchableOpacity
               style={[styles.clearButton, { borderColor: colors.border }]}
@@ -423,7 +421,6 @@ export default function RecipesScreen() {
             </TouchableOpacity>
           )}
 
-          {/* Category dropdowns */}
           {CATEGORY_ORDER.map((category) => {
             const isExpanded = expandedCategories.has(category);
             const meals = allMealsByCategory[category];
@@ -450,7 +447,6 @@ export default function RecipesScreen() {
                   </Text>
                 </TouchableOpacity>
 
-                {/* Selected preview when collapsed */}
                 {!isExpanded && selectedInCategory.length > 0 && (
                   <View style={[styles.selectedPreview, { borderTopColor: colors.borderLight }]}>
                     {selectedInCategory.map((meal) => (
@@ -464,7 +460,6 @@ export default function RecipesScreen() {
                   </View>
                 )}
 
-                {/* Expanded list */}
                 {isExpanded && (
                   <View style={[styles.dropdownList, { borderTopColor: colors.borderLight }]}>
                     {meals.map((meal) => {
@@ -505,7 +500,6 @@ export default function RecipesScreen() {
             );
           })}
 
-          {/* Final plan summary */}
           <View style={[styles.finalPlanCard, { backgroundColor: colors.darkCard }]}>
             <Text style={[styles.finalPlanTitle, { color: colors.darkCardText }]}>Final Daily Meal Plan</Text>
             {selectedMeals.map((meal) => (

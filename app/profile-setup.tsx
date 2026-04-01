@@ -85,6 +85,7 @@ export default function ProfileSetupScreen() {
   const [heightError, setHeightError] = useState("");
   const [weightError, setWeightError] = useState("");
 
+  // Curried setter: set("field") returns an onChangeText handler for that field
   const set = (key: keyof ProfileData) => (value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }));
 
@@ -143,7 +144,6 @@ export default function ProfileSetupScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView style={[styles.container, { backgroundColor: colors.screenBackground }]} showsVerticalScrollIndicator={false}>
-        {/* Header */}
         <View style={[styles.header, { backgroundColor: colors.cardBackground }]}>
           <View style={styles.headerRow}>
             <Text style={[styles.headerTitle, { color: colors.text }]}>Profile Details</Text>
@@ -153,7 +153,6 @@ export default function ProfileSetupScreen() {
         </View>
 
         <View style={styles.body}>
-          {/* Step 1: Account Info */}
           {step === 1 && (
             <>
               <Text style={[styles.sectionHeading, { color: colors.text }]}>Tell us about yourself</Text>
@@ -201,7 +200,6 @@ export default function ProfileSetupScreen() {
             </>
           )}
 
-          {/* Step 2: Body Info */}
           {step === 2 && (
             <>
               <Text style={[styles.sectionHeading, { color: colors.text }]}>Your body details</Text>
@@ -288,7 +286,6 @@ export default function ProfileSetupScreen() {
             </>
           )}
 
-          {/* Step 3: Goal */}
           {step === 3 && (
             <>
               <Text style={[styles.sectionHeading, { color: colors.text }]}>Your primary goal</Text>
@@ -335,7 +332,6 @@ export default function ProfileSetupScreen() {
         <View style={{ height: 20 }} />
       </ScrollView>
 
-      {/* Bottom Navigation */}
       <View style={[styles.bottomNav, { backgroundColor: colors.cardBackground, borderTopColor: colors.borderLight }]}>
         <TouchableOpacity style={[styles.backBtn, { backgroundColor: colors.screenBackground, borderColor: colors.border }]} onPress={back}>
           <Text style={[styles.backBtnText, { color: colors.tertiaryText }]}>&larr; Back</Text>

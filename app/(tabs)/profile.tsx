@@ -38,6 +38,7 @@ function parseProfileNumber(value: string) {
   return Number.parseFloat(value.replace(",", "."));
 }
 
+// WHO BMI classification thresholds: <18.5 underweight, 18.5–24.9 normal, 25–29.9 overweight, ≥30 obese
 function getBmiMeta(bmi: number | null): BmiMeta {
   if (bmi === null) {
     return {
@@ -198,7 +199,6 @@ export default function ProfileScreen() {
   };
 
   if (!hasProcessedInput) {
-    // Unauthenticated state: show login/connect screen.
     return (
       <ScrollView
         style={[
@@ -361,13 +361,11 @@ export default function ProfileScreen() {
     );
   }
 
-  // Authenticated state: show profile, stats, and settings.
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: colors.screenBackground }]}
       showsVerticalScrollIndicator={false}
     >
-      {/* Header */}
       <View style={[styles.header, { backgroundColor: colors.cardBackground }]}>
         <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
           <Text style={styles.avatarText}>{initials}</Text>
@@ -441,7 +439,6 @@ export default function ProfileScreen() {
           <Text style={[styles.bmiDesc, { color: colors.tertiaryText }]}>
             {bmiMeta.description}
           </Text>
-          {/* BMI scale */}
           <View style={styles.bmiScaleRow}>
             {[
               { label: "0", color: "#2196F3" },
@@ -459,7 +456,6 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      {/* Body Info */}
       <View
         style={[
           styles.bodyInfoCard,
@@ -516,7 +512,6 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      {/* Primary Goal */}
       <View
         style={[
           styles.goalCard,
@@ -538,7 +533,6 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      {/* Menu */}
       <View
         style={[
           styles.menuCard,
