@@ -40,11 +40,14 @@ A health and fitness meal planning app that provides **personalized nutrition re
 │   ├── index.tsx              # Planner screen
 │   ├── recipes.tsx            # Recipes & meal suggestions
 │   ├── groceries.tsx          # Grocery list
-│   └── profile.tsx            # User profile
+│   ├── profile.tsx            # User profile
+│   └── explore.tsx            # Explore screen
 ├── meal-history.tsx           # Weekly meal history
-├── health-overview.tsx        # BMI/BMR details
 ├── profile-setup.tsx          # Onboarding flow
-└── settings.tsx               # App settings
+├── settings.tsx               # App settings
+├── help-support.tsx           # Help & support
+├── legal.tsx                  # Legal information
+└── modal.tsx                  # Modal screen
 📁 contexts/
 ├── profile-context.tsx        # User data & auth state
 └── meal-plan-context.tsx      # Shared meal selections
@@ -56,7 +59,12 @@ A health and fitness meal planning app that provides **personalized nutrition re
 📁 PHP/
 ├── save_meal_history.php      # Save daily/weekly plans
 ├── get_meal_history.php       # Fetch meal history
-└── ...                        # Profile CRUD & auth endpoints
+├── save_profile.php           # Save user profile
+├── get_profile.php            # Fetch user profile
+├── delete_account.php         # Account deletion
+├── config.php                 # Database configuration
+├── health_app.sql             # Main database schema
+└── meal_history.sql           # Meal history table schema
 ```
 
 ## Getting Started
@@ -91,7 +99,7 @@ npm run web       # Browser
 
 ### Backend Setup
 
-1. Import the SQL schema into your MySQL database
+1. Import `PHP/health_app.sql` and `PHP/meal_history.sql` into your MySQL database
 2. Place the `PHP/` files in your web server's document root (e.g. `htdocs/health_app/`)
 3. Update `PHP/config.php` with your database credentials
 
