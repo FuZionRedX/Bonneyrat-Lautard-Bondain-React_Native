@@ -8,7 +8,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "test": "node --test lib/nutrition.test.mjs"
+    "test": "node --test lib/*.test.mjs"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

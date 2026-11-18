@@ -75,7 +75,7 @@ function InputField({
 
 export default function ProfileSetupScreen() {
   const router = useRouter();
-  const { profile, updateProfile } = useProfile();
+  const { profile, hasProcessedInput, updateProfile } = useProfile();
   const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
   const [step, setStep] = useState(1);
@@ -175,22 +175,28 @@ export default function ProfileSetupScreen() {
                 index.
               </Text>
 
-              <InputField
-                label="Email Address"
-                placeholder="example@email.com"
-                value={form.email}
-                onChangeText={set("email")}
-                keyboardType="email-address"
-                colors={colors}
-              />
-              <InputField
-                label="Password"
-                placeholder="--------"
-                value={form.password}
-                onChangeText={set("password")}
-                secureTextEntry
-                colors={colors}
-              />
+              {/* Editing (already logged in) keeps the account's email and password:
+                  the server matches the account by both, so changing them here would fail or fork it. */}
+              {!hasProcessedInput && (
+                <>
+                  <InputField
+                    label="Email Address"
+                    placeholder="example@email.com"
+                    value={form.email}
+                    onChangeText={set("email")}
+                    keyboardType="email-address"
+                    colors={colors}
+                  />
+                  <InputField
+                    label="Password"
+                    placeholder="--------"
+                    value={form.password}
+                    onChangeText={set("password")}
+                    secureTextEntry
+                    colors={colors}
+                  />
+                </>
+              )}
               <InputField
                 label="Full Name"
                 placeholder="John Doe"

@@ -13,6 +13,7 @@ import { Colors } from '@/constants/theme';
 import { getMealHistory, saveMealHistory } from '@/lib/api';
 import { CATEGORY_LABELS, CATEGORY_ORDER, getMealEmoji, toLocalDateKey } from '@/constants/meals';
 import { getNutrition } from '@/lib/nutrition';
+import { findBestGlobalCombo } from '@/lib/suggest';
 import { Meal, MealCategory, useMealPlan } from '@/contexts/meal-plan-context';
 import { useProfile } from '@/contexts/profile-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -30,109 +31,6 @@ const CALORIE_SPLIT: Record<MealCategory, number> = {
 };
 
 const MEALS = (mealsData as MealsFile).meals;
-
-// Returns all combinations of `size` elements from `arr`
-function getCombinations<T>(arr: T[], size: number): T[][] {
-  if (size === 0) return [[]];
-  if (arr.length < size) return [];
-  const [first, ...rest] = arr;
-  const withFirst = getCombinations(rest, size - 1).map((c) => [first, ...c]);
-  const withoutFirst = getCombinations(rest, size);
-  return [...withFirst, ...withoutFirst];
-}
-
-type CategorCandidate = { combo: Meal[]; calories: number; usedRecently: boolean };
-
-// Returns top candidate combos for a single category, keeping at most ~10 options.
-function findCategoryCandidates(
-  meals: Meal[],
-  target: number,
-  recentlySeen: number[][],
-  maxSize = 3,
-): CategorCandidate[] {
-  const raw: CategorCandidate[] = [];
-
-  for (let size = 1; size <= Math.min(maxSize, meals.length); size++) {
-    for (const combo of getCombinations(meals, size)) {
-      const calories = combo.reduce((s, m) => s + m.totalCalories, 0);
-      const ids = combo.map((m) => m.id).sort((a, b) => a - b);
-      const usedRecently = recentlySeen.some(
-        (used) => used.length === ids.length && used.every((id, i) => id === ids[i]),
-      );
-      raw.push({ combo, calories, usedRecently });
-    }
-  }
-
-  // Best under-target (highest calories first) + a few over-target fallbacks
-  const under = raw
-    .filter((c) => c.calories <= target)
-    .sort((a, b) => {
-      if (a.usedRecently !== b.usedRecently) return a.usedRecently ? 1 : -1;
-      return b.calories - a.calories;
-    })
-    .slice(0, 8);
-  const over = raw
-    .filter((c) => c.calories > target)
-    .sort((a, b) => a.calories - b.calories)
-    .slice(0, 2);
-
-  return [...under, ...over];
-}
-
-// Finds the best combination across all 4 categories that maximises total calories
-// without exceeding the daily limit, preferring unused combos.
-function findBestGlobalCombo(
-  allMealsByCategory: Record<MealCategory, Meal[]>,
-  categoryTargets: Record<MealCategory, number>,
-  dailyLimit: number,
-  recentHistory: Record<MealCategory, number[][]>,
-): Record<MealCategory, Meal[]> {
-  const perCategory = CATEGORY_ORDER.map((cat) =>
-    findCategoryCandidates(allMealsByCategory[cat], categoryTargets[cat], recentHistory[cat]),
-  );
-
-  let best: { result: Record<MealCategory, Meal[]>; total: number; recentCount: number } | null = null;
-
-  for (const a of perCategory[0]) {
-    for (const b of perCategory[1]) {
-      const ab = a.calories + b.calories;
-      if (ab > dailyLimit) continue;
-      for (const c of perCategory[2]) {
-        const abc = ab + c.calories;
-        if (abc > dailyLimit) continue;
-        for (const d of perCategory[3]) {
-          const total = abc + d.calories;
-          if (total > dailyLimit) continue;
-          const recentCount = [a, b, c, d].filter((x) => x.usedRecently).length;
-          if (
-            !best ||
-            recentCount < best.recentCount ||
-            (recentCount === best.recentCount && total > best.total)
-          ) {
-            best = {
-              result: {
-                breakfast: a.combo,
-                lunch: b.combo,
-                dinner: c.combo,
-                snack: d.combo,
-              },
-              total,
-              recentCount,
-            };
-          }
-        }
-      }
-    }
-  }
-
-  if (best) return best.result;
-
-  // Fallback: pick per-category best independently
-  return CATEGORY_ORDER.reduce<Record<MealCategory, Meal[]>>((acc, cat, i) => {
-    acc[cat] = perCategory[i][0]?.combo ?? [];
-    return acc;
-  }, { breakfast: [], lunch: [], dinner: [], snack: [] });
-}
 
 export default function RecipesScreen() {
   const router = useRouter();
@@ -156,7 +54,10 @@ export default function RecipesScreen() {
       const history: Record<MealCategory, number[][]> = {
         breakfast: [], lunch: [], dinner: [], snack: [],
       };
+      const todayKey = toLocalDateKey(new Date());
       for (const entry of entries) {
+        // Days planned ahead with "Week" are not "recently eaten".
+        if (entry.saved_at.slice(0, 10) > todayKey) continue;
         for (const cat of CATEGORY_ORDER) {
           const ids = (entry.meal_ids[cat] ?? []).slice().sort((a: number, b: number) => a - b);
           if (ids.length > 0) history[cat].push(ids);
@@ -217,10 +118,7 @@ export default function RecipesScreen() {
     CATEGORY_ORDER.forEach((category) => {
       next[category] = suggestedCombo[category].map((m) => m.id);
     });
-    setSelectedByCategory(next);
-    if (profile.email) {
-      saveMealHistory(profile.email, profile.password, next as Record<string, number[]>);
-    }
+    setSelectedByCategory(next); // MealPlanProvider saves today's plan
     setShowApplyModal(true);
   }
 
@@ -238,8 +136,9 @@ export default function RecipesScreen() {
     const dayOfWeek = today.getDay(); // 0 = Sunday
     const daysUntilSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
 
+    // Today is saved by MealPlanProvider; save the rest of the week here.
     const saves: Promise<boolean>[] = [];
-    for (let i = 0; i <= daysUntilSunday; i++) {
+    for (let i = 1; i <= daysUntilSunday; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
       saves.push(

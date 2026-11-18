@@ -9,7 +9,10 @@ $savedAt  = trim($data["saved_at"] ?? "");
 
 require_user($conn, $email, $data["password"] ?? "");
 
-if (!is_array($mealIds) || ($savedAt !== "" && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $savedAt))) {
+$validDate = $savedAt === ""
+    || (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $savedAt, $d) && checkdate((int)$d[2], (int)$d[3], (int)$d[1]));
+
+if (!is_array($mealIds) || !$validDate) {
     echo json_encode(["success" => false, "error" => "invalid_fields"]);
     exit;
 }
@@ -26,11 +29,15 @@ $del = $conn->prepare(
 $del->bind_param("ss", $email, $savedAt);
 $del->execute();
 
-$stmt = $conn->prepare(
-    "INSERT INTO meal_history (user_email, meal_ids, saved_at) VALUES (?, ?, COALESCE(?, NOW()))"
-);
-$stmt->bind_param("sss", $email, $mealIdsJson, $savedAt);
-$ok = $stmt->execute();
+$ok = true;
+// An empty plan (every category empty) only clears the day.
+if (count(array_filter($mealIds)) > 0) {
+    $stmt = $conn->prepare(
+        "INSERT INTO meal_history (user_email, meal_ids, saved_at) VALUES (?, ?, COALESCE(?, NOW()))"
+    );
+    $stmt->bind_param("sss", $email, $mealIdsJson, $savedAt);
+    $ok = $stmt->execute();
+}
 
 $conn->commit();
 

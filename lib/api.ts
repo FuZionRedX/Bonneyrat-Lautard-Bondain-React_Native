@@ -1,6 +1,7 @@
 import { ProfileData } from "@/contexts/profile-context";
 import { Platform } from "react-native";
 
+// shortcut: plain http and the password sent with every request, fine for a local XAMPP demo; add HTTPS + a login token before any real deploy.
 const NATIVE_DEFAULT_API_BASE = "http://10.0.2.2/health_app";
 
 // On web, the PHP backend runs on the same host but a different port than Expo's dev server.
