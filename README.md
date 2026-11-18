@@ -1,6 +1,6 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/Expo-57-blue?logo=expo" alt="Expo SDK 57" />
-  <img src="https://img.shields.io/badge/React_Native-0.86-61DAFB?logo=react" alt="React Native" />
+  <img src="https://img.shields.io/badge/Expo-58-blue?logo=expo" alt="Expo SDK 58" />
+  <img src="https://img.shields.io/badge/React_Native-0.88-61DAFB?logo=react" alt="React Native" />
   <img src="https://img.shields.io/badge/TypeScript-6.0-3178C6?logo=typescript" alt="TypeScript" />
   <img src="https://img.shields.io/badge/Platform-Android%20%7C%20iOS%20%7C%20Web-green" alt="Platforms" />
 </p>
@@ -25,7 +25,7 @@ A health and fitness meal planning app that provides **personalized nutrition re
 
 ## Tech Stack
 
-- **Framework:** [Expo SDK 57](https://expo.dev) + [Expo Router](https://docs.expo.dev/router/introduction/) (file-based routing)
+- **Framework:** [Expo SDK 58](https://expo.dev) + [Expo Router](https://docs.expo.dev/router/introduction/) (file-based routing)
 - **Language:** TypeScript (strict mode)
 - **State:** React Context API (`ProfileContext`, `MealPlanContext`)
 - **Backend:** PHP REST API with MySQL
