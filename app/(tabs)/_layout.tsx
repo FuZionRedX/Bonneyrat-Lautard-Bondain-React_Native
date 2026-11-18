@@ -66,8 +66,6 @@ export default function TabLayout() {
           ),
         }}
       />
-      {/* Hidden legacy screen */}
-      <Tabs.Screen name="explore" options={{ href: null }} />
     </Tabs>
   );
 }

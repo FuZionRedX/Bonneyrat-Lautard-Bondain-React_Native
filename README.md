@@ -1,7 +1,7 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/Expo-54-blue?logo=expo" alt="Expo SDK 54" />
-  <img src="https://img.shields.io/badge/React_Native-0.81-61DAFB?logo=react" alt="React Native" />
-  <img src="https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Expo-57-blue?logo=expo" alt="Expo SDK 57" />
+  <img src="https://img.shields.io/badge/React_Native-0.86-61DAFB?logo=react" alt="React Native" />
+  <img src="https://img.shields.io/badge/TypeScript-6.0-3178C6?logo=typescript" alt="TypeScript" />
   <img src="https://img.shields.io/badge/Platform-Android%20%7C%20iOS%20%7C%20Web-green" alt="Platforms" />
 </p>
 
@@ -25,7 +25,7 @@ A health and fitness meal planning app that provides **personalized nutrition re
 
 ## Tech Stack
 
-- **Framework:** [Expo SDK 54](https://expo.dev) + [Expo Router](https://docs.expo.dev/router/introduction/) (file-based routing)
+- **Framework:** [Expo SDK 57](https://expo.dev) + [Expo Router](https://docs.expo.dev/router/introduction/) (file-based routing)
 - **Language:** TypeScript (strict mode)
 - **State:** React Context API (`ProfileContext`, `MealPlanContext`)
 - **Backend:** PHP REST API with MySQL
@@ -40,14 +40,12 @@ A health and fitness meal planning app that provides **personalized nutrition re
 │   ├── index.tsx              # Planner screen
 │   ├── recipes.tsx            # Recipes & meal suggestions
 │   ├── groceries.tsx          # Grocery list
-│   ├── profile.tsx            # User profile
-│   └── explore.tsx            # Explore screen
+│   └── profile.tsx            # User profile
 ├── meal-history.tsx           # Weekly meal history
 ├── profile-setup.tsx          # Onboarding flow
 ├── settings.tsx               # App settings
 ├── help-support.tsx           # Help & support
-├── legal.tsx                  # Legal information
-└── modal.tsx                  # Modal screen
+└── legal.tsx                  # Legal information
 📁 contexts/
 ├── profile-context.tsx        # User data & auth state
 └── meal-plan-context.tsx      # Shared meal selections
@@ -63,8 +61,7 @@ A health and fitness meal planning app that provides **personalized nutrition re
 ├── get_profile.php            # Fetch user profile
 ├── delete_account.php         # Account deletion
 ├── config.php                 # Database configuration
-├── health_app.sql             # Main database schema
-└── meal_history.sql           # Meal history table schema
+└── health_app.sql             # Database schema (users + meal_history)
 ```
 
 ## Getting Started
@@ -99,7 +96,7 @@ npm run web       # Browser
 
 ### Backend Setup
 
-1. Import `PHP/health_app.sql` and `PHP/meal_history.sql` into your MySQL database
+1. Import `PHP/health_app.sql` into your MySQL database
 2. Place the `PHP/` files in your web server's document root (e.g. `htdocs/health_app/`)
 3. Update `PHP/config.php` with your database credentials
 
