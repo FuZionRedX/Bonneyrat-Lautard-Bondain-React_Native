@@ -9,6 +9,7 @@ import React, { useState } from "react";
 import {
   Alert,
   Appearance,
+  KeyboardAvoidingView,
   ScrollView,
   StyleSheet,
   Text,
@@ -149,9 +150,12 @@ export default function SettingsScreen() {
   return (
     <>
       <Stack.Screen options={{ title: "Settings" }} />
+      {/* Lifts the page above the keyboard so the change-password fields stay visible. */}
+      <KeyboardAvoidingView style={styles.container} behavior="padding">
       <ScrollView
         style={[styles.container, { backgroundColor: colors.screenBackground }]}
         contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
       >
         <Text style={[styles.pageTitle, { color: colors.text }]}>Settings</Text>
 
@@ -382,13 +386,14 @@ export default function SettingsScreen() {
           </View>
         </View>
       </ScrollView>
+      </KeyboardAvoidingView>
     </>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { padding: 16, paddingBottom: 30 },
+  content: { padding: 16, paddingBottom: 120 }, // scroll room above the keyboard
   pageTitle: {
     fontSize: 28,
     fontWeight: "800",

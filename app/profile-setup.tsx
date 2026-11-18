@@ -2,7 +2,6 @@ import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   KeyboardAvoidingView,
-  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -155,9 +154,14 @@ export default function ProfileSetupScreen() {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior="padding" // also on Android: without it the keyboard covers the fields
     >
-      <ScrollView style={[styles.container, { backgroundColor: colors.screenBackground }]} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={[styles.container, { backgroundColor: colors.screenBackground }]}
+        contentContainerStyle={{ paddingBottom: 120 }} // scroll room above the keyboard
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         <View style={[styles.header, { backgroundColor: colors.cardBackground }]}>
           <View style={styles.headerRow}>
             <Text style={[styles.headerTitle, { color: colors.text }]}>Profile Details</Text>
