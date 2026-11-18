@@ -11,7 +11,8 @@ import {
 
 import { Colors } from '@/constants/theme';
 import { getMealHistory, saveMealHistory } from '@/constants/api';
-import { CATEGORY_LABELS, CATEGORY_ORDER, getMealEmoji } from '@/constants/meals';
+import { CATEGORY_LABELS, CATEGORY_ORDER, getMealEmoji, toLocalDateKey } from '@/constants/meals';
+import { getNutrition } from '@/constants/nutrition';
 import { Meal, MealCategory, useMealPlan } from '@/contexts/meal-plan-context';
 import { useProfile } from '@/contexts/profile-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -21,44 +22,14 @@ interface MealsFile {
   meals: Meal[];
 }
 
-type Gender = 'male' | 'female' | 'other';
-
 const CALORIE_SPLIT: Record<MealCategory, number> = {
   breakfast: 0.25,
   lunch: 0.35,
   dinner: 0.3,
   snack: 0.1,
 };
-// Sedentary-to-lightly-active multiplier applied to BMR (Mifflin-St Jeor)
-const ACTIVITY_FACTOR = 1.35;
-// Daily kcal deficit required to lose ~0.5 kg/week (standard clinical guideline)
-const WEIGHT_LOSS_DEFICIT = 500;
 
 const MEALS = (mealsData as MealsFile).meals;
-
-function parseProfileNumber(value: string) {
-  return Number.parseFloat(value.replace(',', '.'));
-}
-
-function getGender(genderValue: string): Gender {
-  const normalized = genderValue.trim().toLowerCase();
-  if (normalized.startsWith('m')) return 'male';
-  if (normalized.startsWith('f')) return 'female';
-  return 'other';
-}
-
-function calculateBmi(weightKg: number, heightCm: number) {
-  if (weightKg <= 0 || heightCm <= 0) return null;
-  return weightKg / (heightCm / 100) ** 2;
-}
-
-function calculateBmr(weightKg: number, heightCm: number, ageYears: number, gender: Gender) {
-  if (weightKg <= 0 || heightCm <= 0 || ageYears <= 0) return null;
-  const base = 10 * weightKg + 6.25 * heightCm - 5 * ageYears;
-  if (gender === 'male') return base + 5;
-  if (gender === 'female') return base - 161;
-  return base - 78;
-}
 
 // Returns all combinations of `size` elements from `arr`
 function getCombinations<T>(arr: T[], size: number): T[][] {
@@ -181,7 +152,7 @@ export default function RecipesScreen() {
 
   useEffect(() => {
     if (!profile.email) return;
-    getMealHistory(profile.email).then((entries) => {
+    getMealHistory(profile.email, profile.password).then((entries) => {
       const history: Record<MealCategory, number[][]> = {
         breakfast: [], lunch: [], dinner: [], snack: [],
       };
@@ -193,26 +164,9 @@ export default function RecipesScreen() {
       }
       setRecentHistory(history);
     });
-  }, [profile.email]);
+  }, [profile.email, profile.password]);
 
-  const heightCm = parseProfileNumber(profile.height);
-  const weightKg = parseProfileNumber(profile.weight);
-  const ageYears = parseProfileNumber(profile.age);
-  const gender = getGender(profile.gender);
-
-  const bmi = calculateBmi(weightKg, heightCm);
-  const bmr = calculateBmr(weightKg, heightCm, ageYears, gender);
-  const needsWeightLoss = bmi !== null && bmi >= 25;
-
-  const dailyCalories = useMemo(() => {
-    if (bmr === null) return null;
-    const maintenance = bmr * ACTIVITY_FACTOR;
-    if (!needsWeightLoss) {
-      return Math.round(maintenance);
-    }
-    const target = Math.round(maintenance - WEIGHT_LOSS_DEFICIT);
-    return Math.max(target, 1200);
-  }, [bmr, needsWeightLoss]);
+  const { bmi, bmr, needsWeightLoss, dailyTarget: dailyCalories } = getNutrition(profile);
 
   const categoryTargets = useMemo(() => {
     if (dailyCalories === null) return null;
@@ -265,7 +219,7 @@ export default function RecipesScreen() {
     });
     setSelectedByCategory(next);
     if (profile.email) {
-      saveMealHistory(profile.email, next as Record<string, number[]>);
+      saveMealHistory(profile.email, profile.password, next as Record<string, number[]>);
     }
     setShowApplyModal(true);
   }
@@ -288,11 +242,9 @@ export default function RecipesScreen() {
     for (let i = 0; i <= daysUntilSunday; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
-      const y = date.getFullYear();
-      const m = String(date.getMonth() + 1).padStart(2, '0');
-      const d = String(date.getDate()).padStart(2, '0');
-      const dateStr = `${y}-${m}-${d}`;
-      saves.push(saveMealHistory(profile.email, next as Record<string, number[]>, dateStr));
+      saves.push(
+        saveMealHistory(profile.email, profile.password, next as Record<string, number[]>, toLocalDateKey(date)),
+      );
     }
     Promise.all(saves).finally(() => setShowWeekModal(true));
   }

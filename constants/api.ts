@@ -24,33 +24,22 @@ export const API_BASE =
     ? resolveWebApiBase()
     : process.env.EXPO_PUBLIC_API_BASE_URL || NATIVE_DEFAULT_API_BASE;
 
-export interface GetProfileResponse extends Omit<ProfileData, "password"> {
-  wasFirstOpen?: boolean;
-}
+export type GetProfileResponse = Omit<ProfileData, "password">;
 
 export type LoginProfileResponse =
   | { status: "connected"; profile: GetProfileResponse }
   | { status: "not_found" }
   | { status: "wrong_password" };
 
-export async function saveProfile(profile: ProfileData) {
+export async function saveProfile(
+  profile: ProfileData,
+): Promise<{ success: boolean; error?: string }> {
   const res = await fetch(`${API_BASE}/save_profile.php`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(profile),
   });
   return res.json();
-}
-
-export async function getProfile(
-  email: string,
-): Promise<GetProfileResponse | null> {
-  const res = await fetch(
-    `${API_BASE}/get_profile.php?email=${encodeURIComponent(email)}`,
-  );
-  const data = await res.json();
-  if (data.error) return null;
-  return data as GetProfileResponse;
 }
 
 export async function loginProfile(
@@ -73,6 +62,10 @@ export async function loginProfile(
     return { status: "wrong_password" };
   }
 
+  if (data.error) {
+    throw new Error(data.error);
+  }
+
   return { status: "connected", profile: data as GetProfileResponse };
 }
 
@@ -83,11 +76,16 @@ export interface MealHistoryEntry {
 
 export async function saveMealHistory(
   email: string,
+  password: string,
   mealIds: Record<string, number[]>,
   savedAt?: string,
 ): Promise<boolean> {
   try {
-    const payload: Record<string, unknown> = { email, meal_ids: mealIds };
+    const payload: Record<string, unknown> = {
+      email,
+      password,
+      meal_ids: mealIds,
+    };
     if (savedAt) payload.saved_at = savedAt;
     const res = await fetch(`${API_BASE}/save_meal_history.php`, {
       method: "POST",
@@ -103,11 +101,14 @@ export async function saveMealHistory(
 
 export async function getMealHistory(
   email: string,
+  password: string,
 ): Promise<MealHistoryEntry[]> {
   try {
-    const res = await fetch(
-      `${API_BASE}/get_meal_history.php?email=${encodeURIComponent(email)}`,
-    );
+    const res = await fetch(`${API_BASE}/get_meal_history.php`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
     const data = await res.json();
     if (!Array.isArray(data)) return [];
     return data as MealHistoryEntry[];
@@ -116,12 +117,15 @@ export async function getMealHistory(
   }
 }
 
-export async function deleteAccount(email: string): Promise<boolean> {
+export async function deleteAccount(
+  email: string,
+  password: string,
+): Promise<boolean> {
   try {
     const res = await fetch(`${API_BASE}/delete_account.php`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email, password }),
     });
 
     const data = await res.json();

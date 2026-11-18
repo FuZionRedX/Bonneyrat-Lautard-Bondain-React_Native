@@ -14,13 +14,7 @@ require "config.php";
 $data = json_decode(file_get_contents("php://input"), true);
 $email = trim($data["email"] ?? "");
 
-if ($email === "") {
-    echo json_encode([
-        "success" => false,
-        "error" => "missing_email"
-    ]);
-    exit;
-}
+require_user($conn, $email, $data["password"] ?? "");
 
 $stmt = $conn->prepare("DELETE FROM users WHERE email = ?");
 $stmt->bind_param("s", $email);

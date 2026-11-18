@@ -1,10 +1,11 @@
 import { deleteAccount, saveProfile } from "@/constants/api";
-import { Colors } from "@/constants/theme";
+import { Colors, THEME_PREF_KEY } from "@/constants/theme";
+import { useMealPlan } from "@/contexts/meal-plan-context";
 import { useProfile } from "@/contexts/profile-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Stack, useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Alert,
   Appearance,
@@ -17,46 +18,18 @@ import {
 
 type ThemePreference = "light" | "dark";
 
-const THEME_PREF_KEY = "theme_preference";
 const LAST_PROFILE_EMAIL_KEY = "last_profile_email";
 
 export default function SettingsScreen() {
   const router = useRouter();
   const { logout, profile, updateProfile } = useProfile();
-  const colorScheme = useColorScheme() ?? "light";
-  const colors = Colors[colorScheme];
-  const [themePreference, setThemePreference] =
-    useState<ThemePreference>("light");
+  const { setSelectedByCategory } = useMealPlan();
+  // The saved preference is applied app-wide by ThemeSync in app/_layout.tsx.
+  const themePreference: ThemePreference = useColorScheme();
+  const colors = Colors[themePreference];
   const [isDeleting, setIsDeleting] = useState(false);
 
-  useEffect(() => {
-    if (profile.email) {
-      const connectedPreference: ThemePreference = profile.darkMode
-        ? "dark"
-        : "light";
-
-      setThemePreference(connectedPreference);
-      Appearance.setColorScheme?.(connectedPreference);
-      AsyncStorage.setItem(THEME_PREF_KEY, connectedPreference).catch(() => {
-        /* no-op */
-      });
-      return;
-    }
-
-    AsyncStorage.getItem(THEME_PREF_KEY)
-      .then((savedPreference: string | null) => {
-        if (savedPreference === "light" || savedPreference === "dark") {
-          setThemePreference(savedPreference);
-          Appearance.setColorScheme?.(savedPreference);
-        }
-      })
-      .catch(() => {
-        /* no-op */
-      });
-  }, [profile.darkMode, profile.email]);
-
   const applyThemePreference = async (nextPreference: ThemePreference) => {
-    setThemePreference(nextPreference);
     Appearance.setColorScheme?.(nextPreference);
     await AsyncStorage.setItem(THEME_PREF_KEY, nextPreference);
 
@@ -72,7 +45,7 @@ export default function SettingsScreen() {
     updateProfile(nextProfile);
 
     try {
-      await saveProfile(nextProfile);
+      if (!(await saveProfile(nextProfile)).success) throw new Error();
     } catch {
       Alert.alert(
         "Sync failed",
@@ -116,7 +89,10 @@ export default function SettingsScreen() {
                   style: "destructive",
                   onPress: async () => {
                     setIsDeleting(true);
-                    const ok = await deleteAccount(profile.email);
+                    const ok = await deleteAccount(
+                      profile.email,
+                      profile.password,
+                    );
                     setIsDeleting(false);
 
                     if (!ok) {
@@ -128,6 +104,7 @@ export default function SettingsScreen() {
                     }
 
                     await AsyncStorage.removeItem(LAST_PROFILE_EMAIL_KEY);
+                    setSelectedByCategory({});
                     logout();
                     Alert.alert(
                       "Account deleted",

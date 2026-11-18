@@ -38,11 +38,7 @@ interface ProfileContextValue {
   connectProfileByEmail: (
     email: string,
     password: string,
-  ) => Promise<
-    | { status: "connected"; wasFirstOpen?: boolean }
-    | { status: "not_found" }
-    | { status: "wrong_password" }
-  >;
+  ) => Promise<"connected" | "not_found" | "wrong_password">;
   logout: () => void;
 }
 
@@ -67,22 +63,13 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       connectProfileByEmail: async (email: string, password: string) => {
         const result = await loginProfile(email, password);
 
-        if (result.status === "not_found") {
-          return { status: "not_found" as const };
+        if (result.status !== "connected") {
+          return result.status;
         }
 
-        if (result.status === "wrong_password") {
-          return { status: "wrong_password" as const };
-        }
-
-        const saved = result.profile;
-
-        setProfile({ ...saved, password });
+        setProfile({ ...result.profile, password });
         setHasProcessedInput(true);
-        return {
-          status: "connected" as const,
-          wasFirstOpen: !!saved.wasFirstOpen,
-        };
+        return "connected" as const;
       },
       logout: () => {
         setProfile(defaultProfile);

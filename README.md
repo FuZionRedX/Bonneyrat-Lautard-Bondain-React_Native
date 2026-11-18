@@ -51,6 +51,7 @@ A health and fitness meal planning app that provides **personalized nutrition re
 └── meal-plan-context.tsx      # Shared meal selections
 📁 constants/
 ├── api.ts                     # API layer (PHP backend)
+├── nutrition.ts               # BMI / BMR / daily calorie target (tested: npm test)
 └── theme.ts                   # Light & dark color tokens
 📁 data/
 └── meals.json                 # 30+ meals with ingredients & calories

@@ -17,25 +17,32 @@ $email    = trim($data["email"]    ?? "");
 $mealIds  = $data["meal_ids"] ?? null;
 $savedAt  = trim($data["saved_at"] ?? "");
 
-if ($email === "" || $mealIds === null) {
-    echo json_encode(["success" => false, "error" => "missing_fields"]);
+require_user($conn, $email, $data["password"] ?? "");
+
+if (!is_array($mealIds) || ($savedAt !== "" && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $savedAt))) {
+    echo json_encode(["success" => false, "error" => "invalid_fields"]);
     exit;
 }
 
 $mealIdsJson = json_encode($mealIds);
+$savedAt = $savedAt === "" ? null : $savedAt; // NULL -> NOW() below
 
-if ($savedAt !== "") {
-    $stmt = $conn->prepare(
-        "INSERT INTO meal_history (user_email, meal_ids, saved_at) VALUES (?, ?, ?)"
-    );
-    $stmt->bind_param("sss", $email, $mealIdsJson, $savedAt);
-} else {
-    $stmt = $conn->prepare(
-        "INSERT INTO meal_history (user_email, meal_ids) VALUES (?, ?)"
-    );
-    $stmt->bind_param("ss", $email, $mealIdsJson);
-}
+// One plan per user per day: replace that day's row instead of adding another.
+$conn->begin_transaction();
+
+$del = $conn->prepare(
+    "DELETE FROM meal_history WHERE user_email = ? AND DATE(saved_at) = DATE(COALESCE(?, NOW()))"
+);
+$del->bind_param("ss", $email, $savedAt);
+$del->execute();
+
+$stmt = $conn->prepare(
+    "INSERT INTO meal_history (user_email, meal_ids, saved_at) VALUES (?, ?, COALESCE(?, NOW()))"
+);
+$stmt->bind_param("sss", $email, $mealIdsJson, $savedAt);
 $ok = $stmt->execute();
+
+$conn->commit();
 
 echo json_encode(["success" => $ok]);
 ?>

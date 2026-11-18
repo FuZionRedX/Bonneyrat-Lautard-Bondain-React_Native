@@ -90,6 +90,11 @@ export default function ProfileSetupScreen() {
     setForm((prev) => ({ ...prev, [key]: value }));
 
   const next = async () => {
+    if (step === 1 && (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()) || !form.password)) {
+      setStatusMessage("Enter a valid email and a password.");
+      return;
+    }
+
     if (step === 2) {
       const age = parseInt(form.age, 10);
       if (!form.age.trim() || isNaN(age) || age <= 0) {
@@ -123,12 +128,21 @@ export default function ProfileSetupScreen() {
       return;
     }
 
+    const savedForm = { ...form, email: form.email.trim() };
     try {
-      await saveProfile(form);
-      updateProfile(form);
+      const result = await saveProfile(savedForm);
+      if (!result.success) {
+        setStatusMessage(
+          result.error === "email_taken"
+            ? "An account with this email already exists. Log in instead."
+            : "Failed to save profile.",
+        );
+        return;
+      }
+      updateProfile(savedForm);
       setStatusMessage("User input processing completed.");
       router.replace("/(tabs)/profile");
-    } catch (e) {
+    } catch {
       setStatusMessage("Failed to save profile. Check your connection.");
     }
   };

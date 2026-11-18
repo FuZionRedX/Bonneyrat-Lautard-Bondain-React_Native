@@ -97,3 +97,4 @@ export const Colors = {
   },
 };
 
+export const THEME_PREF_KEY = "theme_preference";

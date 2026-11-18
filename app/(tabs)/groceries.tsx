@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Modal,
   ScrollView,
@@ -35,10 +35,13 @@ export default function GroceriesScreen() {
   const [dismissed, setDismissed] = useState(false);
   const [showClearModal, setShowClearModal] = useState(false);
 
-  useEffect(() => {
+  // New meal selection -> fresh list (React's "adjust state on prop change" pattern, no effect needed).
+  const [listFor, setListFor] = useState(selectedMeals);
+  if (listFor !== selectedMeals) {
+    setListFor(selectedMeals);
     setDismissed(false);
     setCheckedKeys(new Set());
-  }, [selectedMeals]);
+  }
 
   const items = useMemo<GroceryItem[]>(() => {
     return selectedMeals.flatMap((meal) =>

@@ -9,41 +9,12 @@ import {
   View,
 } from "react-native";
 
-import { Colors } from "@/constants/theme";
 import { CATEGORY_LABELS, CATEGORY_ORDER, getMealEmoji } from "@/constants/meals";
+import { getNutrition } from "@/constants/nutrition";
+import { Colors } from "@/constants/theme";
 import { useMealPlan } from "@/contexts/meal-plan-context";
 import { useProfile } from "@/contexts/profile-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
-
-type Gender = "male" | "female" | "other";
-// Sedentary-to-lightly-active multiplier applied to BMR (Mifflin-St Jeor)
-const ACTIVITY_FACTOR = 1.35;
-// Daily kcal deficit required to lose ~0.5 kg/week (standard clinical guideline)
-const WEIGHT_LOSS_DEFICIT = 500;
-
-function parseProfileNumber(value: string) {
-  return Number.parseFloat(value.replace(",", "."));
-}
-
-function getGender(genderValue: string): Gender {
-  const normalized = genderValue.trim().toLowerCase();
-  if (normalized.startsWith("m")) return "male";
-  if (normalized.startsWith("f")) return "female";
-  return "other";
-}
-
-function calculateBmr(
-  weightKg: number,
-  heightCm: number,
-  ageYears: number,
-  gender: Gender,
-) {
-  if (weightKg <= 0 || heightCm <= 0 || ageYears <= 0) return null;
-  const base = 10 * weightKg + 6.25 * heightCm - 5 * ageYears;
-  if (gender === "male") return base + 5;
-  if (gender === "female") return base - 161;
-  return base - 78;
-}
 
 function ProgressBar({
   value,
@@ -77,22 +48,10 @@ export default function PlannerScreen() {
   const colors = Colors[colorScheme];
 
   const firstName = profile.fullName.trim().split(/\s+/)[0] || "there";
-  const heightCm = parseProfileNumber(profile.height);
-  const weightKg = parseProfileNumber(profile.weight);
-  const ageYears = parseProfileNumber(profile.age);
-  const gender = getGender(profile.gender);
-  const hasValidMetrics = heightCm > 0 && weightKg > 0;
-  const bmi = hasValidMetrics ? weightKg / (heightCm / 100) ** 2 : null;
+  const nutrition = getNutrition(profile);
+  const { bmi } = nutrition;
   const bmiDisplay = bmi === null ? "--" : bmi.toFixed(1);
-  const bmr = calculateBmr(weightKg, heightCm, ageYears, gender);
-  const needsWeightLoss = bmi !== null && bmi >= 25;
-
-  const dailyTarget = useMemo(() => {
-    if (bmr === null) return 2000;
-    const maintenance = bmr * ACTIVITY_FACTOR;
-    if (!needsWeightLoss) return Math.round(maintenance);
-    return Math.max(Math.round(maintenance - WEIGHT_LOSS_DEFICIT), 1200);
-  }, [bmr, needsWeightLoss]);
+  const dailyTarget = nutrition.dailyTarget ?? 2000;
 
   const mealSections = useMemo(() => {
     return CATEGORY_ORDER.map((category) => {

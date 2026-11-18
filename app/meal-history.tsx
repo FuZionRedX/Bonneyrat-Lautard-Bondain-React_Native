@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 
 import { getMealHistory, MealHistoryEntry } from '@/constants/api';
-import { CATEGORY_LABELS, CATEGORY_ORDER, getMealEmoji } from '@/constants/meals';
+import { CATEGORY_LABELS, CATEGORY_ORDER, getMealEmoji, toLocalDateKey } from '@/constants/meals';
 import { Meal } from '@/contexts/meal-plan-context';
 import { useProfile } from '@/contexts/profile-context';
 import { Colors } from '@/constants/theme';
@@ -24,17 +24,14 @@ interface MealsFile {
 const MEALS = (mealsData as MealsFile).meals;
 const MEALS_BY_ID = new Map(MEALS.map((m) => [m.id, m]));
 
+// saved_at is the server's local "YYYY-MM-DD HH:MM:SS"; the "T" makes every JS engine parse it as local time.
 function formatDate(dateStr: string) {
-  const d = new Date(dateStr);
+  const d = new Date(dateStr.replace(' ', 'T'));
   return d.toLocaleDateString('en-GB', {
     weekday: 'long',
     day: 'numeric',
     month: 'short',
   });
-}
-
-function toDateKey(dateStr: string) {
-  return new Date(dateStr).toISOString().split('T')[0];
 }
 
 export default function MealHistoryScreen() {
@@ -43,35 +40,29 @@ export default function MealHistoryScreen() {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
 
-  const [history, setHistory] = useState<MealHistoryEntry[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [history, setHistory] = useState<MealHistoryEntry[] | null>(null);
+  const loading = !!profile.email && history === null;
 
   useEffect(() => {
-    if (!profile.email) {
-      setLoading(false);
-      return;
-    }
-    getMealHistory(profile.email)
-      .then(setHistory)
-      .finally(() => setLoading(false));
-  }, [profile.email]);
+    if (!profile.email) return;
+    getMealHistory(profile.email, profile.password).then(setHistory);
+  }, [profile.email, profile.password]);
 
   const { futureEntries, pastEntries } = useMemo(() => {
-    const todayKey = toDateKey(new Date().toISOString());
-    const sorted = [...history].sort(
-      (a, b) => new Date(b.saved_at).getTime() - new Date(a.saved_at).getTime(),
-    );
+    const todayKey = toLocalDateKey(new Date());
+    // "YYYY-MM-DD HH:MM:SS" strings sort correctly as plain text.
+    const sorted = [...(history ?? [])].sort((a, b) => b.saved_at.localeCompare(a.saved_at));
     const future: MealHistoryEntry[] = [];
     const past: MealHistoryEntry[] = [];
     for (const entry of sorted) {
-      if (toDateKey(entry.saved_at) > todayKey) {
+      if (entry.saved_at.slice(0, 10) > todayKey) {
         future.push(entry);
       } else {
         past.push(entry);
       }
     }
     // Future: nearest day first (ascending)
-    future.sort((a, b) => new Date(a.saved_at).getTime() - new Date(b.saved_at).getTime());
+    future.reverse();
     return { futureEntries: future, pastEntries: past };
   }, [history]);
 

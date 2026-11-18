@@ -1,7 +1,7 @@
 <?php
 header("Content-Type: application/json");
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, OPTIONS");
+header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
 
 if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
@@ -11,12 +11,11 @@ if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
 
 require "config.php";
 
-$email = trim($_GET["email"] ?? "");
+// POST so the password travels in the body, not in the URL / server logs.
+$data = json_decode(file_get_contents("php://input"), true);
+$email = trim($data["email"] ?? "");
 
-if ($email === "") {
-    echo json_encode(["error" => "missing_email"]);
-    exit;
-}
+require_user($conn, $email, $data["password"] ?? "");
 
 // Fetch entries from the last 7 days + any future planned entries
 $stmt = $conn->prepare(

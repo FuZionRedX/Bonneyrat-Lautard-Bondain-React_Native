@@ -13,30 +13,19 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { getNutrition } from "@/constants/nutrition";
 import { Colors } from "@/constants/theme";
+import { useMealPlan } from "@/contexts/meal-plan-context";
 import { getProfileInitials, useProfile } from "@/contexts/profile-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 
 const LAST_PROFILE_EMAIL_KEY = "last_profile_email";
-
-type ConnectResult =
-  | "connected"
-  | "not_found"
-  | "wrong_password"
-  | {
-      status: "connected" | "not_found" | "wrong_password";
-      wasFirstOpen?: boolean;
-    };
 
 type BmiMeta = {
   label: string;
   color: string;
   description: string;
 };
-
-function parseProfileNumber(value: string) {
-  return Number.parseFloat(value.replace(",", "."));
-}
 
 // WHO BMI classification thresholds: <18.5 underweight, 18.5–24.9 normal, 25–29.9 overweight, ≥30 obese
 function getBmiMeta(bmi: number | null): BmiMeta {
@@ -115,6 +104,7 @@ export default function ProfileScreen() {
   const colors = Colors[colorScheme];
   const { connectProfileByEmail, hasProcessedInput, logout, profile } =
     useProfile();
+  const { setSelectedByCategory } = useMealPlan();
   const [emailToConnect, setEmailToConnect] = useState("");
   const [emailError, setEmailError] = useState("");
   const [passwordToConnect, setPasswordToConnect] = useState("");
@@ -123,10 +113,7 @@ export default function ProfileScreen() {
   const [isConnecting, setIsConnecting] = useState(false);
   const initials = getProfileInitials(profile.fullName);
 
-  const heightCm = parseProfileNumber(profile.height);
-  const weightKg = parseProfileNumber(profile.weight);
-  const hasValidBodyMetrics = heightCm > 0 && weightKg > 0;
-  const bmi = hasValidBodyMetrics ? weightKg / (heightCm / 100) ** 2 : null;
+  const { bmi } = getNutrition(profile);
   const bmiDisplay = bmi === null ? "--" : bmi.toFixed(1);
   const bmiMeta = getBmiMeta(bmi);
 
@@ -167,11 +154,7 @@ export default function ProfileScreen() {
     try {
       setIsConnecting(true);
       setConnectError("");
-      const result = (await connectProfileByEmail(
-        trimmedEmail,
-        enteredPassword,
-      )) as ConnectResult;
-      const status = typeof result === "string" ? result : result.status;
+      const status = await connectProfileByEmail(trimmedEmail, enteredPassword);
 
       if (status === "not_found") {
         setConnectError("No profile found for this email.");
@@ -195,6 +178,7 @@ export default function ProfileScreen() {
     setPasswordToConnect("");
     setShowPassword(false);
     setConnectError("");
+    setSelectedByCategory({}); // don't show this user's plan to the next one
     logout();
   };
 
