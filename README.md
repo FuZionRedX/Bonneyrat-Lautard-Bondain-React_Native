@@ -15,9 +15,9 @@ A health and fitness meal planning app that provides **personalized nutrition re
 
 | Feature | Description |
 |---------|-------------|
-| **Planner** | Daily meal overview with calorie tracking and over-limit alerts |
+| **Planner** | Plan today or any of the next 6 days, with calorie tracking and over-limit alerts |
 | **Recipes** | Smart meal suggestions based on your health profile (BMI/BMR) |
-| **Groceries** | Auto-generated shopping list from your selected meals |
+| **Groceries** | Shopping list for the planned day, one line per ingredient across all meals |
 | **Profile** | Personal health data, goals, and app settings |
 | **Meal History** | Weekly history of planned and past meals |
 | **Week Planning** | Apply a suggested combo for the entire week in one tap |
@@ -64,10 +64,15 @@ A health and fitness meal planning app that provides **personalized nutrition re
 ├── save_profile.php           # Save user profile
 ├── get_profile.php            # Fetch user profile
 ├── delete_account.php         # Account deletion
+├── change_password.php        # Password change (needs the current password)
 ├── config.php                 # Headers, CORS, database connection
 ├── auth.php                   # Password checks for user endpoints
 └── health_app.sql             # Database schema (users + meal_history)
 ```
+
+## Checks
+
+`npm test` runs the unit tests in `lib/` (calorie maths, meal suggestions, meal data). GitHub Actions (`.github/workflows/ci.yml`) runs `tsc`, `expo lint`, `npm test` and a PHP syntax check on every push.
 
 ## Getting Started
 
