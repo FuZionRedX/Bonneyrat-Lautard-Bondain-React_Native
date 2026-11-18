@@ -50,9 +50,11 @@ A health and fitness meal planning app that provides **personalized nutrition re
 ├── profile-context.tsx        # User data & auth state
 └── meal-plan-context.tsx      # Shared meal selections
 📁 constants/
-├── api.ts                     # API layer (PHP backend)
-├── nutrition.ts               # BMI / BMR / daily calorie target (tested: npm test)
+├── meals.ts                   # Meal categories, labels, emoji
 └── theme.ts                   # Light & dark color tokens
+📁 lib/
+├── api.ts                     # API layer (PHP backend)
+└── nutrition.ts               # BMI / BMR / daily calorie target (tested: npm test)
 📁 data/
 └── meals.json                 # 30+ meals with ingredients & calories
 📁 PHP/
@@ -61,7 +63,8 @@ A health and fitness meal planning app that provides **personalized nutrition re
 ├── save_profile.php           # Save user profile
 ├── get_profile.php            # Fetch user profile
 ├── delete_account.php         # Account deletion
-├── config.php                 # Database configuration
+├── config.php                 # Headers, CORS, database connection
+├── auth.php                   # Password checks for user endpoints
 └── health_app.sql             # Database schema (users + meal_history)
 ```
 

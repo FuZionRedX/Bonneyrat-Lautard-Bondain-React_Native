@@ -1,4 +1,4 @@
-import { loginProfile } from "@/constants/api";
+import { loginProfile } from "@/lib/api";
 import React, {
     createContext,
     ReactNode,

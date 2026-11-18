@@ -1,4 +1,4 @@
-import { deleteAccount, saveProfile } from "@/constants/api";
+import { deleteAccount, saveProfile } from "@/lib/api";
 import { Colors, THEME_PREF_KEY } from "@/constants/theme";
 import { useMealPlan } from "@/contexts/meal-plan-context";
 import { useProfile } from "@/contexts/profile-context";

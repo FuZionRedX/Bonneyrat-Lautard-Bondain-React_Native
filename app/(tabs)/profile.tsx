@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { getNutrition } from "@/constants/nutrition";
+import { getNutrition } from "@/lib/nutrition";
 import { Colors } from "@/constants/theme";
 import { useMealPlan } from "@/contexts/meal-plan-context";
 import { getProfileInitials, useProfile } from "@/contexts/profile-context";

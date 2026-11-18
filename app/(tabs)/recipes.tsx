@@ -10,9 +10,9 @@ import {
 } from 'react-native';
 
 import { Colors } from '@/constants/theme';
-import { getMealHistory, saveMealHistory } from '@/constants/api';
+import { getMealHistory, saveMealHistory } from '@/lib/api';
 import { CATEGORY_LABELS, CATEGORY_ORDER, getMealEmoji, toLocalDateKey } from '@/constants/meals';
-import { getNutrition } from '@/constants/nutrition';
+import { getNutrition } from '@/lib/nutrition';
 import { Meal, MealCategory, useMealPlan } from '@/contexts/meal-plan-context';
 import { useProfile } from '@/contexts/profile-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';

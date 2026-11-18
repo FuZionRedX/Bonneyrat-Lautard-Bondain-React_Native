@@ -11,7 +11,7 @@ import {
   View,
 } from "react-native";
 
-import { saveProfile } from "@/constants/api";
+import { saveProfile } from "@/lib/api";
 import { Colors } from "@/constants/theme";
 import {
   ProfileData,

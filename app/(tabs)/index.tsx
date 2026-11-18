@@ -10,7 +10,7 @@ import {
 } from "react-native";
 
 import { CATEGORY_LABELS, CATEGORY_ORDER, getMealEmoji } from "@/constants/meals";
-import { getNutrition } from "@/constants/nutrition";
+import { getNutrition } from "@/lib/nutrition";
 import { Colors } from "@/constants/theme";
 import { useMealPlan } from "@/contexts/meal-plan-context";
 import { useProfile } from "@/contexts/profile-context";

@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native';
 
-import { getMealHistory, MealHistoryEntry } from '@/constants/api';
+import { getMealHistory, MealHistoryEntry } from '@/lib/api';
 import { CATEGORY_LABELS, CATEGORY_ORDER, getMealEmoji, toLocalDateKey } from '@/constants/meals';
 import { Meal } from '@/contexts/meal-plan-context';
 import { useProfile } from '@/contexts/profile-context';
