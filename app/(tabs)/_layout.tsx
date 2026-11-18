@@ -16,6 +16,8 @@ export default function TabLayout() {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.secondaryText,
         headerShown: false,
+        // Small left/right slide between tabs (Profile opts out below).
+        animation: "shift",
         tabBarButton: HapticTab,
         tabBarStyle: {
           backgroundColor: colors.cardBackground,
@@ -61,6 +63,7 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: "Profile",
+          animation: "none",
           tabBarIcon: ({ color }) => (
             <IconSymbol size={24} name="person.fill" color={color} />
           ),
