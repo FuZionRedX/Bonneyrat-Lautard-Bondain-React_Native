@@ -4,6 +4,8 @@ import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Image,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -185,12 +187,18 @@ export default function ProfileScreen() {
 
   if (!hasProcessedInput) {
     return (
+      // Lifts the form above the keyboard so the field being typed in stays visible and the page can scroll.
+      <KeyboardAvoidingView
+        style={styles.loginScreen}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
       <ScrollView
         style={[
           styles.loginScreen,
           { backgroundColor: colors.loginBarBackground },
         ]}
         contentContainerStyle={styles.loginContent}
+        keyboardShouldPersistTaps="handled"
       >
         <View
           style={[
@@ -337,6 +345,7 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+      </KeyboardAvoidingView>
     );
   }
 
