@@ -37,6 +37,9 @@ interface MealPlanContextValue {
     React.SetStateAction<Partial<Record<MealCategory, number[]>>>
   >;
   selectedMeals: Meal[];
+  // Day being planned, "YYYY-MM-DD" (local). Defaults to today.
+  planDate: string;
+  setPlanDate: (date: string) => void;
 }
 
 const MealPlanContext = createContext<MealPlanContextValue | undefined>(
@@ -47,39 +50,41 @@ export function MealPlanProvider({ children }: { children: ReactNode }) {
   const [selectedByCategory, setSelectedByCategory] = useState<
     Partial<Record<MealCategory, number[]>>
   >({});
+  const [planDate, setPlanDate] = useState(() => toLocalDateKey(new Date()));
   const { profile } = useProfile();
-  // Email whose saved plan has been loaded; saving waits for it so an empty
+  // "email|date" whose saved plan has been loaded; saving waits for it so an empty
   // in-memory plan never overwrites the one on the server.
   const loadedFor = useRef<string | null>(null);
+  const planKey = `${profile.email}|${planDate}`;
 
-  // On login: restore today's plan from the server.
+  // On login or day change: load that day's plan from the server.
   useEffect(() => {
     loadedFor.current = null;
     if (!profile.email) return;
     let cancelled = false;
     getMealHistory(profile.email, profile.password).then((entries) => {
       if (cancelled) return;
-      const today = toLocalDateKey(new Date());
-      const saved = entries.find((e) => e.saved_at.slice(0, 10) === today);
-      loadedFor.current = profile.email;
-      if (saved) setSelectedByCategory(saved.meal_ids);
+      const saved = entries.find((e) => e.saved_at.slice(0, 10) === planDate);
+      loadedFor.current = `${profile.email}|${planDate}`;
+      setSelectedByCategory(saved?.meal_ids ?? {});
     });
     return () => {
       cancelled = true;
     };
-  }, [profile.email, profile.password]);
+  }, [profile.email, profile.password, planDate]);
 
-  // Every change to the plan is saved as today's row (an empty plan deletes it).
+  // Every change to the plan is saved as that day's row (an empty plan deletes it).
+  // The date is the device's local day, not the DB server's NOW().
   // shortcut: one request per change, no debounce or ordering; fine for a few taps, queue the saves if they start to race.
   useEffect(() => {
-    if (!profile.email || loadedFor.current !== profile.email) return;
+    if (!profile.email || loadedFor.current !== planKey) return;
     saveMealHistory(
       profile.email,
       profile.password,
       selectedByCategory as Record<string, number[]>,
-      toLocalDateKey(new Date()), // the device's day, not the DB server's NOW()
+      planDate,
     );
-  }, [selectedByCategory, profile.email, profile.password]);
+  }, [selectedByCategory, profile.email, profile.password, planDate, planKey]);
 
   const selectedMeals = useMemo(() => {
     return CATEGORY_ORDER.flatMap((category) => {
@@ -95,8 +100,10 @@ export function MealPlanProvider({ children }: { children: ReactNode }) {
       selectedByCategory,
       setSelectedByCategory,
       selectedMeals,
+      planDate,
+      setPlanDate,
     }),
-    [selectedByCategory, selectedMeals]
+    [selectedByCategory, selectedMeals, planDate]
   );
 
   return (

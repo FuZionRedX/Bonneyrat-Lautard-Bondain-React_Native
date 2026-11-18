@@ -247,7 +247,8 @@ export default function ProfileSetupScreen() {
                   <Text style={[styles.fieldLabel, { color: colors.tertiaryText }]}>Gender</Text>
                   <View style={styles.selectRow}>
                     {GENDERS.map((g) => (
-                      <TouchableOpacity
+                      <TouchableOpacity accessibilityRole="radio"
+                        accessibilityState={{ checked: form.gender === g }}
                         key={g}
                         style={[
                           styles.selectChip,
@@ -315,7 +316,9 @@ export default function ProfileSetupScreen() {
 
               <View style={styles.goalGrid}>
                 {GOALS.map((g) => (
-                  <TouchableOpacity
+                  <TouchableOpacity accessibilityRole="radio"
+                    accessibilityState={{ checked: form.goal === g }}
+                    accessibilityLabel={g}
                     key={g}
                     style={[
                       styles.goalCard,
@@ -353,10 +356,10 @@ export default function ProfileSetupScreen() {
       </ScrollView>
 
       <View style={[styles.bottomNav, { backgroundColor: colors.cardBackground, borderTopColor: colors.borderLight }]}>
-        <TouchableOpacity style={[styles.backBtn, { backgroundColor: colors.screenBackground, borderColor: colors.border }]} onPress={back}>
+        <TouchableOpacity accessibilityRole="button" style={[styles.backBtn, { backgroundColor: colors.screenBackground, borderColor: colors.border }]} onPress={back}>
           <Text style={[styles.backBtnText, { color: colors.tertiaryText }]}>&larr; Back</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.nextBtn, { backgroundColor: colors.primary }]} onPress={next}>
+        <TouchableOpacity accessibilityRole="button" style={[styles.nextBtn, { backgroundColor: colors.primary }]} onPress={next}>
           <Text style={styles.nextBtnText}>
             {step < 3 ? "Continue \u2192" : "Finish Setup \u2713"}
           </Text>

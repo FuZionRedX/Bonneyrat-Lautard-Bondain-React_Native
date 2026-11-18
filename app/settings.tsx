@@ -1,4 +1,4 @@
-import { deleteAccount, saveProfile } from "@/lib/api";
+import { changePassword, deleteAccount, saveProfile } from "@/lib/api";
 import { Colors, THEME_PREF_KEY } from "@/constants/theme";
 import { useMealPlan } from "@/contexts/meal-plan-context";
 import { useProfile } from "@/contexts/profile-context";
@@ -12,6 +12,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -28,6 +29,30 @@ export default function SettingsScreen() {
   const themePreference: ThemePreference = useColorScheme();
   const colors = Colors[themePreference];
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [isSavingPassword, setIsSavingPassword] = useState(false);
+
+  const submitPasswordChange = async () => {
+    if (!currentPassword || !newPassword) {
+      Alert.alert("Change password", "Fill in both fields.");
+      return;
+    }
+    setIsSavingPassword(true);
+    const ok = await changePassword(profile.email, currentPassword, newPassword);
+    setIsSavingPassword(false);
+    if (!ok) {
+      Alert.alert("Change password", "Current password is wrong, or the server is unreachable.");
+      return;
+    }
+    // Later requests authenticate with the new password.
+    updateProfile({ ...profile, password: newPassword });
+    setCurrentPassword("");
+    setNewPassword("");
+    setShowPasswordForm(false);
+    Alert.alert("Change password", "Your password has been changed.");
+  };
 
   const applyThemePreference = async (nextPreference: ThemePreference) => {
     Appearance.setColorScheme?.(nextPreference);
@@ -145,7 +170,8 @@ export default function SettingsScreen() {
             ]}
           >
             <View style={styles.themeSwitchRow}>
-              <TouchableOpacity
+              <TouchableOpacity accessibilityRole="radio"
+                accessibilityState={{ checked: themePreference === "light" }}
                 style={[
                   styles.themeChip,
                   {
@@ -171,7 +197,8 @@ export default function SettingsScreen() {
                   White mode
                 </Text>
               </TouchableOpacity>
-              <TouchableOpacity
+              <TouchableOpacity accessibilityRole="radio"
+                accessibilityState={{ checked: themePreference === "dark" }}
                 style={[
                   styles.themeChip,
                   {
@@ -213,7 +240,7 @@ export default function SettingsScreen() {
               },
             ]}
           >
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               style={[styles.row, { borderBottomColor: colors.borderLight }]}
               onPress={() => router.push("/profile-setup" as any)}
               activeOpacity={0.75}
@@ -232,6 +259,54 @@ export default function SettingsScreen() {
                 </Text>
               </View>
             </TouchableOpacity>
+            {profile.email ? (
+              <TouchableOpacity accessibilityRole="button"
+                style={[styles.row, { borderBottomColor: colors.borderLight }]}
+                onPress={() => setShowPasswordForm((v) => !v)}
+                activeOpacity={0.75}
+                accessibilityState={{ expanded: showPasswordForm }}
+              >
+                <Text style={[styles.rowLabel, { color: colors.text }]}>
+                  Change password
+                </Text>
+                <Text style={[styles.rowArrow, { color: colors.secondaryText }]}>
+                  {showPasswordForm ? "⌄" : "›"}
+                </Text>
+              </TouchableOpacity>
+            ) : null}
+            {showPasswordForm ? (
+              <View style={styles.passwordForm}>
+                <TextInput
+                  style={[styles.passwordInput, { borderColor: colors.border, color: colors.text, backgroundColor: colors.inputBackground }]}
+                  placeholder="Current password"
+                  placeholderTextColor={colors.secondaryText}
+                  value={currentPassword}
+                  onChangeText={setCurrentPassword}
+                  secureTextEntry
+                  autoCapitalize="none"
+                  accessibilityLabel="Current password"
+                />
+                <TextInput
+                  style={[styles.passwordInput, { borderColor: colors.border, color: colors.text, backgroundColor: colors.inputBackground }]}
+                  placeholder="New password"
+                  placeholderTextColor={colors.secondaryText}
+                  value={newPassword}
+                  onChangeText={setNewPassword}
+                  secureTextEntry
+                  autoCapitalize="none"
+                  accessibilityLabel="New password"
+                />
+                <TouchableOpacity accessibilityRole="button"
+                  style={[styles.passwordSave, { backgroundColor: colors.primary }]}
+                  onPress={isSavingPassword ? undefined : submitPasswordChange}
+                  disabled={isSavingPassword}
+                >
+                  <Text style={styles.passwordSaveText}>
+                    {isSavingPassword ? "Saving..." : "Save new password"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            ) : null}
           </View>
         </View>
 
@@ -254,7 +329,7 @@ export default function SettingsScreen() {
               "Personal data protection policy",
               "Terms and conditions of use",
             ].map((label) => (
-              <TouchableOpacity
+              <TouchableOpacity accessibilityRole="button"
                 key={label}
                 style={[styles.row, { borderBottomColor: colors.borderLight }]}
                 onPress={() => openLegal(label)}
@@ -294,7 +369,7 @@ export default function SettingsScreen() {
               },
             ]}
           >
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               style={[styles.row, { borderBottomColor: colors.borderLight }]}
               onPress={isDeleting ? undefined : confirmDeleteAccount}
               disabled={isDeleting}
@@ -345,6 +420,16 @@ const styles = StyleSheet.create({
   rowRight: { flexDirection: "row", alignItems: "center", gap: 8 },
   rowValue: { fontSize: 13, fontWeight: "600" },
   rowArrow: { fontSize: 18 },
+  passwordForm: { paddingVertical: 12, gap: 10 },
+  passwordInput: {
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+  },
+  passwordSave: { borderRadius: 10, paddingVertical: 12, alignItems: "center" },
+  passwordSaveText: { color: "#fff", fontWeight: "700", fontSize: 14 },
   themeSwitchRow: {
     flexDirection: "row",
     gap: 10,

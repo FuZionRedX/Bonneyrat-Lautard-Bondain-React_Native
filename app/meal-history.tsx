@@ -136,7 +136,7 @@ export default function MealHistoryScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       {/* Header */}
       <View style={[styles.header, { backgroundColor: colors.cardBackground }]}>
-        <TouchableOpacity onPress={() => router.back()} style={{ paddingRight: 12 }}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go back" onPress={() => router.back()} style={{ paddingRight: 12 }}>
           <Text style={{ fontSize: 22, color: colors.text }}>←</Text>
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.text }]}>Meal History</Text>

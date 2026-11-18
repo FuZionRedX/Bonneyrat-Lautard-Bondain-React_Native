@@ -135,3 +135,22 @@ export async function deleteAccount(
     return false;
   }
 }
+
+export async function changePassword(
+  email: string,
+  password: string,
+  newPassword: string,
+): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/change_password.php`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password, new_password: newPassword }),
+    });
+
+    const data = await res.json();
+    return !!data.success;
+  } catch {
+    return false;
+  }
+}

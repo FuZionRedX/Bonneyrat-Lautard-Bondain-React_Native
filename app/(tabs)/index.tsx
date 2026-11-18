@@ -9,7 +9,7 @@ import {
   View,
 } from "react-native";
 
-import { CATEGORY_LABELS, CATEGORY_ORDER, getMealEmoji } from "@/constants/meals";
+import { CATEGORY_LABELS, CATEGORY_ORDER, getMealEmoji, toLocalDateKey } from "@/constants/meals";
 import { getNutrition } from "@/lib/nutrition";
 import { Colors } from "@/constants/theme";
 import { useMealPlan } from "@/contexts/meal-plan-context";
@@ -43,7 +43,7 @@ function ProgressBar({
 export default function PlannerScreen() {
   const router = useRouter();
   const { profile } = useProfile();
-  const { selectedMeals } = useMealPlan();
+  const { selectedMeals, planDate, setPlanDate } = useMealPlan();
   const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
 
@@ -52,6 +52,20 @@ export default function PlannerScreen() {
   const { bmi } = nutrition;
   const bmiDisplay = bmi === null ? "--" : bmi.toFixed(1);
   const dailyTarget = nutrition.dailyTarget ?? 2000;
+
+  // Today and the next 6 days, so the week can be planned day by day.
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    return {
+      key: toLocalDateKey(d),
+      weekday: i === 0 ? "Today" : d.toLocaleDateString("en-GB", { weekday: "short" }),
+      day: d.getDate(),
+      long: d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "short" }),
+    };
+  });
+  const planDay = days.find((d) => d.key === planDate) ?? days[0];
+  const isToday = planDay.key === days[0].key;
 
   const mealSections = useMemo(() => {
     return CATEGORY_ORDER.map((category) => {
@@ -94,7 +108,7 @@ export default function PlannerScreen() {
             Good morning, {firstName}{" "}
           </Text>
           <Text style={[styles.subGreeting, { color: colors.secondaryText }]}>
-            Let&apos;s track your nutrition today
+            {isToday ? "Let's track your nutrition today" : `Planning ${planDay.long}`}
           </Text>
         </View>
         <View
@@ -106,6 +120,39 @@ export default function PlannerScreen() {
           <Text style={[styles.bmiLabel, { color: colors.primary }]}>BMI</Text>
         </View>
       </View>
+
+      {profile.email ? (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.dayStrip}
+        >
+          {days.map((d) => {
+            const selected = d.key === planDay.key;
+            return (
+              <TouchableOpacity
+                key={d.key}
+                onPress={() => setPlanDate(d.key)}
+                style={[
+                  styles.dayChip,
+                  { backgroundColor: colors.cardBackground, borderColor: colors.border },
+                  selected && { backgroundColor: colors.primary, borderColor: colors.primary },
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel={`Plan ${d.long}`}
+                accessibilityState={{ selected }}
+              >
+                <Text style={[styles.dayChipWeekday, { color: selected ? "#fff" : colors.secondaryText }]}>
+                  {d.weekday}
+                </Text>
+                <Text style={[styles.dayChipNumber, { color: selected ? "#fff" : colors.text }]}>
+                  {d.day}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      ) : null}
 
       <View
         style={[
@@ -275,7 +322,7 @@ export default function PlannerScreen() {
               Meals tailored for you
             </Text>
           </View>
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="button"
             style={[styles.recommendBtn, { backgroundColor: colors.primary }]}
             onPress={() => router.push("/(tabs)/recipes" as any)}
           >
@@ -295,7 +342,7 @@ export default function PlannerScreen() {
           <Text style={[styles.modalMessage, { color: colors.secondaryText }]}>
             You are {excess} kcal above your target. Consider removing some meals.
           </Text>
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="button"
             style={[styles.modalButton, { backgroundColor: "#D32F2F" }]}
             onPress={() => setShowOverLimitModal(false)}
           >
@@ -309,6 +356,16 @@ export default function PlannerScreen() {
 }
 
 const styles = StyleSheet.create({
+  dayStrip: { paddingHorizontal: 16, paddingTop: 12, gap: 8 },
+  dayChip: {
+    width: 54,
+    paddingVertical: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: "center",
+  },
+  dayChipWeekday: { fontSize: 11, fontWeight: "600" },
+  dayChipNumber: { fontSize: 16, fontWeight: "800", marginTop: 2 },
   container: { flex: 1 },
 
   header: {

@@ -84,7 +84,8 @@ function MenuItem({
   colors: typeof Colors.light;
 }) {
   return (
-    <TouchableOpacity
+    <TouchableOpacity accessibilityRole="button"
+      accessibilityLabel={label} // skip the emoji and arrow when read aloud
       style={[styles.menuItem, { borderBottomColor: colors.borderLight }]}
       onPress={onPress}
     >
@@ -201,7 +202,7 @@ export default function ProfileScreen() {
             },
           ]}
         >
-          <Text style={[styles.loginBack, { color: colors.text }]}>&larr;</Text>
+          <View style={{ width: 24 }} />
           <Text style={[styles.loginBrand, { color: colors.text }]}>
             VitalSync
           </Text>
@@ -284,7 +285,7 @@ export default function ProfileScreen() {
               secureTextEntry={!showPassword}
               autoCapitalize="none"
             />
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               style={styles.eyeButton}
               onPress={() => setShowPassword((prev) => !prev)}
             >
@@ -294,19 +295,13 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity style={styles.forgotBtn}>
-            <Text style={[styles.forgotText, { color: colors.primary }]}>
-              Forgot Password?
-            </Text>
-          </TouchableOpacity>
-
           {connectError ? (
             <Text style={[styles.loginError, { color: colors.dangerText }]}>
               {connectError}
             </Text>
           ) : null}
 
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="button"
             style={[
               styles.loginButton,
               { backgroundColor: colors.loginButtonBackground },
@@ -329,7 +324,7 @@ export default function ProfileScreen() {
           </TouchableOpacity>
 
 
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="button"
             style={styles.signupRow}
             onPress={() => router.push("/profile-setup" as any)}
           >
@@ -562,7 +557,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-  loginBack: { fontSize: 22, fontWeight: "600" },
   loginBrand: { fontSize: 18, fontWeight: "800" },
   heroBlock: {
     height: 190,
@@ -611,11 +605,6 @@ const styles = StyleSheet.create({
   },
   eyeButton: { paddingHorizontal: 4, paddingVertical: 4 },
   eyeText: { fontWeight: "600" },
-  forgotBtn: {
-    marginTop: 8,
-    alignSelf: "flex-end",
-  },
-  forgotText: { fontSize: 13, fontWeight: "700" },
   loginError: {
     marginTop: 8,
     fontSize: 16,

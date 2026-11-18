@@ -15,16 +15,8 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 interface GroceryItem {
   key: string;
   name: string;
-  qty: string;
-  mealName: string;
-}
-
-function groupByMeal(items: GroceryItem[]) {
-  return items.reduce<Record<string, GroceryItem[]>>((acc, item) => {
-    if (!acc[item.mealName]) acc[item.mealName] = [];
-    acc[item.mealName].push(item);
-    return acc;
-  }, {});
+  // Each meal that needs it. Quantities are free text ("2 large"), so they are listed, not summed.
+  uses: { qty: string; mealName: string }[];
 }
 
 export default function GroceriesScreen() {
@@ -43,15 +35,18 @@ export default function GroceriesScreen() {
     setCheckedKeys(new Set());
   }
 
+  // One row per ingredient, merged across meals (same name, ignoring case and spaces).
   const items = useMemo<GroceryItem[]>(() => {
-    return selectedMeals.flatMap((meal) =>
-      meal.ingredients.map((ing) => ({
-        key: `${meal.id}-${ing.name}`,
-        name: ing.name,
-        qty: ing.quantity,
-        mealName: meal.name,
-      }))
-    );
+    const byName = new Map<string, GroceryItem>();
+    for (const meal of selectedMeals) {
+      for (const ing of meal.ingredients) {
+        const key = ing.name.trim().toLowerCase();
+        const item = byName.get(key) ?? { key, name: ing.name.trim(), uses: [] };
+        item.uses.push({ qty: ing.quantity, mealName: meal.name });
+        byName.set(key, item);
+      }
+    }
+    return [...byName.values()].sort((a, b) => a.name.localeCompare(b.name));
   }, [selectedMeals]);
 
   const toggle = (key: string) =>
@@ -63,7 +58,6 @@ export default function GroceriesScreen() {
     });
 
   const visibleItems = dismissed ? [] : items;
-  const grouped = groupByMeal(visibleItems);
   const checkedCount = visibleItems.filter((i) => checkedKeys.has(i.key)).length;
 
   return (
@@ -85,7 +79,7 @@ export default function GroceriesScreen() {
                   {Math.round((checkedCount / visibleItems.length) * 100)}%
                 </Text>
               </View>
-              <TouchableOpacity style={[styles.clearBtn, { backgroundColor: '#FF5252' }]} onPress={() => setShowClearModal(true)}>
+              <TouchableOpacity accessibilityRole="button" style={[styles.clearBtn, { backgroundColor: '#FF5252' }]} onPress={() => setShowClearModal(true)}>
                 <Text style={styles.clearBtnText}>Done</Text>
               </TouchableOpacity>
             </View>
@@ -106,17 +100,20 @@ export default function GroceriesScreen() {
         )}
 
         {visibleItems.length > 0 ? (
-          Object.entries(grouped).map(([mealName, mealItems]) => (
-            <View key={mealName} style={styles.categorySection}>
-              <Text style={[styles.categoryTitle, { color: colors.secondaryText }]}>{mealName}</Text>
-              {mealItems.map((item) => {
+          <View style={styles.categorySection}>
+              <Text style={[styles.categoryTitle, { color: colors.secondaryText }]}>Shopping list</Text>
+              {visibleItems.map((item) => {
                 const checked = checkedKeys.has(item.key);
+                const qtyText = item.uses.map((u) => `${u.qty} · ${u.mealName}`).join('\n');
                 return (
                   <TouchableOpacity
                     key={item.key}
                     style={[styles.itemRow, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}
                     onPress={() => toggle(item.key)}
                     activeOpacity={0.7}
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked }}
+                    accessibilityLabel={`${item.name}, ${item.uses.map((u) => `${u.qty} for ${u.mealName}`).join(', ')}`}
                   >
                     <View style={[styles.checkbox, { borderColor: colors.border }, checked && { backgroundColor: colors.primary, borderColor: colors.primary }]}>
                       {checked && <Text style={styles.checkmark}>&#10003;</Text>}
@@ -125,13 +122,12 @@ export default function GroceriesScreen() {
                       <Text style={[styles.itemName, { color: colors.text }, checked && { textDecorationLine: 'line-through', color: colors.secondaryText }]}>
                         {item.name}
                       </Text>
-                      <Text style={[styles.itemQty, { color: colors.secondaryText }]}>{item.qty}</Text>
+                      <Text style={[styles.itemQty, { color: colors.secondaryText }]}>{qtyText}</Text>
                     </View>
                   </TouchableOpacity>
                 );
               })}
             </View>
-          ))
         ) : (
           <View style={styles.emptyCard}>
             <Text style={[styles.emptyText, { color: colors.secondaryText }]}>
@@ -152,13 +148,13 @@ export default function GroceriesScreen() {
               This will clear your grocery list. Your meal plan will not be affected.
             </Text>
             <View style={styles.modalButtons}>
-              <TouchableOpacity
+              <TouchableOpacity accessibilityRole="button"
                 style={[styles.modalButton, { backgroundColor: colors.progressTrack }]}
                 onPress={() => setShowClearModal(false)}
               >
                 <Text style={[styles.modalButtonText, { color: colors.text }]}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity
+              <TouchableOpacity accessibilityRole="button"
                 style={[styles.modalButton, { backgroundColor: '#FF5252' }]}
                 onPress={() => { setDismissed(true); setShowClearModal(false); }}
               >

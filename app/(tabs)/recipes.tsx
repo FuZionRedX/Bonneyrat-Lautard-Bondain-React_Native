@@ -37,7 +37,7 @@ export default function RecipesScreen() {
   const { profile } = useProfile();
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
-  const { selectedByCategory, setSelectedByCategory, selectedMeals } = useMealPlan();
+  const { selectedByCategory, setSelectedByCategory, selectedMeals, planDate } = useMealPlan();
 
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [showWeekConfirm, setShowWeekConfirm] = useState(false);
@@ -136,11 +136,12 @@ export default function RecipesScreen() {
     const dayOfWeek = today.getDay(); // 0 = Sunday
     const daysUntilSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
 
-    // Today is saved by MealPlanProvider; save the rest of the week here.
+    // The day being planned is saved by MealPlanProvider; save the rest of the week here.
     const saves: Promise<boolean>[] = [];
-    for (let i = 1; i <= daysUntilSunday; i++) {
+    for (let i = 0; i <= daysUntilSunday; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
+      if (toLocalDateKey(date) === planDate) continue;
       saves.push(
         saveMealHistory(profile.email, profile.password, next as Record<string, number[]>, toLocalDateKey(date)),
       );
@@ -212,13 +213,13 @@ export default function RecipesScreen() {
                 </Text>
               </View>
               <View style={styles.applyButtons}>
-                <TouchableOpacity
+                <TouchableOpacity accessibilityRole="button"
                   style={[styles.applyButton, { backgroundColor: colors.primary }]}
                   onPress={applySuggestedCombo}
                 >
                   <Text style={styles.applyButtonText}>Apply</Text>
                 </TouchableOpacity>
-                <TouchableOpacity
+                <TouchableOpacity accessibilityRole="button"
                   style={[styles.applyWeekButton, { borderColor: colors.primary }]}
                   onPress={() => setShowWeekConfirm(true)}
                 >
@@ -256,7 +257,7 @@ export default function RecipesScreen() {
             </View>
           </View>
 
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="button"
             style={[styles.historyButton, { backgroundColor: colors.primary }]}
             onPress={() => router.push('/meal-history')}
           >
@@ -264,7 +265,7 @@ export default function RecipesScreen() {
           </TouchableOpacity>
 
           {selectedMeals.length > 0 && (
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               style={[styles.clearButton, { borderColor: colors.border }]}
               onPress={() => setSelectedByCategory({})}
             >
@@ -280,7 +281,8 @@ export default function RecipesScreen() {
 
             return (
               <View key={category} style={[styles.categoryCard, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
-                <TouchableOpacity
+                <TouchableOpacity accessibilityRole="button"
+                  accessibilityState={{ expanded: isExpanded }}
                   style={styles.dropdownHeader}
                   onPress={() => toggleCategory(category)}
                   activeOpacity={0.7}
@@ -316,7 +318,8 @@ export default function RecipesScreen() {
                     {meals.map((meal) => {
                       const selected = selectedIds.includes(meal.id);
                       return (
-                        <TouchableOpacity
+                        <TouchableOpacity accessibilityRole="checkbox"
+                          accessibilityState={{ checked: selected }}
                           key={meal.id}
                           style={[
                             styles.optionCard,
@@ -393,7 +396,7 @@ export default function RecipesScreen() {
           <Text style={[styles.modalMessage, { color: colors.secondaryText }]}>
             The suggested meal plan has been applied to your daily plan.
           </Text>
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="button"
             style={[styles.modalButton, { backgroundColor: colors.primary }]}
             onPress={() => setShowApplyModal(false)}
           >
@@ -412,13 +415,13 @@ export default function RecipesScreen() {
             This will save the suggested meal plan for every day from today through Sunday.
           </Text>
           <View style={styles.modalButtonRow}>
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               style={[styles.modalCancelButton, { borderColor: colors.border }]}
               onPress={() => setShowWeekConfirm(false)}
             >
               <Text style={[styles.modalCancelButtonText, { color: colors.secondaryText }]}>Cancel</Text>
             </TouchableOpacity>
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button"
               style={[styles.modalButton, { backgroundColor: colors.primary }]}
               onPress={confirmApplyForWeek}
             >
@@ -437,7 +440,7 @@ export default function RecipesScreen() {
           <Text style={[styles.modalMessage, { color: colors.secondaryText }]}>
             The suggested meal plan has been saved for every day from today through Sunday.
           </Text>
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="button"
             style={[styles.modalButton, { backgroundColor: colors.primary }]}
             onPress={() => setShowWeekModal(false)}
           >
