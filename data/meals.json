@@ -99,7 +99,7 @@
       "id": 8,
       "name": "Veggie Omelette",
       "category": "breakfast",
-      "totalCalories": 280,
+      "totalCalories": 220,
       "calorieBand": "low",
       "ingredients": [
         { "name": "eggs", "quantity": "2 medium", "calories": 130 },
@@ -115,7 +115,7 @@
       "id": 9,
       "name": "Chia Pudding with Fruit",
       "category": "breakfast",
-      "totalCalories": 260,
+      "totalCalories": 245,
       "calorieBand": "low",
       "ingredients": [
         { "name": "chia seeds", "quantity": "20 g", "calories": 95 },
@@ -214,7 +214,7 @@
       "id": 16,
       "name": "Spinach and Banana Smoothie",
       "category": "breakfast",
-      "totalCalories": 250,
+      "totalCalories": 224,
       "calorieBand": "low",
       "ingredients": [
         { "name": "spinach", "quantity": "40 g", "calories": 9 },
@@ -261,7 +261,7 @@
       "id": 19,
       "name": "Quinoa Veggie Bowl",
       "category": "lunch",
-      "totalCalories": 450,
+      "totalCalories": 452,
       "calorieBand": "medium",
       "ingredients": [
         { "name": "quinoa cooked", "quantity": "150 g", "calories": 165 },
@@ -275,7 +275,7 @@
       "id": 20,
       "name": "Tuna Salad Wrap",
       "category": "lunch",
-      "totalCalories": 410,
+      "totalCalories": 359,
       "calorieBand": "medium",
       "ingredients": [
         { "name": "wholemeal tortilla", "quantity": "1 medium", "calories": 150 },
@@ -305,7 +305,7 @@
       "id": 22,
       "name": "Chicken and Rice Bowl",
       "category": "lunch",
-      "totalCalories": 500,
+      "totalCalories": 526,
       "calorieBand": "medium",
       "ingredients": [
         { "name": "chicken breast", "quantity": "120 g cooked", "calories": 170 },
@@ -335,7 +335,7 @@
       "id": 24,
       "name": "Chicken Pitta with Salad",
       "category": "lunch",
-      "totalCalories": 380,
+      "totalCalories": 301,
       "calorieBand": "medium",
       "ingredients": [
         { "name": "wholemeal pitta", "quantity": "1 medium", "calories": 150 },
@@ -351,7 +351,7 @@
       "id": 25,
       "name": "Warm Chicken Tikka Salad",
       "category": "lunch",
-      "totalCalories": 430,
+      "totalCalories": 390,
       "calorieBand": "medium",
       "ingredients": [
         { "name": "chicken breast", "quantity": "120 g", "calories": 170 },
@@ -368,7 +368,7 @@
       "id": 26,
       "name": "Sweet Potato Soup and Bread",
       "category": "lunch",
-      "totalCalories": 360,
+      "totalCalories": 380,
       "calorieBand": "medium",
       "ingredients": [
         { "name": "sweet potato soup", "quantity": "300 ml", "calories": 220 },
@@ -381,7 +381,7 @@
       "id": 27,
       "name": "Couscous Salad with Chickpeas",
       "category": "lunch",
-      "totalCalories": 440,
+      "totalCalories": 476,
       "calorieBand": "medium",
       "ingredients": [
         { "name": "wholewheat couscous cooked", "quantity": "150 g", "calories": 200 },
@@ -397,7 +397,7 @@
       "id": 28,
       "name": "Black Bean Arepa Bowl",
       "category": "lunch",
-      "totalCalories": 480,
+      "totalCalories": 482,
       "calorieBand": "medium",
       "ingredients": [
         { "name": "arepa (cornmeal flatbread)", "quantity": "1 medium", "calories": 200 },
@@ -412,7 +412,7 @@
       "id": 29,
       "name": "Roasted Vegetable and Hummus Wrap",
       "category": "lunch",
-      "totalCalories": 430,
+      "totalCalories": 450,
       "calorieBand": "medium",
       "ingredients": [
         { "name": "wholemeal tortilla", "quantity": "1 large", "calories": 200 },
@@ -426,7 +426,7 @@
       "id": 30,
       "name": "Egg Fried Rice (Light)",
       "category": "lunch",
-      "totalCalories": 470,
+      "totalCalories": 462,
       "calorieBand": "medium",
       "ingredients": [
         { "name": "brown rice cooked", "quantity": "150 g", "calories": 195 },
@@ -443,7 +443,7 @@
       "id": 31,
       "name": "Mediterranean Tuna Salad",
       "category": "lunch",
-      "totalCalories": 390,
+      "totalCalories": 376,
       "calorieBand": "medium",
       "ingredients": [
         { "name": "canned tuna in water", "quantity": "80 g drained", "calories": 90 },
@@ -476,7 +476,7 @@
       "id": 33,
       "name": "Baked Salmon with Veg",
       "category": "dinner",
-      "totalCalories": 520,
+      "totalCalories": 524,
       "calorieBand": "medium",
       "ingredients": [
         { "name": "salmon fillet", "quantity": "130 g", "calories": 260 },
@@ -490,7 +490,7 @@
       "id": 34,
       "name": "Stir-fry Chicken and Veg",
       "category": "dinner",
-      "totalCalories": 500,
+      "totalCalories": 530,
       "calorieBand": "medium",
       "ingredients": [
         { "name": "chicken breast", "quantity": "120 g", "calories": 170 },
@@ -519,7 +519,7 @@
       "id": 36,
       "name": "Bean Chilli with Rice",
       "category": "dinner",
-      "totalCalories": 510,
+      "totalCalories": 559,
       "calorieBand": "medium",
       "ingredients": [
         { "name": "kidney beans cooked", "quantity": "100 g", "calories": 127 },
@@ -534,7 +534,7 @@
       "id": 37,
       "name": "Turkey Meatballs with Spaghetti",
       "category": "dinner",
-      "totalCalories": 530,
+      "totalCalories": 560,
       "calorieBand": "medium",
       "ingredients": [
         { "name": "wholewheat spaghetti dry", "quantity": "70 g", "calories": 250 },
@@ -562,7 +562,7 @@
       "id": 39,
       "name": "Chicken, Red Lentil and Coconut Curry",
       "category": "dinner",
-      "totalCalories": 560,
+      "totalCalories": 612,
       "calorieBand": "medium",
       "ingredients": [
         { "name": "chicken breast", "quantity": "100 g", "calories": 140 },
@@ -578,7 +578,7 @@
       "id": 40,
       "name": "Peri Peri Chicken Traybake",
       "category": "dinner",
-      "totalCalories": 540,
+      "totalCalories": 520,
       "calorieBand": "medium",
       "ingredients": [
         { "name": "chicken thighs (skinless)", "quantity": "120 g", "calories": 210 },
@@ -595,7 +595,7 @@
       "id": 41,
       "name": "Easy Chilli Con Carne",
       "category": "dinner",
-      "totalCalories": 560,
+      "totalCalories": 581,
       "calorieBand": "medium",
       "ingredients": [
         { "name": "extra-lean beef mince", "quantity": "100 g", "calories": 145 },
@@ -611,7 +611,7 @@
       "id": 42,
       "name": "Chicken, Mushroom and Leek Pie (Light)",
       "category": "dinner",
-      "totalCalories": 560,
+      "totalCalories": 508,
       "calorieBand": "medium",
       "ingredients": [
         { "name": "chicken breast", "quantity": "100 g", "calories": 140 },
@@ -628,7 +628,7 @@
       "id": 43,
       "name": "Turkey Chilli with Black Beans",
       "category": "dinner",
-      "totalCalories": 530,
+      "totalCalories": 617,
       "calorieBand": "medium",
       "ingredients": [
         { "name": "turkey mince (lean)", "quantity": "100 g", "calories": 135 },
@@ -674,7 +674,7 @@
       "id": 46,
       "name": "Baked Cod with Herby Potatoes",
       "category": "dinner",
-      "totalCalories": 480,
+      "totalCalories": 465,
       "calorieBand": "medium",
       "ingredients": [
         { "name": "cod fillet", "quantity": "140 g", "calories": 140 },
@@ -690,7 +690,7 @@
       "id": 47,
       "name": "Stuffed Peppers with Quinoa",
       "category": "dinner",
-      "totalCalories": 460,
+      "totalCalories": 560,
       "calorieBand": "medium",
       "ingredients": [
         { "name": "red peppers", "quantity": "2 medium", "calories": 50 },
@@ -706,7 +706,7 @@
       "id": 48,
       "name": "Aubergine and Chickpea Curry",
       "category": "dinner",
-      "totalCalories": 490,
+      "totalCalories": 504,
       "calorieBand": "medium",
       "ingredients": [
         { "name": "aubergine", "quantity": "120 g", "calories": 30 },
@@ -723,7 +723,7 @@
       "id": 49,
       "name": "Apple and Peanut Butter",
       "category": "snack",
-      "totalCalories": 210,
+      "totalCalories": 207,
       "calorieBand": "low",
       "ingredients": [
         { "name": "apple", "quantity": "1 medium", "calories": 112 },
@@ -793,7 +793,7 @@
       "id": 55,
       "name": "Chocolate Chia Pudding",
       "category": "snack",
-      "totalCalories": 200,
+      "totalCalories": 210,
       "calorieBand": "low",
       "ingredients": [
         { "name": "chia seeds", "quantity": "20 g", "calories": 95 },
@@ -807,7 +807,7 @@
       "id": 56,
       "name": "Date and Walnut Bites",
       "category": "snack",
-      "totalCalories": 220,
+      "totalCalories": 227,
       "calorieBand": "low",
       "ingredients": [
         { "name": "dates", "quantity": "30 g", "calories": 82 },
@@ -820,7 +820,7 @@
       "id": 57,
       "name": "Cottage Cheese with Berries",
       "category": "snack",
-      "totalCalories": 180,
+      "totalCalories": 176,
       "calorieBand": "low",
       "ingredients": [
         { "name": "low-fat cottage cheese", "quantity": "120 g", "calories": 96 },
@@ -845,7 +845,7 @@
       "id": 59,
       "name": "Butternut Squash Fries",
       "category": "snack",
-      "totalCalories": 180,
+      "totalCalories": 182,
       "calorieBand": "low",
       "ingredients": [
         { "name": "butternut squash", "quantity": "150 g", "calories": 60 },
@@ -871,7 +871,7 @@
       "id": 61,
       "name": "Boiled Eggs and Veg Sticks",
       "category": "snack",
-      "totalCalories": 200,
+      "totalCalories": 222,
       "calorieBand": "low",
       "ingredients": [
         { "name": "boiled egg", "quantity": "1 large", "calories": 70 },
@@ -885,7 +885,7 @@
       "id": 62,
       "name": "Skyr with Banana and Cinnamon",
       "category": "snack",
-      "totalCalories": 210,
+      "totalCalories": 208,
       "calorieBand": "low",
       "ingredients": [
         { "name": "plain skyr", "quantity": "150 g", "calories": 96 },
