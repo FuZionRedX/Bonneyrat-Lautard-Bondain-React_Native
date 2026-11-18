@@ -1,63 +1,58 @@
-import { Tabs, usePathname, useRouter } from "expo-router";
+import * as Haptics from "expo-haptics";
+import { TopTabs } from "expo-router/js-top-tabs";
 import React from "react";
-import { View } from "react-native";
-import { GestureDetector, usePanGesture } from "react-native-gesture-handler";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { HapticTab } from "@/components/haptic-tab";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 
-// Tab order left to right, used for swiping between tabs.
-const TAB_PATHS = ["/", "/recipes", "/groceries", "/profile"] as const;
-const SWIPE_DISTANCE = 60;
-
+// Swipeable pager with the tab bar at the bottom: pages sit side by side and
+// follow the finger when swiping. Screens are created up front (lazy: false),
+// so switching never waits for a first render.
 export default function TabLayout() {
   const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
-  const router = useRouter();
-  const pathname = usePathname();
-
-  // Horizontal swipe = previous/next tab. Starts only after 30 px sideways and
-  // gives up after 20 px vertical, so normal scrolling keeps working.
-  const swipe = usePanGesture({
-    activeOffsetX: [-30, 30],
-    failOffsetY: [-20, 20],
-    runOnJS: true,
-    onDeactivate: (e) => {
-      const step =
-        e.translationX <= -SWIPE_DISTANCE ? 1 : e.translationX >= SWIPE_DISTANCE ? -1 : 0;
-      const index = TAB_PATHS.indexOf(pathname as (typeof TAB_PATHS)[number]);
-      const next = TAB_PATHS[index + step];
-      if (step !== 0 && index !== -1 && next) router.navigate(next);
-    },
-  });
+  const insets = useSafeAreaInsets();
 
   return (
-    <GestureDetector gesture={swipe}>
-    <View style={{ flex: 1 }}>
-    <Tabs
+    <TopTabs
+      tabBarPosition="bottom"
+      screenListeners={{
+        tabPress: () => {
+          // Soft haptic feedback on iOS when pressing a tab.
+          if (process.env.EXPO_OS === "ios") {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          }
+        },
+      }}
       screenOptions={{
+        swipeEnabled: true,
+        lazy: false,
+        tabBarShowIcon: true,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.secondaryText,
-        headerShown: false,
-        // Small left/right slide between tabs (Profile opts out below).
-        animation: "shift",
-        tabBarButton: HapticTab,
+        tabBarPressColor: "transparent",
         tabBarStyle: {
           backgroundColor: colors.cardBackground,
           borderTopWidth: 1,
           borderTopColor: colors.borderLight,
-          height: 60,
-          paddingBottom: 8,
+          paddingBottom: insets.bottom,
+          elevation: 0,
+          shadowOpacity: 0,
         },
+        // Thin line above the active tab, sliding along as you swipe.
+        tabBarIndicatorStyle: { backgroundColor: colors.primary, top: 0 },
+        tabBarItemStyle: { paddingVertical: 4 },
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: "500",
+          textTransform: "none",
+          margin: 0,
         },
       }}
     >
-      <Tabs.Screen
+      <TopTabs.Screen
         name="index"
         options={{
           title: "Planner",
@@ -66,7 +61,7 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen
+      <TopTabs.Screen
         name="recipes"
         options={{
           title: "Recipes",
@@ -75,7 +70,7 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen
+      <TopTabs.Screen
         name="groceries"
         options={{
           title: "Groceries",
@@ -84,18 +79,17 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen
+      <TopTabs.Screen
         name="profile"
         options={{
           title: "Profile",
-          animation: "none",
+          // Tapping the Profile tab jumps straight to it (swiping still slides).
+          animationEnabled: false,
           tabBarIcon: ({ color }) => (
             <IconSymbol size={24} name="person.fill" color={color} />
           ),
         }}
       />
-    </Tabs>
-    </View>
-    </GestureDetector>
+    </TopTabs>
   );
 }
