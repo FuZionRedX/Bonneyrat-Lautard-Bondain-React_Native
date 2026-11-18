@@ -5,7 +5,6 @@ import {
   ActivityIndicator,
   Image,
   KeyboardAvoidingView,
-  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -190,7 +189,7 @@ export default function ProfileScreen() {
       // Lifts the form above the keyboard so the field being typed in stays visible and the page can scroll.
       <KeyboardAvoidingView
         style={styles.loginScreen}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior="padding" // "height" barely shrinks the view on edge-to-edge Android
       >
       <ScrollView
         style={[
@@ -558,7 +557,7 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   loginScreen: { flex: 1 },
-  loginContent: { flexGrow: 1 },
+  loginContent: { flexGrow: 1, paddingBottom: 120 }, // room to scroll the last field and button above the keyboard
   loginTopBar: {
     height: 52,
     paddingHorizontal: 18,
