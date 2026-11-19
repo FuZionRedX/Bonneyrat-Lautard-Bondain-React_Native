@@ -1,8 +1,8 @@
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { AppState, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { CATEGORY_LABELS } from '@/constants/meals';
+import { CATEGORY_LABELS, toLocalDateKey } from '@/constants/meals';
 import { Colors } from '@/constants/theme';
 import { useLanguage } from '@/contexts/language-context';
 import type { Meal } from '@/contexts/meal-plan-context';
@@ -22,10 +22,21 @@ export default function HomeScreen() {
   const { profile } = useProfile();
   const router = useRouter();
   const [openArticle, setOpenArticle] = useState<string | null>(null);
+  // Today's local date; refreshed when the app comes back on screen, so a night in
+  // the background never leaves yesterday's tip and recipes.
+  const [today, setToday] = useState(() => toLocalDateKey(new Date()));
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') setToday(toLocalDateKey(new Date()));
+    });
+    return () => subscription.remove();
+  }, []);
 
-  const now = new Date();
+  const [year, month, date] = today.split('-').map(Number);
   // Same number all day long on this device (local calendar day).
-  const day = Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 86_400_000);
+  const day = Date.UTC(year, month - 1, date) / 86_400_000;
+  // Capitalize only the first letter: French and Spanish keep month names lowercase.
+  const dateLabel = new Date(year, month - 1, date).toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' });
   const content = news[language];
   const tip = content.tips[day % content.tips.length];
   const recipes = Array.from(
@@ -38,7 +49,7 @@ export default function HomeScreen() {
     <ScrollView style={[styles.container, { backgroundColor: colors.screenBackground }]} showsVerticalScrollIndicator={false}>
       <View style={[styles.header, { backgroundColor: colors.cardBackground }]}>
         <Text style={[styles.date, { color: colors.secondaryText }]}>
-          {now.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' })}
+          {dateLabel.charAt(0).toUpperCase() + dateLabel.slice(1)}
         </Text>
         <Text style={[styles.title, { color: colors.text }]} accessibilityRole="header">
           {firstName ? t('Hello, {name}', { name: firstName }) : t('Hello')}
@@ -118,7 +129,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
 
   header: { paddingHorizontal: 20, paddingTop: 56, paddingBottom: 16 },
-  date: { fontSize: 13, fontWeight: '600', textTransform: 'capitalize' },
+  date: { fontSize: 13, fontWeight: '600' },
   title: { fontSize: 24, fontWeight: '800', marginTop: 2 },
 
   tipCard: { marginHorizontal: 16, marginTop: 16, borderRadius: 14, padding: 16 },
