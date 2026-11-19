@@ -1,4 +1,4 @@
-import { useRouter } from "expo-router";
+import { useIsFocused, useRouter } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Modal,
@@ -87,16 +87,19 @@ export default function PlannerScreen() {
   const hasMealPlan = selectedMeals.length > 0;
   const wasOverLimitRef = useRef(false);
   const [showOverLimitModal, setShowOverLimitModal] = useState(false);
+  const isFocused = useIsFocused();
 
   // Show the over-limit modal only on the transition into over-limit (not on every re-render).
   // wasOverLimitRef tracks the previous state so the modal fires exactly once per breach.
+  // The Planner runs in the background too; a native Modal would cover whatever screen
+  // is open (e.g. the login screen), so it only opens while the Planner is on screen.
   useEffect(() => {
-    if (isOverLimit && !wasOverLimitRef.current) {
+    if (isFocused && isOverLimit && !wasOverLimitRef.current) {
       setShowOverLimitModal(true);
     }
 
     wasOverLimitRef.current = isOverLimit;
-  }, [excess, isOverLimit]);
+  }, [excess, isOverLimit, isFocused]);
 
   return (
     <>
