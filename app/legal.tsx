@@ -1,4 +1,5 @@
 import { Colors } from "@/constants/theme";
+import { useLanguage } from "@/contexts/language-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { Stack, useLocalSearchParams } from "expo-router";
 import React from "react";
@@ -8,9 +9,11 @@ const LOREM = `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed non 
 
 export default function LegalScreen() {
   const params = useLocalSearchParams<{ title?: string }>();
-  const title = params.title ?? "Legal";
   const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
+  const { t } = useLanguage();
+  // Settings passes the English title; it is translated here.
+  const title = t(params.title ?? "Legal");
 
   return (
     <>

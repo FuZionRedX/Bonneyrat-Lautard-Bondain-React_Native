@@ -1,4 +1,5 @@
 import { loginProfile } from "@/lib/api";
+import type { Language } from "@/lib/translations";
 import React, {
     createContext,
     ReactNode,
@@ -17,6 +18,8 @@ export interface ProfileData {
   weight: string;
   goal: string;
   darkMode: boolean;
+  // null until the user picks one: the app then keeps the device language.
+  language: Language | null;
 }
 
 const defaultProfile: ProfileData = {
@@ -29,6 +32,7 @@ const defaultProfile: ProfileData = {
   weight: "",
   goal: "",
   darkMode: false,
+  language: null,
 };
 
 interface ProfileContextValue {

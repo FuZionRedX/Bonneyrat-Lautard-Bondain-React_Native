@@ -10,6 +10,7 @@ import {
 
 import { Colors } from '@/constants/theme';
 import { useMealPlan } from '@/contexts/meal-plan-context';
+import { useLanguage } from '@/contexts/language-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 interface GroceryItem {
@@ -23,6 +24,7 @@ export default function GroceriesScreen() {
   const { selectedMeals } = useMealPlan();
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
+  const { t } = useLanguage();
   const [checkedKeys, setCheckedKeys] = useState<Set<string>>(new Set());
   const [dismissed, setDismissed] = useState(false);
   const [showClearModal, setShowClearModal] = useState(false);
@@ -65,11 +67,11 @@ export default function GroceriesScreen() {
       <ScrollView style={[styles.container, { backgroundColor: colors.screenBackground }]} showsVerticalScrollIndicator={false}>
         <View style={[styles.header, { backgroundColor: colors.cardBackground }]}>
           <View>
-            <Text style={[styles.title, { color: colors.text }]}>Groceries</Text>
+            <Text style={[styles.title, { color: colors.text }]}>{t("Groceries")}</Text>
             <Text style={[styles.subtitle, { color: colors.secondaryText }]}>
               {visibleItems.length > 0
-                ? `${checkedCount} / ${visibleItems.length} items checked`
-                : 'No meals selected yet'}
+                ? t("{checked} / {total} items checked", { checked: checkedCount, total: visibleItems.length })
+                : t("No meals selected yet")}
             </Text>
           </View>
           {visibleItems.length > 0 && (
@@ -80,7 +82,7 @@ export default function GroceriesScreen() {
                 </Text>
               </View>
               <TouchableOpacity accessibilityRole="button" style={[styles.clearBtn, { backgroundColor: '#FF5252' }]} onPress={() => setShowClearModal(true)}>
-                <Text style={styles.clearBtnText}>Done</Text>
+                <Text style={styles.clearBtnText}>{t("Done")}</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -101,7 +103,7 @@ export default function GroceriesScreen() {
 
         {visibleItems.length > 0 ? (
           <View style={styles.categorySection}>
-              <Text style={[styles.categoryTitle, { color: colors.secondaryText }]}>Shopping list</Text>
+              <Text style={[styles.categoryTitle, { color: colors.secondaryText }]}>{t("Shopping list")}</Text>
               {visibleItems.map((item) => {
                 const checked = checkedKeys.has(item.key);
                 const qtyText = item.uses.map((u) => `${u.qty} · ${u.mealName}`).join('\n');
@@ -113,7 +115,7 @@ export default function GroceriesScreen() {
                     activeOpacity={0.7}
                     accessibilityRole="checkbox"
                     accessibilityState={{ checked }}
-                    accessibilityLabel={`${item.name}, ${item.uses.map((u) => `${u.qty} for ${u.mealName}`).join(', ')}`}
+                    accessibilityLabel={`${item.name}, ${item.uses.map((u) => t("{qty} for {meal}", { qty: u.qty, meal: u.mealName })).join(', ')}`}
                   >
                     <View style={[styles.checkbox, { borderColor: colors.border }, checked && { backgroundColor: colors.primary, borderColor: colors.primary }]}>
                       {checked && <Text style={styles.checkmark}>&#10003;</Text>}
@@ -131,7 +133,7 @@ export default function GroceriesScreen() {
         ) : (
           <View style={styles.emptyCard}>
             <Text style={[styles.emptyText, { color: colors.secondaryText }]}>
-              Select meals in the Recipes tab to generate your grocery list.
+              {t("Select meals in the Recipes tab to generate your grocery list.")}
             </Text>
           </View>
         )}
@@ -143,22 +145,22 @@ export default function GroceriesScreen() {
         <View style={styles.modalOverlay}>
           <View style={[styles.modalCard, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
             <Text style={styles.modalIcon}>&#10003;</Text>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>All done shopping?</Text>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>{t("All done shopping?")}</Text>
             <Text style={[styles.modalMessage, { color: colors.secondaryText }]}>
-              This will clear your grocery list. Your meal plan will not be affected.
+              {t("This will clear your grocery list. Your meal plan will not be affected.")}
             </Text>
             <View style={styles.modalButtons}>
               <TouchableOpacity accessibilityRole="button"
                 style={[styles.modalButton, { backgroundColor: colors.progressTrack }]}
                 onPress={() => setShowClearModal(false)}
               >
-                <Text style={[styles.modalButtonText, { color: colors.text }]}>Cancel</Text>
+                <Text style={[styles.modalButtonText, { color: colors.text }]}>{t("Cancel")}</Text>
               </TouchableOpacity>
               <TouchableOpacity accessibilityRole="button"
                 style={[styles.modalButton, { backgroundColor: '#FF5252' }]}
                 onPress={() => { setDismissed(true); setShowClearModal(false); }}
               >
-                <Text style={styles.modalButtonText}>Clear</Text>
+                <Text style={styles.modalButtonText}>{t("Clear")}</Text>
               </TouchableOpacity>
             </View>
           </View>

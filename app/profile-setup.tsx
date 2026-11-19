@@ -17,6 +17,7 @@ import {
   maskPassword,
   useProfile,
 } from "@/contexts/profile-context";
+import { useLanguage } from "@/contexts/language-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 
 const GENDERS = ["Male", "Female", "Other"];
@@ -77,6 +78,7 @@ export default function ProfileSetupScreen() {
   const { profile, hasProcessedInput, updateProfile } = useProfile();
   const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
+  const { language, t } = useLanguage();
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<ProfileData>(profile);
   const [statusMessage, setStatusMessage] = useState("");
@@ -90,32 +92,32 @@ export default function ProfileSetupScreen() {
 
   const next = async () => {
     if (step === 1 && (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()) || !form.password)) {
-      setStatusMessage("Enter a valid email and a password.");
+      setStatusMessage(t("Enter a valid email and a password."));
       return;
     }
 
     if (step === 2) {
       const age = parseInt(form.age, 10);
       if (!form.age.trim() || isNaN(age) || age <= 0) {
-        setAgeError("Please enter a valid age.");
+        setAgeError(t("Please enter a valid age."));
         return;
       }
       if (age < 18) {
-        setAgeError("You must be at least 18 years old.");
+        setAgeError(t("You must be at least 18 years old."));
         return;
       }
       setAgeError("");
 
       const height = parseFloat(form.height);
       if (!form.height.trim() || isNaN(height) || height <= 0) {
-        setHeightError("Please enter a valid height.");
+        setHeightError(t("Please enter a valid height."));
         return;
       }
       setHeightError("");
 
       const weight = parseFloat(form.weight);
       if (!form.weight.trim() || isNaN(weight) || weight <= 0) {
-        setWeightError("Please enter a valid weight.");
+        setWeightError(t("Please enter a valid weight."));
         return;
       }
       setWeightError("");
@@ -127,22 +129,22 @@ export default function ProfileSetupScreen() {
       return;
     }
 
-    const savedForm = { ...form, email: form.email.trim() };
+    const savedForm = { ...form, email: form.email.trim(), language };
     try {
       const result = await saveProfile(savedForm);
       if (!result.success) {
         setStatusMessage(
           result.error === "email_taken"
-            ? "An account with this email already exists. Log in instead."
-            : "Failed to save profile.",
+            ? t("An account with this email already exists. Log in instead.")
+            : t("Failed to save profile."),
         );
         return;
       }
       updateProfile(savedForm);
-      setStatusMessage("User input processing completed.");
+      setStatusMessage(t("User input processing completed."));
       router.replace("/(tabs)/profile");
     } catch {
-      setStatusMessage("Failed to save profile. Check your connection.");
+      setStatusMessage(t("Failed to save profile. Check your connection."));
     }
   };
 
@@ -164,8 +166,8 @@ export default function ProfileSetupScreen() {
       >
         <View style={[styles.header, { backgroundColor: colors.cardBackground }]}>
           <View style={styles.headerRow}>
-            <Text style={[styles.headerTitle, { color: colors.text }]}>Profile Details</Text>
-            <Text style={[styles.headerStep, { color: colors.secondaryText }]}>Step {step} of 3</Text>
+            <Text style={[styles.headerTitle, { color: colors.text }]}>{t("Profile Details")}</Text>
+            <Text style={[styles.headerStep, { color: colors.secondaryText }]}>{t("Step {step} of 3", { step })}</Text>
           </View>
           <StepIndicator current={step} total={3} colors={colors} />
         </View>
@@ -173,10 +175,9 @@ export default function ProfileSetupScreen() {
         <View style={styles.body}>
           {step === 1 && (
             <>
-              <Text style={[styles.sectionHeading, { color: colors.text }]}>Tell us about yourself</Text>
+              <Text style={[styles.sectionHeading, { color: colors.text }]}>{t("Tell us about yourself")}</Text>
               <Text style={[styles.sectionSubtitle, { color: colors.secondaryText }]}>
-                This helps us calculate your daily caloric needs and body mass
-                index.
+                {t("This helps us calculate your daily caloric needs and body mass index.")}
               </Text>
 
               {/* Editing (already logged in) keeps the account's email and password:
@@ -184,7 +185,7 @@ export default function ProfileSetupScreen() {
               {!hasProcessedInput && (
                 <>
                   <InputField
-                    label="Email Address"
+                    label={t("Email Address")}
                     placeholder="example@email.com"
                     value={form.email}
                     onChangeText={set("email")}
@@ -192,7 +193,7 @@ export default function ProfileSetupScreen() {
                     colors={colors}
                   />
                   <InputField
-                    label="Password"
+                    label={t("Password")}
                     placeholder="--------"
                     value={form.password}
                     onChangeText={set("password")}
@@ -202,7 +203,7 @@ export default function ProfileSetupScreen() {
                 </>
               )}
               <InputField
-                label="Full Name"
+                label={t("Full Name")}
                 placeholder="John Doe"
                 value={form.fullName}
                 onChangeText={set("fullName")}
@@ -210,15 +211,15 @@ export default function ProfileSetupScreen() {
               />
 
               <View style={[styles.previewCard, { backgroundColor: colors.primaryLight, borderColor: colors.primary }]}>
-                <Text style={[styles.previewTitle, { color: colors.primaryDark }]}>Live Input Preview</Text>
+                <Text style={[styles.previewTitle, { color: colors.primaryDark }]}>{t("Live Input Preview")}</Text>
                 <Text style={[styles.previewLine, { color: colors.primaryText }]}>
-                  Name: {form.fullName || "Not set yet"}
+                  {t("Name: {value}", { value: form.fullName || t("Not set yet") })}
                 </Text>
                 <Text style={[styles.previewLine, { color: colors.primaryText }]}>
-                  Email: {form.email || "Not set yet"}
+                  {t("Email: {value}", { value: form.email || t("Not set yet") })}
                 </Text>
                 <Text style={[styles.previewLine, { color: colors.primaryText }]}>
-                  Password: {maskPassword(form.password)}
+                  {t("Password: {value}", { value: maskPassword(form.password) })}
                 </Text>
               </View>
             </>
@@ -226,15 +227,15 @@ export default function ProfileSetupScreen() {
 
           {step === 2 && (
             <>
-              <Text style={[styles.sectionHeading, { color: colors.text }]}>Your body details</Text>
+              <Text style={[styles.sectionHeading, { color: colors.text }]}>{t("Your body details")}</Text>
               <Text style={[styles.sectionSubtitle, { color: colors.secondaryText }]}>
-                We use this information to personalise your nutrition plan.
+                {t("We use this information to personalise your nutrition plan.")}
               </Text>
 
               <View style={styles.rowFields}>
                 <View style={{ flex: 1 }}>
                   <InputField
-                    label="Age"
+                    label={t("Age")}
                     placeholder="25"
                     value={form.age}
                     onChangeText={(v) => { set("age")(v); if (ageError) setAgeError(""); }}
@@ -248,7 +249,7 @@ export default function ProfileSetupScreen() {
                   ) : null}
                 </View>
                 <View style={{ flex: 1, marginLeft: 12 }}>
-                  <Text style={[styles.fieldLabel, { color: colors.tertiaryText }]}>Gender</Text>
+                  <Text style={[styles.fieldLabel, { color: colors.tertiaryText }]}>{t("Gender")}</Text>
                   <View style={styles.selectRow}>
                     {GENDERS.map((g) => (
                       <TouchableOpacity accessibilityRole="radio"
@@ -268,7 +269,7 @@ export default function ProfileSetupScreen() {
                             form.gender === g && { color: "#fff" },
                           ]}
                         >
-                          {g}
+                          {t(g)}
                         </Text>
                       </TouchableOpacity>
                     ))}
@@ -279,7 +280,7 @@ export default function ProfileSetupScreen() {
               <View style={styles.rowFields}>
                 <View style={{ flex: 1 }}>
                   <InputField
-                    label="Height (cm)"
+                    label={t("Height (cm)")}
                     placeholder="180"
                     value={form.height}
                     onChangeText={(v) => { set("height")(v); if (heightError) setHeightError(""); }}
@@ -294,7 +295,7 @@ export default function ProfileSetupScreen() {
                 </View>
                 <View style={{ flex: 1, marginLeft: 12 }}>
                   <InputField
-                    label="Weight (kg)"
+                    label={t("Weight (kg)")}
                     placeholder="75"
                     value={form.weight}
                     onChangeText={(v) => { set("weight")(v); if (weightError) setWeightError(""); }}
@@ -313,16 +314,16 @@ export default function ProfileSetupScreen() {
 
           {step === 3 && (
             <>
-              <Text style={[styles.sectionHeading, { color: colors.text }]}>Your primary goal</Text>
+              <Text style={[styles.sectionHeading, { color: colors.text }]}>{t("Your primary goal")}</Text>
               <Text style={[styles.sectionSubtitle, { color: colors.secondaryText }]}>
-                Choose the goal that best describes what you want to achieve.
+                {t("Choose the goal that best describes what you want to achieve.")}
               </Text>
 
               <View style={styles.goalGrid}>
                 {GOALS.map((g) => (
                   <TouchableOpacity accessibilityRole="radio"
                     accessibilityState={{ checked: form.goal === g }}
-                    accessibilityLabel={g}
+                    accessibilityLabel={t(g)}
                     key={g}
                     style={[
                       styles.goalCard,
@@ -347,7 +348,7 @@ export default function ProfileSetupScreen() {
                         form.goal === g && { color: colors.primaryText },
                       ]}
                     >
-                      {g}
+                      {t(g)}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -361,11 +362,11 @@ export default function ProfileSetupScreen() {
 
       <View style={[styles.bottomNav, { backgroundColor: colors.cardBackground, borderTopColor: colors.borderLight }]}>
         <TouchableOpacity accessibilityRole="button" style={[styles.backBtn, { backgroundColor: colors.screenBackground, borderColor: colors.border }]} onPress={back}>
-          <Text style={[styles.backBtnText, { color: colors.tertiaryText }]}>&larr; Back</Text>
+          <Text style={[styles.backBtnText, { color: colors.tertiaryText }]}>{t("← Back")}</Text>
         </TouchableOpacity>
         <TouchableOpacity accessibilityRole="button" style={[styles.nextBtn, { backgroundColor: colors.primary }]} onPress={next}>
           <Text style={styles.nextBtnText}>
-            {step < 3 ? "Continue \u2192" : "Finish Setup \u2713"}
+            {step < 3 ? t("Continue →") : t("Finish Setup ✓")}
           </Text>
         </TouchableOpacity>
       </View>

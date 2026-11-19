@@ -14,6 +14,7 @@ import { getNutrition } from "@/lib/nutrition";
 import { Colors } from "@/constants/theme";
 import { useMealPlan } from "@/contexts/meal-plan-context";
 import { useProfile } from "@/contexts/profile-context";
+import { useLanguage } from "@/contexts/language-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 
 function ProgressBar({
@@ -46,8 +47,9 @@ export default function PlannerScreen() {
   const { selectedMeals, planDate, setPlanDate } = useMealPlan();
   const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
+  const { locale, t } = useLanguage();
 
-  const firstName = profile.fullName.trim().split(/\s+/)[0] || "there";
+  const firstName = profile.fullName.trim().split(/\s+/)[0] || t("there");
   const nutrition = getNutrition(profile);
   const { bmi } = nutrition;
   const bmiDisplay = bmi === null ? "--" : bmi.toFixed(1);
@@ -59,9 +61,9 @@ export default function PlannerScreen() {
     d.setDate(d.getDate() + i);
     return {
       key: toLocalDateKey(d),
-      weekday: i === 0 ? "Today" : d.toLocaleDateString("en-GB", { weekday: "short" }),
+      weekday: i === 0 ? t("Today") : d.toLocaleDateString(locale, { weekday: "short" }),
       day: d.getDate(),
-      long: d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "short" }),
+      long: d.toLocaleDateString(locale, { weekday: "long", day: "numeric", month: "short" }),
     };
   });
   const planDay = days.find((d) => d.key === planDate) ?? days[0];
@@ -71,9 +73,9 @@ export default function PlannerScreen() {
     return CATEGORY_ORDER.map((category) => {
       const meals = selectedMeals.filter((m) => m.category === category);
       const totalKcal = meals.reduce((sum, m) => sum + m.totalCalories, 0);
-      return { category, label: CATEGORY_LABELS[category], totalKcal, meals };
+      return { category, label: t(CATEGORY_LABELS[category]), totalKcal, meals };
     });
-  }, [selectedMeals]);
+  }, [selectedMeals, t]);
 
   const totalPlanned = selectedMeals.reduce(
     (sum, m) => sum + m.totalCalories,
@@ -105,10 +107,10 @@ export default function PlannerScreen() {
       <View style={[styles.header, { backgroundColor: colors.cardBackground }]}>
         <View>
           <Text style={[styles.greeting, { color: colors.text }]}>
-            Good morning, {firstName}{" "}
+            {t("Good morning, {name}", { name: firstName })}{" "}
           </Text>
           <Text style={[styles.subGreeting, { color: colors.secondaryText }]}>
-            {isToday ? "Let's track your nutrition today" : `Planning ${planDay.long}`}
+            {isToday ? t("Let's track your nutrition today") : t("Planning {date}", { date: planDay.long })}
           </Text>
         </View>
         <View
@@ -117,7 +119,7 @@ export default function PlannerScreen() {
           <Text style={[styles.bmiValue, { color: colors.primary }]}>
             {bmiDisplay}
           </Text>
-          <Text style={[styles.bmiLabel, { color: colors.primary }]}>BMI</Text>
+          <Text style={[styles.bmiLabel, { color: colors.primary }]}>{t("BMI")}</Text>
         </View>
       </View>
 
@@ -139,7 +141,7 @@ export default function PlannerScreen() {
                   selected && { backgroundColor: colors.primary, borderColor: colors.primary },
                 ]}
                 accessibilityRole="button"
-                accessibilityLabel={`Plan ${d.long}`}
+                accessibilityLabel={t("Plan {date}", { date: d.long })}
                 accessibilityState={{ selected }}
               >
                 <Text style={[styles.dayChipWeekday, { color: selected ? "#fff" : colors.secondaryText }]}>
@@ -165,7 +167,7 @@ export default function PlannerScreen() {
       >
         <View style={styles.targetHeader}>
           <Text style={[styles.targetTitle, { color: colors.secondaryText }]}>
-            DAILY TARGET
+            {t("DAILY TARGET")}
           </Text>
           <Text style={[styles.targetKcal, { color: colors.text }]}>
             {dailyTarget.toLocaleString()} kcal
@@ -175,7 +177,7 @@ export default function PlannerScreen() {
           <Text
             style={[styles.targetConsumed, { color: colors.secondaryText }]}
           >
-            CALORIES PLANNED{"\n"}
+            {t("CALORIES PLANNED")}{"\n"}
             <Text style={[styles.targetConsumedValue, { color: colors.text }]}>
               {totalPlanned.toLocaleString()} / {dailyTarget.toLocaleString()}
             </Text>
@@ -191,7 +193,7 @@ export default function PlannerScreen() {
                   },
             ]}
           >
-            {isOverLimit ? `${excess} over limit` : `${remaining} remaining`}
+            {isOverLimit ? t("{n} over limit", { n: excess }) : t("{n} remaining", { n: remaining })}
           </Text>
         </View>
         <ProgressBar
@@ -202,8 +204,7 @@ export default function PlannerScreen() {
         />
         {isOverLimit && (
           <Text style={styles.overLimitAlert}>
-            You are {excess} kcal above your daily target. Consider removing
-            some meals.
+            {t("You are {n} kcal above your daily target. Consider removing some meals.", { n: excess })}
           </Text>
         )}
       </View>
@@ -258,7 +259,7 @@ export default function PlannerScreen() {
                         { color: colors.secondaryText },
                       ]}
                     >
-                      {meal.ingredients.length} ingredients -{" "}
+                      {t("{n} ingredients", { n: meal.ingredients.length })} -{" "}
                       {meal.totalCalories} kcal
                     </Text>
                   </View>
@@ -271,7 +272,7 @@ export default function PlannerScreen() {
                   { color: colors.secondaryText, paddingVertical: 4 },
                 ]}
               >
-                No {section.label.toLowerCase()} selected
+                {t("No {categoryLower} selected", { category: section.label, categoryLower: section.label.toLowerCase() })}
               </Text>
             )}
           </View>
@@ -292,10 +293,10 @@ export default function PlannerScreen() {
               { color: colors.text, marginBottom: 6 },
             ]}
           >
-            No meals planned yet
+            {t("No meals planned yet")}
           </Text>
           <Text style={[styles.mealDetail, { color: colors.secondaryText }]}>
-            Go to the Recipes tab to select your meals
+            {t("Go to the Recipes tab to select your meals")}
           </Text>
         </View>
       )}
@@ -311,22 +312,22 @@ export default function PlannerScreen() {
             <Text
               style={[styles.recommendTitle, { color: colors.darkCardText }]}
             >
-              Ready for lunch?
+              {t("Ready for lunch?")}
             </Text>
             <Text
               style={[styles.recommendSub, { color: colors.darkCardSubtext }]}
             >
-              Follow your personalised nutrition plan to maintain your BMI goal.
+              {t("Follow your personalised nutrition plan to maintain your BMI goal.")}
             </Text>
             <Text style={[styles.recommendNote, { color: colors.primary }]}>
-              Meals tailored for you
+              {t("Meals tailored for you")}
             </Text>
           </View>
           <TouchableOpacity accessibilityRole="button"
             style={[styles.recommendBtn, { backgroundColor: colors.primary }]}
             onPress={() => router.push("/(tabs)/recipes" as any)}
           >
-            <Text style={styles.recommendBtnText}>See Meal Plan</Text>
+            <Text style={styles.recommendBtnText}>{t("See Meal Plan")}</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -338,15 +339,15 @@ export default function PlannerScreen() {
       <View style={styles.modalOverlay}>
         <View style={[styles.modalCard, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
           <Text style={styles.modalIcon}>&#9888;</Text>
-          <Text style={[styles.modalTitle, { color: colors.text }]}>Daily limit exceeded</Text>
+          <Text style={[styles.modalTitle, { color: colors.text }]}>{t("Daily limit exceeded")}</Text>
           <Text style={[styles.modalMessage, { color: colors.secondaryText }]}>
-            You are {excess} kcal above your target. Consider removing some meals.
+            {t("You are {n} kcal above your target. Consider removing some meals.", { n: excess })}
           </Text>
           <TouchableOpacity accessibilityRole="button"
             style={[styles.modalButton, { backgroundColor: "#D32F2F" }]}
             onPress={() => setShowOverLimitModal(false)}
           >
-            <Text style={styles.modalButtonText}>OK</Text>
+            <Text style={styles.modalButtonText}>{t("OK")}</Text>
           </TouchableOpacity>
         </View>
       </View>

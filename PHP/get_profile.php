@@ -13,7 +13,7 @@ if ($email === "" || $password === "") {
 }
 
 $stmt = $conn->prepare("
-    SELECT email, password, full_name, age, gender, height, weight, goal, dark_mode
+    SELECT email, password, full_name, age, gender, height, weight, goal, dark_mode, language
     FROM users
     WHERE email = ?
     LIMIT 1
@@ -40,5 +40,6 @@ echo json_encode([
     "height" => (string)$row["height"],
     "weight" => (string)$row["weight"],
     "goal" => $row["goal"],
-    "darkMode" => ((int)($row["dark_mode"] ?? 0)) === 1
+    "darkMode" => ((int)($row["dark_mode"] ?? 0)) === 1,
+    "language" => $row["language"]
 ]);

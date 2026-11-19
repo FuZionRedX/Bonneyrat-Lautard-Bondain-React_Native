@@ -18,6 +18,7 @@ import { getNutrition } from "@/lib/nutrition";
 import { Colors } from "@/constants/theme";
 import { useMealPlan } from "@/contexts/meal-plan-context";
 import { getProfileInitials, useProfile } from "@/contexts/profile-context";
+import { useLanguage } from "@/contexts/language-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 
 const LAST_PROFILE_EMAIL_KEY = "last_profile_email";
@@ -104,6 +105,7 @@ export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
+  const { t } = useLanguage();
   const { connectProfileByEmail, hasProcessedInput, logout, profile } =
     useProfile();
   const { setSelectedByCategory } = useMealPlan();
@@ -136,20 +138,20 @@ export default function ProfileScreen() {
     const enteredPassword = passwordToConnect;
 
     if (!trimmedEmail) {
-      setEmailError("Enter your email to connect your profile.");
+      setEmailError(t("Enter your email to connect your profile."));
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(trimmedEmail)) {
-      setEmailError("Enter a valid email address (e.g. name@example.com).");
+      setEmailError(t("Enter a valid email address (e.g. name@example.com)."));
       return;
     }
 
     setEmailError("");
 
     if (!enteredPassword.trim()) {
-      setConnectError("Enter your password to connect your profile.");
+      setConnectError(t("Enter your password to connect your profile."));
       return;
     }
 
@@ -159,18 +161,18 @@ export default function ProfileScreen() {
       const status = await connectProfileByEmail(trimmedEmail, enteredPassword);
 
       if (status === "not_found") {
-        setConnectError("No profile found for this email.");
+        setConnectError(t("No profile found for this email."));
         return;
       }
 
       if (status === "wrong_password") {
-        setConnectError("Incorrect password.");
+        setConnectError(t("Incorrect password."));
         return;
       }
 
       await AsyncStorage.setItem(LAST_PROFILE_EMAIL_KEY, trimmedEmail);
     } catch {
-      setConnectError("Connection failed. Check XAMPP and your API URL.");
+      setConnectError(t("Connection failed. Check XAMPP and your API URL."));
     } finally {
       setIsConnecting(false);
     }
@@ -228,14 +230,14 @@ export default function ProfileScreen() {
 
         <View style={styles.loginPanel}>
           <Text style={[styles.loginTitle, { color: colors.text }]}>
-            Welcome
+            {t("Welcome")}
           </Text>
           <Text style={[styles.loginSubtitle, { color: colors.labelText }]}>
-            Log in to sync your health goals and track your diet.
+            {t("Log in to sync your health goals and track your diet.")}
           </Text>
 
           <Text style={[styles.inputLabel, { color: colors.tertiaryText }]}>
-            EMAIL
+            {t("EMAIL")}
           </Text>
           <View
             style={[
@@ -269,7 +271,7 @@ export default function ProfileScreen() {
           ) : null}
 
           <Text style={[styles.inputLabel, { color: colors.tertiaryText }]}>
-            PASSWORD
+            {t("PASSWORD")}
           </Text>
           <View
             style={[
@@ -285,7 +287,7 @@ export default function ProfileScreen() {
             </Text>
             <TextInput
               style={[styles.loginInput, { color: colors.text }]}
-              placeholder="Enter your password"
+              placeholder={t("Enter your password")}
               placeholderTextColor={colors.placeholderText}
               value={passwordToConnect}
               onChangeText={setPasswordToConnect}
@@ -297,7 +299,7 @@ export default function ProfileScreen() {
               onPress={() => setShowPassword((prev) => !prev)}
             >
               <Text style={[styles.eyeText, { color: colors.placeholderText }]}>
-                {showPassword ? "Hide" : "Show"}
+                {showPassword ? t("Hide") : t("Show")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -325,7 +327,7 @@ export default function ProfileScreen() {
                   { color: colors.loginButtonText },
                 ]}
               >
-                Log In
+                {t("Log In")}
               </Text>
             )}
           </TouchableOpacity>
@@ -336,10 +338,10 @@ export default function ProfileScreen() {
             onPress={() => router.push("/profile-setup" as any)}
           >
             <Text style={[styles.signupMuted, { color: colors.labelText }]}>
-              Don&apos;t have an account?{" "}
+              {t("Don't have an account?")}{" "}
             </Text>
             <Text style={[styles.signupLink, { color: colors.primary }]}>
-              Sign Up
+              {t("Sign Up")}
             </Text>
           </TouchableOpacity>
         </View>
@@ -375,13 +377,13 @@ export default function ProfileScreen() {
         ]}
       >
         <Text style={[styles.sectionTitle, { color: colors.text }]}>
-          Account Information
+          {t("Account Information")}
         </Text>
         <View
           style={[styles.accountRow, { borderBottomColor: colors.borderLight }]}
         >
           <Text style={[styles.accountLabel, { color: colors.secondaryText }]}>
-            Name
+            {t("Name")}
           </Text>
           <Text style={[styles.accountValue, { color: colors.text }]}>
             {profile.fullName}
@@ -391,7 +393,7 @@ export default function ProfileScreen() {
           style={[styles.accountRow, { borderBottomColor: colors.borderLight }]}
         >
           <Text style={[styles.accountLabel, { color: colors.secondaryText }]}>
-            Email
+            {t("Email")}
           </Text>
           <Text style={[styles.accountValue, { color: colors.text }]}>
             {profile.email}
@@ -411,7 +413,7 @@ export default function ProfileScreen() {
       >
         <View>
           <Text style={[styles.bmiTitle, { color: colors.secondaryText }]}>
-            BODY MASS INDEX
+            {t("BODY MASS INDEX")}
           </Text>
           <Text style={[styles.bmiValue, { color: colors.text }]}>
             {bmiDisplay}
@@ -419,12 +421,12 @@ export default function ProfileScreen() {
           <View
             style={[styles.bmiNormalBadge, { backgroundColor: bmiMeta.color }]}
           >
-            <Text style={styles.bmiNormalText}>{bmiMeta.label}</Text>
+            <Text style={styles.bmiNormalText}>{t(bmiMeta.label)}</Text>
           </View>
         </View>
         <View style={styles.bmiRight}>
           <Text style={[styles.bmiDesc, { color: colors.tertiaryText }]}>
-            {bmiMeta.description}
+            {t(bmiMeta.description)}
           </Text>
           <View style={styles.bmiScaleRow}>
             {[
@@ -453,14 +455,14 @@ export default function ProfileScreen() {
         ]}
       >
         <Text style={[styles.sectionTitle, { color: colors.text }]}>
-          Body Information
+          {t("Body Information")}
         </Text>
         <View style={styles.bodyInfoRow}>
           <View style={styles.bodyInfoItem}>
             <Text
               style={[styles.bodyInfoLabel, { color: colors.secondaryText }]}
             >
-              Age
+              {t("Age")}
             </Text>
             <Text style={[styles.bodyInfoValue, { color: colors.text }]}>
               {profile.age}
@@ -470,17 +472,17 @@ export default function ProfileScreen() {
             <Text
               style={[styles.bodyInfoLabel, { color: colors.secondaryText }]}
             >
-              Gender
+              {t("Gender")}
             </Text>
             <Text style={[styles.bodyInfoValue, { color: colors.text }]}>
-              {profile.gender}
+              {t(profile.gender)}
             </Text>
           </View>
           <View style={styles.bodyInfoItem}>
             <Text
               style={[styles.bodyInfoLabel, { color: colors.secondaryText }]}
             >
-              Height
+              {t("Height")}
             </Text>
             <Text style={[styles.bodyInfoValue, { color: colors.text }]}>
               {profile.height} cm
@@ -490,7 +492,7 @@ export default function ProfileScreen() {
             <Text
               style={[styles.bodyInfoLabel, { color: colors.secondaryText }]}
             >
-              Weight
+              {t("Weight")}
             </Text>
             <Text style={[styles.bodyInfoValue, { color: colors.text }]}>
               {profile.weight} kg
@@ -509,13 +511,13 @@ export default function ProfileScreen() {
         ]}
       >
         <Text style={[styles.sectionTitle, { color: colors.text }]}>
-          Primary Goal
+          {t("Primary Goal")}
         </Text>
         <View style={styles.goalRow}>
           <View
             style={[styles.goalChip, { backgroundColor: colors.primary }]}
           >
-            <Text style={styles.goalChipText}>{profile.goal}</Text>
+            <Text style={styles.goalChipText}>{t(profile.goal)}</Text>
           </View>
         </View>
       </View>
@@ -531,19 +533,19 @@ export default function ProfileScreen() {
       >
         <MenuItem
           emoji={"\u2699\uFE0F"}
-          label="Settings"
+          label={t("Settings")}
           onPress={() => router.push("/settings" as any)}
           colors={colors}
         />
         <MenuItem
           emoji={"\u2753"}
-          label="Help & Support"
+          label={t("Help & Support")}
           onPress={() => router.push("/help-support" as any)}
           colors={colors}
         />
         <MenuItem
           emoji={"\u{1F6AA}"}
-          label="Log Out"
+          label={t("Log Out")}
           onPress={handleLogout}
           colors={colors}
         />

@@ -12,6 +12,8 @@ $height = trim((string)($data["height"] ?? ""));
 $weight = trim((string)($data["weight"] ?? ""));
 $goal = trim($data["goal"] ?? "");
 $darkmode = !empty($data["darkMode"]) ? 1 : 0;
+// NULL = not chosen yet: the app keeps the device language.
+$language = in_array($data["language"] ?? null, ["en", "fr", "es", "de"], true) ? $data["language"] : null;
 
 if ($email === "" || $plainPassword === "") {
     echo json_encode(["success" => false, "error" => "missing_fields"]);
@@ -24,10 +26,10 @@ if ($existingHash === null) {
     // New account. A plain INSERT (no upsert) fails on the unique email key if another sign-up wins the race.
     $hashedPassword = password_hash($plainPassword, PASSWORD_DEFAULT);
     $stmt = $conn->prepare(
-        "INSERT INTO users (email, password, full_name, age, gender, height, weight, goal, dark_mode)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        "INSERT INTO users (email, password, full_name, age, gender, height, weight, goal, dark_mode, language)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     );
-    $stmt->bind_param("sssissssi", $email, $hashedPassword, $fullName, $age, $gender, $height, $weight, $goal, $darkmode);
+    $stmt->bind_param("sssissssis", $email, $hashedPassword, $fullName, $age, $gender, $height, $weight, $goal, $darkmode, $language);
 } else {
     // Existing account: only its owner may update it.
     if (!password_verify($plainPassword, $existingHash)) {
@@ -37,10 +39,10 @@ if ($existingHash === null) {
     }
     $stmt = $conn->prepare(
         "UPDATE users
-         SET full_name = ?, age = ?, gender = ?, height = ?, weight = ?, goal = ?, dark_mode = ?
+         SET full_name = ?, age = ?, gender = ?, height = ?, weight = ?, goal = ?, dark_mode = ?, language = ?
          WHERE email = ?"
     );
-    $stmt->bind_param("sissssis", $fullName, $age, $gender, $height, $weight, $goal, $darkmode, $email);
+    $stmt->bind_param("sissssiss", $fullName, $age, $gender, $height, $weight, $goal, $darkmode, $language, $email);
 }
 
 $ok = $stmt->execute();

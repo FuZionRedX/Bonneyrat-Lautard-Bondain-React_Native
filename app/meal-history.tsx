@@ -15,6 +15,7 @@ import { CATEGORY_LABELS, CATEGORY_ORDER, getMealEmoji, toLocalDateKey } from '@
 import { Meal } from '@/contexts/meal-plan-context';
 import { useProfile } from '@/contexts/profile-context';
 import { Colors } from '@/constants/theme';
+import { useLanguage } from '@/contexts/language-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 interface MealsFile {
@@ -25,9 +26,9 @@ const MEALS = (mealsData as MealsFile).meals;
 const MEALS_BY_ID = new Map(MEALS.map((m) => [m.id, m]));
 
 // saved_at is the server's local "YYYY-MM-DD HH:MM:SS"; the "T" makes every JS engine parse it as local time.
-function formatDate(dateStr: string) {
+function formatDate(dateStr: string, locale: string) {
   const d = new Date(dateStr.replace(' ', 'T'));
-  return d.toLocaleDateString('en-GB', {
+  return d.toLocaleDateString(locale, {
     weekday: 'long',
     day: 'numeric',
     month: 'short',
@@ -39,6 +40,7 @@ export default function MealHistoryScreen() {
   const { profile } = useProfile();
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
+  const { locale, t } = useLanguage();
 
   const [history, setHistory] = useState<MealHistoryEntry[] | null>(null);
   const loading = !!profile.email && history === null;
@@ -84,11 +86,11 @@ export default function MealHistoryScreen() {
         <View style={styles.dayHeader}>
           <View style={styles.dayHeaderLeft}>
             <Text style={[styles.dayDate, { color: isFuture ? colors.secondaryText : colors.text }]}>
-              {formatDate(entry.saved_at)}
+              {formatDate(entry.saved_at, locale)}
             </Text>
             {isFuture && (
               <View style={[styles.previewBadge, { backgroundColor: colors.borderLight }]}>
-                <Text style={[styles.previewBadgeText, { color: colors.secondaryText }]}>Planned</Text>
+                <Text style={[styles.previewBadgeText, { color: colors.secondaryText }]}>{t("Planned")}</Text>
               </View>
             )}
           </View>
@@ -108,7 +110,7 @@ export default function MealHistoryScreen() {
               <View style={styles.categoryHeader}>
                 <Text style={styles.categoryEmoji}>{getMealEmoji(cat)}</Text>
                 <Text style={[styles.categoryLabel, { color: colors.secondaryText }]}>
-                  {CATEGORY_LABELS[cat]}
+                  {t(CATEGORY_LABELS[cat])}
                 </Text>
                 <Text style={[styles.categoryKcal, { color: isFuture ? colors.secondaryText : colors.primary }]}>
                   {catTotal} kcal
@@ -136,10 +138,10 @@ export default function MealHistoryScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       {/* Header */}
       <View style={[styles.header, { backgroundColor: colors.cardBackground }]}>
-        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go back" onPress={() => router.back()} style={{ paddingRight: 12 }}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel={t("Go back")} onPress={() => router.back()} style={{ paddingRight: 12 }}>
           <Text style={{ fontSize: 22, color: colors.text }}>←</Text>
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Meal History</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>{t("Meal History")}</Text>
       </View>
 
       {loading && (
@@ -149,7 +151,7 @@ export default function MealHistoryScreen() {
       {!loading && futureEntries.length === 0 && pastEntries.length === 0 && (
         <View style={[styles.emptyCard, { backgroundColor: colors.cardBackground }]}>
           <Text style={[styles.emptyText, { color: colors.secondaryText }]}>
-            No meal history yet. Your saved meal plans will appear here.
+            {t("No meal history yet. Your saved meal plans will appear here.")}
           </Text>
         </View>
       )}
@@ -158,7 +160,7 @@ export default function MealHistoryScreen() {
       {!loading && futureEntries.length > 0 && (
         <>
           <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: colors.secondaryText }]}>Upcoming</Text>
+            <Text style={[styles.sectionTitle, { color: colors.secondaryText }]}>{t("Upcoming")}</Text>
           </View>
           {futureEntries.map((entry) => renderDayCard(entry, true))}
         </>
@@ -169,7 +171,7 @@ export default function MealHistoryScreen() {
         <View style={styles.sectionHeader}>
           <View style={[styles.sectionDivider, { backgroundColor: colors.border }]} />
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            {futureEntries.length > 0 ? 'Today & Past' : 'History'}
+            {futureEntries.length > 0 ? t("Today & Past") : t("History")}
           </Text>
           <View style={[styles.sectionDivider, { backgroundColor: colors.border }]} />
         </View>

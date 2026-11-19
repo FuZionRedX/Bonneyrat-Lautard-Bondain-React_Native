@@ -50,7 +50,8 @@ CREATE TABLE `users` (
   `height` float DEFAULT NULL,
   `weight` float DEFAULT NULL,
   `goal` varchar(100) DEFAULT NULL,
-  `dark_mode` tinyint(1) NOT NULL DEFAULT 1
+  `dark_mode` tinyint(1) NOT NULL DEFAULT 1,
+  `language` varchar(2) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --

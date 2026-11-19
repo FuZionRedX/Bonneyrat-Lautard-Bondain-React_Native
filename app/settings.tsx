@@ -1,7 +1,9 @@
 import { changePassword, deleteAccount, saveProfile } from "@/lib/api";
+import { Language, LANGUAGES, translate } from "@/lib/translations";
 import { Colors, THEME_PREF_KEY } from "@/constants/theme";
 import { useMealPlan } from "@/contexts/meal-plan-context";
 import { useProfile } from "@/contexts/profile-context";
+import { useLanguage } from "@/contexts/language-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Stack, useRouter } from "expo-router";
@@ -29,6 +31,7 @@ export default function SettingsScreen() {
   // The saved preference is applied app-wide by ThemeSync in app/_layout.tsx.
   const themePreference: ThemePreference = useColorScheme();
   const colors = Colors[themePreference];
+  const { language, setLanguage, t } = useLanguage();
   const [isDeleting, setIsDeleting] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
@@ -37,14 +40,14 @@ export default function SettingsScreen() {
 
   const submitPasswordChange = async () => {
     if (!currentPassword || !newPassword) {
-      Alert.alert("Change password", "Fill in both fields.");
+      Alert.alert(t("Change password"), t("Fill in both fields."));
       return;
     }
     setIsSavingPassword(true);
     const ok = await changePassword(profile.email, currentPassword, newPassword);
     setIsSavingPassword(false);
     if (!ok) {
-      Alert.alert("Change password", "Current password is wrong, or the server is unreachable.");
+      Alert.alert(t("Change password"), t("Current password is wrong, or the server is unreachable."));
       return;
     }
     // Later requests authenticate with the new password.
@@ -52,7 +55,7 @@ export default function SettingsScreen() {
     setCurrentPassword("");
     setNewPassword("");
     setShowPasswordForm(false);
-    Alert.alert("Change password", "Your password has been changed.");
+    Alert.alert(t("Change password"), t("Your password has been changed."));
   };
 
   const applyThemePreference = async (nextPreference: ThemePreference) => {
@@ -74,8 +77,29 @@ export default function SettingsScreen() {
       if (!(await saveProfile(nextProfile)).success) throw new Error();
     } catch {
       Alert.alert(
-        "Sync failed",
-        "Theme changed locally, but we could not save dark mode to the server.",
+        t("Sync failed"),
+        t("Theme changed locally, but we could not save dark mode to the server."),
+      );
+    }
+  };
+
+  const applyLanguage = async (next: Language) => {
+    setLanguage(next);
+
+    if (!profile.email) {
+      return;
+    }
+
+    const nextProfile = { ...profile, language: next };
+    updateProfile(nextProfile);
+
+    try {
+      if (!(await saveProfile(nextProfile)).success) throw new Error();
+    } catch {
+      // translate() with the new language: t() still holds the previous one here.
+      Alert.alert(
+        translate(next, "Sync failed"),
+        translate(next, "Language changed locally, but we could not save it to the server."),
       );
     }
   };
@@ -90,28 +114,28 @@ export default function SettingsScreen() {
   const confirmDeleteAccount = () => {
     if (!profile.email) {
       Alert.alert(
-        "No account connected",
-        "Connect an account before deleting it.",
+        t("No account connected"),
+        t("Connect an account before deleting it."),
       );
       return;
     }
 
     Alert.alert(
-      "Delete my account",
-      "This will permanently remove your account and profile data.",
+      t("Delete my account"),
+      t("This will permanently remove your account and profile data."),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("Cancel"), style: "cancel" },
         {
-          text: "Continue",
+          text: t("Continue"),
           style: "destructive",
           onPress: () => {
             Alert.alert(
-              "Final confirmation",
-              "Are you absolutely sure? This action cannot be undone.",
+              t("Final confirmation"),
+              t("Are you absolutely sure? This action cannot be undone."),
               [
-                { text: "Cancel", style: "cancel" },
+                { text: t("Cancel"), style: "cancel" },
                 {
-                  text: "Delete account",
+                  text: t("Delete account"),
                   style: "destructive",
                   onPress: async () => {
                     setIsDeleting(true);
@@ -123,8 +147,8 @@ export default function SettingsScreen() {
 
                     if (!ok) {
                       Alert.alert(
-                        "Deletion failed",
-                        "Could not delete the account. Check your API endpoint delete_account.php.",
+                        t("Deletion failed"),
+                        t("Could not delete the account. Check your API endpoint delete_account.php."),
                       );
                       return;
                     }
@@ -133,8 +157,8 @@ export default function SettingsScreen() {
                     setSelectedByCategory({});
                     logout();
                     Alert.alert(
-                      "Account deleted",
-                      "Your account has been removed.",
+                      t("Account deleted"),
+                      t("Your account has been removed."),
                     );
                     router.replace("/(tabs)/profile");
                   },
@@ -149,7 +173,7 @@ export default function SettingsScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: "Settings" }} />
+      <Stack.Screen options={{ title: t("Settings") }} />
       {/* Lifts the page above the keyboard so the change-password fields stay visible. */}
       <KeyboardAvoidingView style={styles.container} behavior="padding">
       <ScrollView
@@ -157,12 +181,12 @@ export default function SettingsScreen() {
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={[styles.pageTitle, { color: colors.text }]}>Settings</Text>
+        <Text style={[styles.pageTitle, { color: colors.text }]}>{t("Settings")}</Text>
 
         {/* Appearance */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.subtitleText }]}>
-            Appearance
+            {t("Appearance")}
           </Text>
           <View
             style={[
@@ -198,7 +222,7 @@ export default function SettingsScreen() {
                     },
                   ]}
                 >
-                  White mode
+                  {t("White mode")}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity accessibilityRole="radio"
@@ -223,9 +247,60 @@ export default function SettingsScreen() {
                     themePreference === "dark" && { color: colors.primaryText },
                   ]}
                 >
-                  Dark mode
+                  {t("Dark mode")}
                 </Text>
               </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+
+        {/* Language */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.subtitleText }]}>
+            {t("Language")}
+          </Text>
+          <View
+            style={[
+              styles.card,
+              {
+                backgroundColor: colors.cardBackground,
+                shadowColor: colors.shadow,
+              },
+            ]}
+          >
+            <View style={[styles.themeSwitchRow, styles.languageRow]}>
+              {LANGUAGES.map((option) => {
+                const selected = language === option.code;
+                return (
+                  <TouchableOpacity accessibilityRole="radio"
+                    accessibilityState={{ checked: selected }}
+                    key={option.code}
+                    style={[
+                      styles.themeChip,
+                      styles.languageChip,
+                      {
+                        borderColor: colors.border,
+                        backgroundColor: colors.inputBackground,
+                      },
+                      selected && {
+                        borderColor: colors.primary,
+                        backgroundColor: colors.primaryLight,
+                      },
+                    ]}
+                    onPress={() => applyLanguage(option.code)}
+                  >
+                    <Text
+                      style={[
+                        styles.themeChipText,
+                        { color: colors.labelText },
+                        selected && { color: colors.primaryText },
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           </View>
         </View>
@@ -233,7 +308,7 @@ export default function SettingsScreen() {
         {/* Personal Information */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.subtitleText }]}>
-            Personal Information
+            {t("Personal Information")}
           </Text>
           <View
             style={[
@@ -250,11 +325,11 @@ export default function SettingsScreen() {
               activeOpacity={0.75}
             >
               <Text style={[styles.rowLabel, { color: colors.text }]}>
-                Edit personal information
+                {t("Edit personal information")}
               </Text>
               <View style={styles.rowRight}>
                 <Text style={[styles.rowValue, { color: colors.subtitleText }]}>
-                  Open
+                  {t("Open")}
                 </Text>
                 <Text
                   style={[styles.rowArrow, { color: colors.secondaryText }]}
@@ -271,7 +346,7 @@ export default function SettingsScreen() {
                 accessibilityState={{ expanded: showPasswordForm }}
               >
                 <Text style={[styles.rowLabel, { color: colors.text }]}>
-                  Change password
+                  {t("Change password")}
                 </Text>
                 <Text style={[styles.rowArrow, { color: colors.secondaryText }]}>
                   {showPasswordForm ? "⌄" : "›"}
@@ -282,23 +357,23 @@ export default function SettingsScreen() {
               <View style={styles.passwordForm}>
                 <TextInput
                   style={[styles.passwordInput, { borderColor: colors.border, color: colors.text, backgroundColor: colors.inputBackground }]}
-                  placeholder="Current password"
+                  placeholder={t("Current password")}
                   placeholderTextColor={colors.secondaryText}
                   value={currentPassword}
                   onChangeText={setCurrentPassword}
                   secureTextEntry
                   autoCapitalize="none"
-                  accessibilityLabel="Current password"
+                  accessibilityLabel={t("Current password")}
                 />
                 <TextInput
                   style={[styles.passwordInput, { borderColor: colors.border, color: colors.text, backgroundColor: colors.inputBackground }]}
-                  placeholder="New password"
+                  placeholder={t("New password")}
                   placeholderTextColor={colors.secondaryText}
                   value={newPassword}
                   onChangeText={setNewPassword}
                   secureTextEntry
                   autoCapitalize="none"
-                  accessibilityLabel="New password"
+                  accessibilityLabel={t("New password")}
                 />
                 <TouchableOpacity accessibilityRole="button"
                   style={[styles.passwordSave, { backgroundColor: colors.primary }]}
@@ -306,7 +381,7 @@ export default function SettingsScreen() {
                   disabled={isSavingPassword}
                 >
                   <Text style={styles.passwordSaveText}>
-                    {isSavingPassword ? "Saving..." : "Save new password"}
+                    {isSavingPassword ? t("Saving...") : t("Save new password")}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -317,7 +392,7 @@ export default function SettingsScreen() {
         {/* Legal */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.subtitleText }]}>
-            Legal
+            {t("Legal")}
           </Text>
           <View
             style={[
@@ -340,13 +415,13 @@ export default function SettingsScreen() {
                 activeOpacity={0.75}
               >
                 <Text style={[styles.rowLabel, { color: colors.text }]}>
-                  {label}
+                  {t(label)}
                 </Text>
                 <View style={styles.rowRight}>
                   <Text
                     style={[styles.rowValue, { color: colors.subtitleText }]}
                   >
-                    View
+                    {t("View")}
                   </Text>
                   <Text
                     style={[styles.rowArrow, { color: colors.secondaryText }]}
@@ -362,7 +437,7 @@ export default function SettingsScreen() {
         {/* Account */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.subtitleText }]}>
-            Account
+            {t("Account")}
           </Text>
           <View
             style={[
@@ -380,7 +455,7 @@ export default function SettingsScreen() {
               activeOpacity={0.75}
             >
               <Text style={[styles.rowLabel, { color: colors.dangerText }]}>
-                {isDeleting ? "Deleting account..." : "Delete my account"}
+                {isDeleting ? t("Deleting account...") : t("Delete my account")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -449,4 +524,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   themeChipText: { fontWeight: "700", fontSize: 13 },
+  languageRow: { flexWrap: "wrap" },
+  languageChip: { flexBasis: "40%" }, // two per row
 });

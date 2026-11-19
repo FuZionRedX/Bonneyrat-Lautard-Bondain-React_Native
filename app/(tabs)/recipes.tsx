@@ -16,6 +16,7 @@ import { getNutrition } from '@/lib/nutrition';
 import { findBestGlobalCombo } from '@/lib/suggest';
 import { Meal, MealCategory, useMealPlan } from '@/contexts/meal-plan-context';
 import { useProfile } from '@/contexts/profile-context';
+import { useLanguage } from '@/contexts/language-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useRouter } from 'expo-router';
 
@@ -37,6 +38,7 @@ export default function RecipesScreen() {
   const { profile } = useProfile();
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
+  const { t } = useLanguage();
   const { selectedByCategory, setSelectedByCategory, selectedMeals, planDate } = useMealPlan();
 
   const [showApplyModal, setShowApplyModal] = useState(false);
@@ -163,31 +165,31 @@ export default function RecipesScreen() {
 
   const finalPlanCalories = selectedMeals.reduce((total, meal) => total + meal.totalCalories, 0);
   const hasMetrics = bmi !== null && bmr !== null && dailyCalories !== null;
-  const bmiLabel = bmi === null ? 'N/A' : bmi.toFixed(1);
-  const bmrLabel = bmr === null ? 'N/A' : Math.round(bmr).toString();
+  const bmiLabel = bmi === null ? t("N/A") : bmi.toFixed(1);
+  const bmrLabel = bmr === null ? t("N/A") : Math.round(bmr).toString();
   const adviceText = !hasMetrics
-    ? 'Add age, height, weight, and gender in your profile to generate a personalized meal plan.'
+    ? t("Add age, height, weight, and gender in your profile to generate a personalized meal plan.")
     : needsWeightLoss
-      ? 'You should aim to lose weight. Choose one or more options per category to build your daily plan.'
-      : 'You do not currently need to lose weight. Continue with your current meal plan.';
+      ? t("You should aim to lose weight. Choose one or more options per category to build your daily plan.")
+      : t("You do not currently need to lose weight. Continue with your current meal plan.");
 
   return (
     <>
     <ScrollView style={[styles.container, { backgroundColor: colors.screenBackground }]} showsVerticalScrollIndicator={false}>
       <View style={[styles.header, { backgroundColor: colors.cardBackground }]}>
-        <Text style={[styles.title, { color: colors.text }]}>Recipes</Text>
-        <Text style={[styles.subtitle, { color: colors.secondaryText }]}>BMI and BMR based recommendations</Text>
+        <Text style={[styles.title, { color: colors.text }]}>{t("Recipes")}</Text>
+        <Text style={[styles.subtitle, { color: colors.secondaryText }]}>{t("BMI and BMR based recommendations")}</Text>
       </View>
 
       <View style={[styles.statusCard, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
-        <Text style={[styles.statusTitle, { color: colors.text }]}>Your Health Baseline</Text>
+        <Text style={[styles.statusTitle, { color: colors.text }]}>{t("Your Health Baseline")}</Text>
         <View style={styles.statusRow}>
-          <Text style={[styles.statusMetric, { color: colors.tertiaryText }]}>BMI: {bmiLabel}</Text>
-          <Text style={[styles.statusMetric, { color: colors.tertiaryText }]}>BMR: {bmrLabel} kcal</Text>
+          <Text style={[styles.statusMetric, { color: colors.tertiaryText }]}>{t("BMI: {value}", { value: bmiLabel })}</Text>
+          <Text style={[styles.statusMetric, { color: colors.tertiaryText }]}>{t("BMR: {value} kcal", { value: bmrLabel })}</Text>
         </View>
         {dailyCalories !== null && (
           <Text style={[styles.statusTarget, { color: colors.labelText }]}>
-            Daily target for recommendation: {dailyCalories} kcal
+            {t("Daily target for recommendation: {n} kcal", { n: dailyCalories ?? "" })}
           </Text>
         )}
         <Text style={[styles.statusAdvice, { color: colors.labelText }]}>{adviceText}</Text>
@@ -195,9 +197,9 @@ export default function RecipesScreen() {
 
       {!needsWeightLoss && hasMetrics && (
         <View style={[styles.maintainCard, { backgroundColor: colors.cardBackground, borderColor: colors.selectedBorder }]}>
-          <Text style={[styles.maintainTitle, { color: colors.primaryText }]}>Current Plan Is Appropriate</Text>
+          <Text style={[styles.maintainTitle, { color: colors.primaryText }]}>{t("Current Plan Is Appropriate")}</Text>
           <Text style={[styles.maintainText, { color: colors.primaryText }]}>
-            Keep following your current meal rhythm and monitor your progress weekly.
+            {t("Keep following your current meal rhythm and monitor your progress weekly.")}
           </Text>
         </View>
       )}
@@ -207,9 +209,9 @@ export default function RecipesScreen() {
           <View style={[styles.suggestedCard, { backgroundColor: colors.darkCard, shadowColor: colors.shadow }]}>
             <View style={styles.suggestedHeader}>
               <View>
-                <Text style={[styles.suggestedTitle, { color: colors.darkCardText }]}>Suggested Combo</Text>
+                <Text style={[styles.suggestedTitle, { color: colors.darkCardText }]}>{t("Suggested Combo")}</Text>
                 <Text style={[styles.suggestedSubtitle, { color: colors.darkCardSubtext }]}>
-                  Best match for your {dailyCalories} kcal target
+                  {t("Best match for your {n} kcal target", { n: dailyCalories ?? "" })}
                 </Text>
               </View>
               <View style={styles.applyButtons}>
@@ -217,13 +219,13 @@ export default function RecipesScreen() {
                   style={[styles.applyButton, { backgroundColor: colors.primary }]}
                   onPress={applySuggestedCombo}
                 >
-                  <Text style={styles.applyButtonText}>Apply</Text>
+                  <Text style={styles.applyButtonText}>{t("Apply")}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity accessibilityRole="button"
                   style={[styles.applyWeekButton, { borderColor: colors.primary }]}
                   onPress={() => setShowWeekConfirm(true)}
                 >
-                  <Text style={[styles.applyWeekButtonText, { color: colors.primary }]}>Week</Text>
+                  <Text style={[styles.applyWeekButtonText, { color: colors.primary }]}>{t("Week")}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -237,7 +239,7 @@ export default function RecipesScreen() {
                   <View style={styles.suggestedCategoryHeader}>
                     <Text style={styles.suggestedEmoji}>{getMealEmoji(category)}</Text>
                     <Text style={[styles.suggestedCategoryLabel, { color: colors.darkCardSubtext }]}>
-                      {CATEGORY_LABELS[category]} · target {categoryTargets[category]} kcal
+                      {t(CATEGORY_LABELS[category])} · {t("target {n} kcal", { n: categoryTargets[category] })}
                     </Text>
                     <Text style={styles.suggestedMealKcal}>{categoryTotal} kcal</Text>
                   </View>
@@ -252,7 +254,7 @@ export default function RecipesScreen() {
             })}
 
             <View style={[styles.suggestedTotal, { borderTopColor: 'rgba(255,255,255,0.15)' }]}>
-              <Text style={[styles.suggestedTotalLabel, { color: colors.darkCardText }]}>Total</Text>
+              <Text style={[styles.suggestedTotalLabel, { color: colors.darkCardText }]}>{t("Total")}</Text>
               <Text style={styles.suggestedTotalValue}>{suggestedComboCalories} kcal</Text>
             </View>
           </View>
@@ -261,7 +263,7 @@ export default function RecipesScreen() {
             style={[styles.historyButton, { backgroundColor: colors.primary }]}
             onPress={() => router.push('/meal-history')}
           >
-            <Text style={styles.historyButtonText}>View Meal History</Text>
+            <Text style={styles.historyButtonText}>{t("View Meal History")}</Text>
           </TouchableOpacity>
 
           {selectedMeals.length > 0 && (
@@ -269,7 +271,7 @@ export default function RecipesScreen() {
               style={[styles.clearButton, { borderColor: colors.border }]}
               onPress={() => setSelectedByCategory({})}
             >
-              <Text style={[styles.clearButtonText, { color: colors.secondaryText }]}>Unselect All</Text>
+              <Text style={[styles.clearButtonText, { color: colors.secondaryText }]}>{t("Unselect All")}</Text>
             </TouchableOpacity>
           )}
 
@@ -289,10 +291,10 @@ export default function RecipesScreen() {
                 >
                   <View style={styles.dropdownHeaderLeft}>
                     <Text style={[styles.categoryTitle, { color: colors.text }]}>
-                      {getMealEmoji(category)} {CATEGORY_LABELS[category]}
+                      {getMealEmoji(category)} {t(CATEGORY_LABELS[category])}
                     </Text>
                     <Text style={[styles.categoryHint, { color: colors.secondaryText }]}>
-                      Target: {categoryTargets[category]} kcal · {meals.length} options
+                      {t("Target: {kcal} kcal · {n} options", { kcal: categoryTargets[category], n: meals.length })}
                     </Text>
                   </View>
                   <Text style={[styles.dropdownChevron, { color: colors.secondaryText }]}>
@@ -339,7 +341,7 @@ export default function RecipesScreen() {
                           <View style={styles.optionInfo}>
                             <Text style={[styles.optionName, { color: colors.text }]}>{meal.name}</Text>
                             <Text style={[styles.optionMeta, { color: colors.secondaryText }]}>
-                              {meal.ingredients.length} ingredients · {meal.calorieBand}
+                              {t("{n} ingredients", { n: meal.ingredients.length })} · {t(meal.calorieBand)}
                             </Text>
                           </View>
                           <Text style={[styles.optionKcal, { color: selected ? colors.primary : colors.tertiaryText }]}>
@@ -355,7 +357,7 @@ export default function RecipesScreen() {
           })}
 
           <View style={[styles.finalPlanCard, { backgroundColor: colors.darkCard }]}>
-            <Text style={[styles.finalPlanTitle, { color: colors.darkCardText }]}>Final Daily Meal Plan</Text>
+            <Text style={[styles.finalPlanTitle, { color: colors.darkCardText }]}>{t("Final Daily Meal Plan")}</Text>
             {selectedMeals.map((meal) => (
               <View key={meal.id} style={styles.finalPlanRow}>
                 <Text style={[styles.finalPlanMeal, { color: colors.darkCardSubtext }]}>{meal.name}</Text>
@@ -364,7 +366,7 @@ export default function RecipesScreen() {
             ))}
             <View style={[styles.finalPlanDivider, { backgroundColor: colors.border }]} />
             <View style={styles.finalPlanRow}>
-              <Text style={[styles.finalPlanTotalLabel, { color: colors.darkCardText }]}>Total</Text>
+              <Text style={[styles.finalPlanTotalLabel, { color: colors.darkCardText }]}>{t("Total")}</Text>
               <Text style={styles.finalPlanTotalValue}>{finalPlanCalories} kcal</Text>
             </View>
           </View>
@@ -374,14 +376,14 @@ export default function RecipesScreen() {
       {!hasMetrics && (
         <View style={[styles.emptyCard, { backgroundColor: colors.cardBackground }]}>
           <Text style={[styles.empty, { color: colors.secondaryText }]}>
-            Complete your profile details to unlock BMI and BMR based meal recommendations.
+            {t("Complete your profile details to unlock BMI and BMR based meal recommendations.")}
           </Text>
         </View>
       )}
 
       {hasMetrics && needsWeightLoss && selectedMeals.length === 0 && (
         <View style={[styles.emptyCard, { backgroundColor: colors.cardBackground }]}>
-          <Text style={[styles.empty, { color: colors.secondaryText }]}>No matching meals found for your calorie targets.</Text>
+          <Text style={[styles.empty, { color: colors.secondaryText }]}>{t("No matching meals found for your calorie targets.")}</Text>
         </View>
       )}
 
@@ -392,15 +394,15 @@ export default function RecipesScreen() {
       <View style={styles.modalOverlay}>
         <View style={[styles.modalCard, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
           <Text style={[styles.modalIcon]}>&#10003;</Text>
-          <Text style={[styles.modalTitle, { color: colors.text }]}>Combo Applied</Text>
+          <Text style={[styles.modalTitle, { color: colors.text }]}>{t("Combo Applied")}</Text>
           <Text style={[styles.modalMessage, { color: colors.secondaryText }]}>
-            The suggested meal plan has been applied to your daily plan.
+            {t("The suggested meal plan has been applied to your daily plan.")}
           </Text>
           <TouchableOpacity accessibilityRole="button"
             style={[styles.modalButton, { backgroundColor: colors.primary }]}
             onPress={() => setShowApplyModal(false)}
           >
-            <Text style={styles.modalButtonText}>OK</Text>
+            <Text style={styles.modalButtonText}>{t("OK")}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -410,22 +412,22 @@ export default function RecipesScreen() {
       <View style={styles.modalOverlay}>
         <View style={[styles.modalCard, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
           <Text style={[styles.modalIcon]}>&#128197;</Text>
-          <Text style={[styles.modalTitle, { color: colors.text }]}>Apply for the week?</Text>
+          <Text style={[styles.modalTitle, { color: colors.text }]}>{t("Apply for the week?")}</Text>
           <Text style={[styles.modalMessage, { color: colors.secondaryText }]}>
-            This will save the suggested meal plan for every day from today through Sunday.
+            {t("This will save the suggested meal plan for every day from today through Sunday.")}
           </Text>
           <View style={styles.modalButtonRow}>
             <TouchableOpacity accessibilityRole="button"
               style={[styles.modalCancelButton, { borderColor: colors.border }]}
               onPress={() => setShowWeekConfirm(false)}
             >
-              <Text style={[styles.modalCancelButtonText, { color: colors.secondaryText }]}>Cancel</Text>
+              <Text style={[styles.modalCancelButtonText, { color: colors.secondaryText }]}>{t("Cancel")}</Text>
             </TouchableOpacity>
             <TouchableOpacity accessibilityRole="button"
               style={[styles.modalButton, { backgroundColor: colors.primary }]}
               onPress={confirmApplyForWeek}
             >
-              <Text style={styles.modalButtonText}>Confirm</Text>
+              <Text style={styles.modalButtonText}>{t("Confirm")}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -436,15 +438,15 @@ export default function RecipesScreen() {
       <View style={styles.modalOverlay}>
         <View style={[styles.modalCard, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
           <Text style={[styles.modalIcon]}>&#128197;</Text>
-          <Text style={[styles.modalTitle, { color: colors.text }]}>Week Plan Applied</Text>
+          <Text style={[styles.modalTitle, { color: colors.text }]}>{t("Week Plan Applied")}</Text>
           <Text style={[styles.modalMessage, { color: colors.secondaryText }]}>
-            The suggested meal plan has been saved for every day from today through Sunday.
+            {t("The suggested meal plan has been saved for every day from today through Sunday.")}
           </Text>
           <TouchableOpacity accessibilityRole="button"
             style={[styles.modalButton, { backgroundColor: colors.primary }]}
             onPress={() => setShowWeekModal(false)}
           >
-            <Text style={styles.modalButtonText}>OK</Text>
+            <Text style={styles.modalButtonText}>{t("OK")}</Text>
           </TouchableOpacity>
         </View>
       </View>

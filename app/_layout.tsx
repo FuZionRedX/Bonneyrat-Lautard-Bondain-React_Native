@@ -6,6 +6,7 @@ import { Appearance } from "react-native";
 import "react-native-reanimated";
 
 import { THEME_PREF_KEY } from "@/constants/theme";
+import { LanguageProvider, useLanguage } from "@/contexts/language-context";
 import { MealPlanProvider } from "@/contexts/meal-plan-context";
 import { ProfileProvider, useProfile } from "@/contexts/profile-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
@@ -42,12 +43,28 @@ function ThemeSync() {
   return null;
 }
 
+// Applies the account's saved language on login (null = never chosen: keep the current one).
+function LanguageSync() {
+  const { profile } = useProfile();
+  const { setLanguage } = useLanguage();
+
+  useEffect(() => {
+    if (profile.email && profile.language) {
+      setLanguage(profile.language);
+    }
+  }, [profile.email, profile.language, setLanguage]);
+
+  return null;
+}
+
 export default function RootLayout() {
   const colorScheme = useColorScheme();
 
   return (
+    <LanguageProvider>
     <ProfileProvider>
       <ThemeSync />
+      <LanguageSync />
       <MealPlanProvider>
         <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
           <Stack>
@@ -58,5 +75,6 @@ export default function RootLayout() {
         </ThemeProvider>
       </MealPlanProvider>
     </ProfileProvider>
+    </LanguageProvider>
   );
 }

@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Colors } from "@/constants/theme";
+import { useLanguage } from "@/contexts/language-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 
 // Swipeable pager with the tab bar at the bottom: pages sit side by side and
@@ -13,6 +14,7 @@ import { useColorScheme } from "@/hooks/use-color-scheme";
 export default function TabLayout() {
   const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
+  const { t } = useLanguage();
   const insets = useSafeAreaInsets();
 
   return (
@@ -55,7 +57,7 @@ export default function TabLayout() {
       <TopTabs.Screen
         name="index"
         options={{
-          title: "Planner",
+          title: t("Planner"),
           tabBarIcon: ({ color }) => (
             <IconSymbol size={24} name="calendar" color={color} />
           ),
@@ -64,7 +66,7 @@ export default function TabLayout() {
       <TopTabs.Screen
         name="recipes"
         options={{
-          title: "Recipes",
+          title: t("Recipes"),
           tabBarIcon: ({ color }) => (
             <IconSymbol size={24} name="fork.knife" color={color} />
           ),
@@ -73,7 +75,7 @@ export default function TabLayout() {
       <TopTabs.Screen
         name="groceries"
         options={{
-          title: "Groceries",
+          title: t("Groceries"),
           tabBarIcon: ({ color }) => (
             <IconSymbol size={24} name="cart.fill" color={color} />
           ),
@@ -82,7 +84,7 @@ export default function TabLayout() {
       <TopTabs.Screen
         name="profile"
         options={{
-          title: "Profile",
+          title: t("Profile"),
           // Tapping the Profile tab jumps straight to it (swiping still slides).
           animationEnabled: false,
           tabBarIcon: ({ color }) => (
