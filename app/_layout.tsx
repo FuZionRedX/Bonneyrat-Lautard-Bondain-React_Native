@@ -3,7 +3,6 @@ import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { Appearance } from "react-native";
-import "react-native-reanimated";
 
 import { THEME_PREF_KEY } from "@/constants/theme";
 import { LanguageProvider, useLanguage } from "@/contexts/language-context";
