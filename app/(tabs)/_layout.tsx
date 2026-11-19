@@ -57,6 +57,15 @@ export default function TabLayout() {
       <TopTabs.Screen
         name="index"
         options={{
+          title: t("Home"),
+          tabBarIcon: ({ color }) => (
+            <IconSymbol size={24} name="house.fill" color={color} />
+          ),
+        }}
+      />
+      <TopTabs.Screen
+        name="planner"
+        options={{
           title: t("Planner"),
           tabBarIcon: ({ color }) => (
             <IconSymbol size={24} name="calendar" color={color} />

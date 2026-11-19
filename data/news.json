@@ -1,0 +1,150 @@
+{
+  "en": {
+    "tips": [
+      "Fill half your plate with vegetables: they add volume and fibre for very few calories.",
+      "Drink a glass of water before each meal. Thirst is often mistaken for hunger.",
+      "Swap white bread and pasta for wholegrain versions to stay full for longer.",
+      "Keep fruit where you can see it. You will reach for it more often than snacks.",
+      "Cook a double portion and keep one for tomorrow's lunch.",
+      "Read the labels: sugar hides under names like glucose syrup, dextrose or maltose.",
+      "Eat slowly. Your brain needs about 20 minutes to register that you are full."
+    ],
+    "articles": [
+      {
+        "id": "fibre",
+        "tag": "Nutrition",
+        "minutes": 2,
+        "title": "Why fibre keeps you full",
+        "summary": "Fibre slows digestion, steadies your blood sugar and keeps hunger away between meals.",
+        "body": "Fibre is the part of plants your body cannot digest. Soluble fibre (oats, beans, apples) forms a gel that slows digestion, so energy is released gradually. Insoluble fibre (wholegrains, vegetables) adds bulk and helps your gut work well. Most adults eat less than the recommended 25 to 30 g a day. Easy wins: oats at breakfast, a handful of beans in your salad, and fruit with the skin on."
+      },
+      {
+        "id": "plan",
+        "tag": "Planning",
+        "minutes": 2,
+        "title": "Plan once, eat well all week",
+        "summary": "Ten minutes of planning on Sunday saves money, time and last-minute takeaway orders.",
+        "body": "People who plan their meals tend to eat more varied food and waste less. Pick your meals for the week in the Planner, then open Groceries: every ingredient is merged into one list. Cook staples like rice, grains or roasted vegetables in batches, and keep a couple of quick backup meals for busy evenings."
+      },
+      {
+        "id": "water",
+        "tag": "Hydration",
+        "minutes": 1,
+        "title": "Hydration is more than water",
+        "summary": "About a fifth of the water you need comes from food. Here is how to keep up.",
+        "body": "Fruit and vegetables like cucumber, watermelon and oranges are mostly water. Soups, milk and tea count too. A simple check: pale yellow urine means you are drinking enough. Drink more when it is hot or when you exercise, and keep a bottle within reach during the day."
+      }
+    ]
+  },
+  "fr": {
+    "tips": [
+      "Remplissez la moitié de votre assiette de légumes : ils apportent volume et fibres pour très peu de calories.",
+      "Buvez un verre d'eau avant chaque repas. La soif est souvent confondue avec la faim.",
+      "Remplacez le pain et les pâtes blanches par des versions complètes pour rester rassasié plus longtemps.",
+      "Gardez les fruits bien en vue. Vous les choisirez plus souvent que les snacks.",
+      "Cuisinez une double portion et gardez-en une pour le déjeuner du lendemain.",
+      "Lisez les étiquettes : le sucre se cache sous les noms de sirop de glucose, dextrose ou maltose.",
+      "Mangez lentement. Votre cerveau met environ 20 minutes à sentir que vous êtes rassasié."
+    ],
+    "articles": [
+      {
+        "id": "fibre",
+        "tag": "Nutrition",
+        "minutes": 2,
+        "title": "Pourquoi les fibres rassasient",
+        "summary": "Les fibres ralentissent la digestion, stabilisent la glycémie et éloignent la faim entre les repas.",
+        "body": "Les fibres sont la partie des plantes que le corps ne digère pas. Les fibres solubles (avoine, légumineuses, pommes) forment un gel qui ralentit la digestion : l'énergie est libérée progressivement. Les fibres insolubles (céréales complètes, légumes) donnent du volume et aident l'intestin à bien fonctionner. La plupart des adultes en mangent moins que les 25 à 30 g recommandés par jour. Faciles à adopter : de l'avoine au petit-déjeuner, une poignée de haricots dans la salade et des fruits avec la peau."
+      },
+      {
+        "id": "plan",
+        "tag": "Organisation",
+        "minutes": 2,
+        "title": "Planifiez une fois, mangez bien toute la semaine",
+        "summary": "Dix minutes de planification le dimanche font gagner de l'argent, du temps et évitent les commandes de dernière minute.",
+        "body": "Les personnes qui planifient leurs repas mangent plus varié et gaspillent moins. Choisissez vos repas de la semaine dans le Planning, puis ouvrez Courses : tous les ingrédients sont réunis dans une seule liste. Préparez à l'avance les bases comme le riz, les céréales ou les légumes rôtis, et gardez deux ou trois repas rapides pour les soirs chargés."
+      },
+      {
+        "id": "water",
+        "tag": "Hydratation",
+        "minutes": 1,
+        "title": "S'hydrater, ce n'est pas que boire de l'eau",
+        "summary": "Environ un cinquième de l'eau dont vous avez besoin vient de l'alimentation. Voici comment suivre le rythme.",
+        "body": "Les fruits et légumes comme le concombre, la pastèque et les oranges sont surtout composés d'eau. Les soupes, le lait et le thé comptent aussi. Un repère simple : une urine jaune pâle indique que vous buvez assez. Buvez davantage quand il fait chaud ou pendant le sport, et gardez une bouteille à portée de main dans la journée."
+      }
+    ]
+  },
+  "es": {
+    "tips": [
+      "Llena la mitad de tu plato con verduras: aportan volumen y fibra con muy pocas calorías.",
+      "Bebe un vaso de agua antes de cada comida. La sed se confunde a menudo con el hambre.",
+      "Cambia el pan y la pasta blancos por versiones integrales para sentirte saciado más tiempo.",
+      "Deja la fruta a la vista. La elegirás más a menudo que los snacks.",
+      "Cocina una ración doble y guarda una para la comida de mañana.",
+      "Lee las etiquetas: el azúcar se esconde bajo nombres como jarabe de glucosa, dextrosa o maltosa.",
+      "Come despacio. Tu cerebro tarda unos 20 minutos en notar que estás lleno."
+    ],
+    "articles": [
+      {
+        "id": "fibre",
+        "tag": "Nutrición",
+        "minutes": 2,
+        "title": "Por qué la fibra te sacia",
+        "summary": "La fibra ralentiza la digestión, estabiliza el azúcar en sangre y aleja el hambre entre comidas.",
+        "body": "La fibra es la parte de las plantas que el cuerpo no puede digerir. La fibra soluble (avena, legumbres, manzanas) forma un gel que ralentiza la digestión, así la energía se libera poco a poco. La fibra insoluble (cereales integrales, verduras) aporta volumen y ayuda al intestino. La mayoría de los adultos toma menos de los 25 a 30 g recomendados al día. Fácil de conseguir: avena en el desayuno, un puñado de alubias en la ensalada y fruta con piel."
+      },
+      {
+        "id": "plan",
+        "tag": "Planificación",
+        "minutes": 2,
+        "title": "Planifica una vez, come bien toda la semana",
+        "summary": "Diez minutos de planificación el domingo ahorran dinero, tiempo y pedidos de última hora.",
+        "body": "Quienes planifican sus comidas comen más variado y desperdician menos. Elige las comidas de la semana en el Planificador y abre Compras: todos los ingredientes se juntan en una sola lista. Prepara de antemano bases como arroz, cereales o verduras asadas, y ten un par de comidas rápidas para las noches con prisa."
+      },
+      {
+        "id": "water",
+        "tag": "Hidratación",
+        "minutes": 1,
+        "title": "Hidratarse es más que beber agua",
+        "summary": "Cerca de una quinta parte del agua que necesitas viene de la comida. Así puedes mantener el ritmo.",
+        "body": "Frutas y verduras como el pepino, la sandía y las naranjas son casi todo agua. Las sopas, la leche y el té también cuentan. Una pista sencilla: si la orina es amarillo claro, bebes suficiente. Bebe más cuando hace calor o haces deporte, y ten una botella a mano durante el día."
+      }
+    ]
+  },
+  "de": {
+    "tips": [
+      "Fülle die Hälfte deines Tellers mit Gemüse: Es bringt Volumen und Ballaststoffe bei sehr wenigen Kalorien.",
+      "Trink vor jeder Mahlzeit ein Glas Wasser. Durst wird oft mit Hunger verwechselt.",
+      "Ersetze helles Brot und Nudeln durch Vollkorn, damit du länger satt bleibst.",
+      "Stell Obst gut sichtbar hin. Dann greifst du öfter danach als nach Snacks.",
+      "Koch eine doppelte Portion und heb eine für das Mittagessen morgen auf.",
+      "Lies die Etiketten: Zucker versteckt sich hinter Namen wie Glukosesirup, Dextrose oder Maltose.",
+      "Iss langsam. Dein Gehirn braucht etwa 20 Minuten, um zu merken, dass du satt bist."
+    ],
+    "articles": [
+      {
+        "id": "fibre",
+        "tag": "Ernährung",
+        "minutes": 2,
+        "title": "Warum Ballaststoffe satt machen",
+        "summary": "Ballaststoffe verlangsamen die Verdauung, halten den Blutzucker stabil und den Hunger zwischen den Mahlzeiten fern.",
+        "body": "Ballaststoffe sind der Teil von Pflanzen, den der Körper nicht verdauen kann. Lösliche Ballaststoffe (Hafer, Bohnen, Äpfel) bilden ein Gel, das die Verdauung bremst, sodass Energie langsam freigesetzt wird. Unlösliche Ballaststoffe (Vollkorn, Gemüse) sorgen für Volumen und eine gesunde Verdauung. Die meisten Erwachsenen essen weniger als die empfohlenen 25 bis 30 g pro Tag. Einfache Tricks: Haferflocken zum Frühstück, eine Handvoll Bohnen im Salat und Obst mit Schale."
+      },
+      {
+        "id": "plan",
+        "tag": "Planung",
+        "minutes": 2,
+        "title": "Einmal planen, die ganze Woche gut essen",
+        "summary": "Zehn Minuten Planung am Sonntag sparen Geld, Zeit und spontane Bestellungen beim Lieferdienst.",
+        "body": "Wer seine Mahlzeiten plant, isst abwechslungsreicher und wirft weniger weg. Wähle deine Mahlzeiten für die Woche im Planer und öffne dann Einkauf: Alle Zutaten landen in einer Liste. Koch Grundlagen wie Reis, Getreide oder Ofengemüse auf Vorrat und halte ein paar schnelle Gerichte für stressige Abende bereit."
+      },
+      {
+        "id": "water",
+        "tag": "Trinken",
+        "minutes": 1,
+        "title": "Trinken ist mehr als Wasser",
+        "summary": "Etwa ein Fünftel des Wassers, das du brauchst, kommt aus dem Essen. So bleibst du gut versorgt.",
+        "body": "Obst und Gemüse wie Gurke, Wassermelone und Orangen bestehen größtenteils aus Wasser. Suppen, Milch und Tee zählen auch. Ein einfacher Check: Hellgelber Urin heißt, dass du genug trinkst. Trink mehr bei Hitze oder Sport und hab tagsüber eine Flasche griffbereit."
+      }
+    ]
+  }
+}

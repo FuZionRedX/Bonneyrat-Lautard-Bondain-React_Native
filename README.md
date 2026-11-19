@@ -15,6 +15,7 @@ A health and fitness meal planning app that provides **personalized nutrition re
 
 | Feature | Description |
 |---------|-------------|
+| **Home** | First screen: tip of the day, 3 rotating recipes and short articles (`data/news.json`) |
 | **Planner** | Plan today or any of the next 6 days, with calorie tracking and over-limit alerts |
 | **Recipes** | Smart meal suggestions based on your health profile (BMI/BMR) |
 | **Groceries** | Shopping list for the planned day, one line per ingredient across all meals |
@@ -37,7 +38,8 @@ A health and fitness meal planning app that provides **personalized nutrition re
 ```
 📁 app/
 ├── 📂 (tabs)/
-│   ├── index.tsx              # Planner screen
+│   ├── index.tsx              # Home screen (landing page)
+│   ├── planner.tsx            # Planner screen
 │   ├── recipes.tsx            # Recipes & meal suggestions
 │   ├── groceries.tsx          # Grocery list
 │   └── profile.tsx            # User profile
@@ -57,7 +59,8 @@ A health and fitness meal planning app that provides **personalized nutrition re
 ├── nutrition.ts               # BMI / BMR / daily calorie target (tested: npm test)
 └── suggest.ts                 # Meal-combo suggestions (tested: npm test)
 📁 data/
-└── meals.json                 # 30+ meals with ingredients & calories
+├── meals.json                 # 30+ meals with ingredients & calories
+└── news.json                  # Home tips and articles, per language
 📁 PHP/
 ├── save_meal_history.php      # Save daily/weekly plans
 ├── get_meal_history.php       # Fetch meal history
