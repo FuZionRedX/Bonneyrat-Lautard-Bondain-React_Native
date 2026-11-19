@@ -98,3 +98,5 @@ export const Colors = {
 };
 
 export const THEME_PREF_KEY = "theme_preference";
+// Email pre-filled on the login screen; deleting the account clears it.
+export const LAST_PROFILE_EMAIL_KEY = "last_profile_email";

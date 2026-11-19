@@ -1,6 +1,6 @@
 import { changePassword, deleteAccount, saveProfile } from "@/lib/api";
 import { Language, LANGUAGES, translate } from "@/lib/translations";
-import { Colors, THEME_PREF_KEY } from "@/constants/theme";
+import { Colors, LAST_PROFILE_EMAIL_KEY, THEME_PREF_KEY } from "@/constants/theme";
 import { useMealPlan } from "@/contexts/meal-plan-context";
 import { useProfile } from "@/contexts/profile-context";
 import { useLanguage } from "@/contexts/language-context";
@@ -21,8 +21,6 @@ import {
 } from "react-native";
 
 type ThemePreference = "light" | "dark";
-
-const LAST_PROFILE_EMAIL_KEY = "last_profile_email";
 
 export default function SettingsScreen() {
   const router = useRouter();

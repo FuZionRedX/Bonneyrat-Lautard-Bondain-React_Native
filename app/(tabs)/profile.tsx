@@ -15,13 +15,11 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { getNutrition } from "@/lib/nutrition";
-import { Colors } from "@/constants/theme";
+import { Colors, LAST_PROFILE_EMAIL_KEY } from "@/constants/theme";
 import { useMealPlan } from "@/contexts/meal-plan-context";
 import { getProfileInitials, useProfile } from "@/contexts/profile-context";
 import { useLanguage } from "@/contexts/language-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
-
-const LAST_PROFILE_EMAIL_KEY = "last_profile_email";
 
 type BmiMeta = {
   label: string;
