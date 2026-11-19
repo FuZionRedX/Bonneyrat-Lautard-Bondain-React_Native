@@ -10,6 +10,15 @@ if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
     exit;
 }
 
+// Errors must never reach the client as an HTML page (XAMPP has display_errors=On):
+// that breaks the JSON the app reads and shows server paths. They still go to the PHP error log.
+ini_set("display_errors", "0");
+set_exception_handler(function (Throwable $e) {
+    error_log((string)$e);
+    http_response_code(500);
+    echo json_encode(["success" => false, "error" => "server_error"]);
+});
+
 $host = "localhost";
 $db   = "health_app";
 $user = "root";
