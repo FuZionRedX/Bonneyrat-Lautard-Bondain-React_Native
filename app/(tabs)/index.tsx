@@ -44,7 +44,7 @@ function ProgressBar({
 export default function PlannerScreen() {
   const router = useRouter();
   const { profile } = useProfile();
-  const { selectedMeals, planDate, setPlanDate } = useMealPlan();
+  const { selectedMeals, planDate, setPlanDate, loadFailed } = useMealPlan();
   const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
   const { locale, t } = useLanguage();
@@ -154,6 +154,12 @@ export default function PlannerScreen() {
             );
           })}
         </ScrollView>
+      ) : null}
+
+      {loadFailed ? (
+        <Text style={[styles.syncWarning, { color: colors.dangerText }]}>
+          {t("Could not reach the server. Changes to this day are not saved.")}
+        </Text>
       ) : null}
 
       <View
@@ -357,6 +363,7 @@ export default function PlannerScreen() {
 }
 
 const styles = StyleSheet.create({
+  syncWarning: { marginHorizontal: 16, marginTop: 12, fontSize: 13, fontWeight: "600" },
   dayStrip: { paddingHorizontal: 16, paddingTop: 12, gap: 8 },
   dayChip: {
     width: 54,

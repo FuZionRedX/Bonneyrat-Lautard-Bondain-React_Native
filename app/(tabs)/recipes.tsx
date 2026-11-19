@@ -39,7 +39,7 @@ export default function RecipesScreen() {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
   const { t } = useLanguage();
-  const { selectedByCategory, setSelectedByCategory, selectedMeals, planDate } = useMealPlan();
+  const { selectedByCategory, setSelectedByCategory, selectedMeals, planDate, loadFailed } = useMealPlan();
 
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [showWeekConfirm, setShowWeekConfirm] = useState(false);
@@ -57,7 +57,7 @@ export default function RecipesScreen() {
         breakfast: [], lunch: [], dinner: [], snack: [],
       };
       const todayKey = toLocalDateKey(new Date());
-      for (const entry of entries) {
+      for (const entry of entries ?? []) {
         // Days planned ahead with "Week" are not "recently eaten".
         if (entry.saved_at.slice(0, 10) > todayKey) continue;
         for (const cat of CATEGORY_ORDER) {
@@ -180,6 +180,12 @@ export default function RecipesScreen() {
         <Text style={[styles.title, { color: colors.text }]}>{t("Recipes")}</Text>
         <Text style={[styles.subtitle, { color: colors.secondaryText }]}>{t("BMI and BMR based recommendations")}</Text>
       </View>
+
+      {loadFailed ? (
+        <Text style={[styles.syncWarning, { color: colors.dangerText }]}>
+          {t("Could not reach the server. Changes to this day are not saved.")}
+        </Text>
+      ) : null}
 
       <View style={[styles.statusCard, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
         <Text style={[styles.statusTitle, { color: colors.text }]}>{t("Your Health Baseline")}</Text>
@@ -457,6 +463,7 @@ export default function RecipesScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  syncWarning: { marginHorizontal: 16, marginTop: 12, fontSize: 13, fontWeight: '600' },
 
   header: {
     paddingHorizontal: 20,

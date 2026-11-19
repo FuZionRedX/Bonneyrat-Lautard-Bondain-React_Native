@@ -47,7 +47,7 @@ export default function MealHistoryScreen() {
 
   useEffect(() => {
     if (!profile.email) return;
-    getMealHistory(profile.email, profile.password).then(setHistory);
+    getMealHistory(profile.email, profile.password).then((entries) => setHistory(entries ?? []));
   }, [profile.email, profile.password]);
 
   const { futureEntries, pastEntries } = useMemo(() => {

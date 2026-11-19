@@ -100,10 +100,12 @@ export async function saveMealHistory(
   }
 }
 
+// null = could not load (offline, server error, wrong password). Never [] on failure:
+// callers must not mistake a failed load for "no saved plans".
 export async function getMealHistory(
   email: string,
   password: string,
-): Promise<MealHistoryEntry[]> {
+): Promise<MealHistoryEntry[] | null> {
   try {
     const res = await fetch(`${API_BASE}/get_meal_history.php`, {
       method: "POST",
@@ -111,10 +113,9 @@ export async function getMealHistory(
       body: JSON.stringify({ email, password }),
     });
     const data = await res.json();
-    if (!Array.isArray(data)) return [];
-    return data as MealHistoryEntry[];
+    return Array.isArray(data) ? (data as MealHistoryEntry[]) : null;
   } catch {
-    return [];
+    return null;
   }
 }
 
