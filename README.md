@@ -110,6 +110,13 @@ npm run web       # Browser
 2. Place the `PHP/` files in your web server's document root (e.g. `htdocs/health_app/`)
 3. Update `PHP/config.php` with your database credentials
 
+Already imported the database before the language setting existed? Run this once,
+or every login fails with "Connection failed":
+
+```sql
+ALTER TABLE users ADD COLUMN language varchar(2) DEFAULT NULL;
+```
+
 ## Team
 
 | Name | GitHub |
