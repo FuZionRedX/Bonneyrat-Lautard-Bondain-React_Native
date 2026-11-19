@@ -1,6 +1,7 @@
 import mealsData from '@/data/meals.json';
 import React, { useMemo, useState } from 'react';
 import {
+  Alert,
   Modal,
   ScrollView,
   StyleSheet,
@@ -130,7 +131,16 @@ export default function RecipesScreen() {
         saveMealHistory(profile.email, profile.password, next as Record<string, number[]>, toLocalDateKey(date)),
       );
     }
-    Promise.all(saves).finally(() => setShowWeekModal(true));
+    Promise.all(saves).then((results) => {
+      if (results.every(Boolean)) {
+        setShowWeekModal(true);
+      } else {
+        Alert.alert(
+          t("Week plan not saved"),
+          t("Some days could not be saved. Check your connection and try again."),
+        );
+      }
+    });
   }
 
   function toggleCategory(category: MealCategory) {
