@@ -1,5 +1,5 @@
 import mealsData from '@/data/meals.json';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Modal,
   ScrollView,
@@ -95,20 +95,6 @@ export default function RecipesScreen() {
       0,
     );
   }, [suggestedCombo]);
-
-  useEffect(() => {
-    if (!needsWeightLoss || !suggestedCombo) return;
-
-    setSelectedByCategory((previous) => {
-      const next: Partial<Record<MealCategory, number[]>> = { ...previous };
-      CATEGORY_ORDER.forEach((category) => {
-        if (!next[category] || next[category]!.length === 0) {
-          next[category] = suggestedCombo[category].map((m) => m.id);
-        }
-      });
-      return next;
-    });
-  }, [needsWeightLoss, suggestedCombo, setSelectedByCategory]);
 
   function applySuggestedCombo() {
     if (!suggestedCombo) return;
