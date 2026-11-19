@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 
 import { Colors } from '@/constants/theme';
-import { getMealHistory, saveMealHistory } from '@/lib/api';
+import { saveMealHistory } from '@/lib/api';
 import { CATEGORY_LABELS, CATEGORY_ORDER, getMealEmoji, toLocalDateKey } from '@/constants/meals';
 import { getNutrition } from '@/lib/nutrition';
 import { findBestGlobalCombo } from '@/lib/suggest';
@@ -39,35 +39,31 @@ export default function RecipesScreen() {
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
   const { t } = useLanguage();
-  const { selectedByCategory, setSelectedByCategory, selectedMeals, planDate, loadFailed } = useMealPlan();
+  const { selectedByCategory, setSelectedByCategory, selectedMeals, planDate, loadFailed, history } =
+    useMealPlan();
 
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [showWeekConfirm, setShowWeekConfirm] = useState(false);
   const [showWeekModal, setShowWeekModal] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<Set<MealCategory>>(new Set());
-  // Per-category list of sorted meal-id arrays used in the last 7 days
-  const [recentHistory, setRecentHistory] = useState<Record<MealCategory, number[][]>>({
-    breakfast: [], lunch: [], dinner: [], snack: [],
-  });
 
-  useEffect(() => {
-    if (!profile.email) return;
-    getMealHistory(profile.email, profile.password).then((entries) => {
-      const history: Record<MealCategory, number[][]> = {
-        breakfast: [], lunch: [], dinner: [], snack: [],
-      };
-      const todayKey = toLocalDateKey(new Date());
-      for (const entry of entries ?? []) {
-        // Days planned ahead with "Week" are not "recently eaten".
-        if (entry.saved_at.slice(0, 10) > todayKey) continue;
-        for (const cat of CATEGORY_ORDER) {
-          const ids = (entry.meal_ids[cat] ?? []).slice().sort((a: number, b: number) => a - b);
-          if (ids.length > 0) history[cat].push(ids);
-        }
+  // Per-category list of sorted meal-id arrays used in the last 7 days,
+  // from the history MealPlanProvider already loaded.
+  const recentHistory = useMemo(() => {
+    const recent: Record<MealCategory, number[][]> = {
+      breakfast: [], lunch: [], dinner: [], snack: [],
+    };
+    const todayKey = toLocalDateKey(new Date());
+    for (const entry of history ?? []) {
+      // Days planned ahead with "Week" are not "recently eaten".
+      if (entry.saved_at.slice(0, 10) > todayKey) continue;
+      for (const cat of CATEGORY_ORDER) {
+        const ids = (entry.meal_ids[cat] ?? []).slice().sort((a: number, b: number) => a - b);
+        if (ids.length > 0) recent[cat].push(ids);
       }
-      setRecentHistory(history);
-    });
-  }, [profile.email, profile.password]);
+    }
+    return recent;
+  }, [history]);
 
   const { bmi, bmr, needsWeightLoss, dailyTarget: dailyCalories } = getNutrition(profile);
 

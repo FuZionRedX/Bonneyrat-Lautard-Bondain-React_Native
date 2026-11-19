@@ -43,6 +43,8 @@ interface MealPlanContextValue {
   setPlanDate: (date: string) => void;
   // The plan of planDate could not be loaded: changes are not saved until a load succeeds.
   loadFailed: boolean;
+  // Saved plans (last 7 days and days ahead) from the last load; null if it failed or none yet.
+  history: MealHistoryEntry[] | null;
 }
 
 const MealPlanContext = createContext<MealPlanContextValue | undefined>(
@@ -97,6 +99,9 @@ export function MealPlanProvider({ children }: { children: ReactNode }) {
     loaded?.email === profile.email &&
     loaded.date === planDate &&
     loaded.entries === null;
+  // Only the logged-in user's history, never the previous user's.
+  const history =
+    profile.email && loaded?.email === profile.email ? loaded.entries : null;
 
   // Back on screen: the app may have slept past midnight, so never keep editing a past
   // day (only today and later can be picked), and retry a load that failed.
@@ -140,8 +145,9 @@ export function MealPlanProvider({ children }: { children: ReactNode }) {
       planDate,
       setPlanDate,
       loadFailed,
+      history,
     }),
-    [selectedByCategory, selectedMeals, planDate, loadFailed]
+    [selectedByCategory, selectedMeals, planDate, loadFailed, history]
   );
 
   return (
