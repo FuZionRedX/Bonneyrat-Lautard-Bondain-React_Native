@@ -288,6 +288,16 @@ export default function PlannerScreen() {
           <Feather name="plus" size={19} color={colors.primaryText} />
           <Text style={[styles.historyText, { color: colors.primaryText }]}>{t("Add your own food")}</Text>
         </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => router.push("/scan")}
+          accessibilityRole="button"
+          style={[styles.historyLink, { borderColor: colors.border }]}
+        >
+          <Feather name="camera" size={19} color={colors.primaryText} />
+          <Text style={[styles.historyText, { color: colors.primaryText }]}>{t("Scan a barcode")}</Text>
+        </TouchableOpacity>
+
         {profile.email ? (
           <TouchableOpacity
             onPress={() => router.push("/meal-history")}
