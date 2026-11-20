@@ -95,3 +95,23 @@ export function findBestGlobalCombo(
   // Fallback: pick per-category best independently
   return toResult(best ? best.picks : perCategory.map((candidates) => candidates[0]));
 }
+
+// One combo per day for `days` days. Each day's picks count as "recently eaten"
+// for the following days, so consecutive days get different meals.
+export function planWeek(
+  allMealsByCategory: ByCategory<Meal[]>,
+  categoryTargets: ByCategory<number>,
+  dailyLimit: number,
+  recentHistory: ByCategory<number[][]>,
+  days: number,
+): ByCategory<Meal[]>[] {
+  const cats = Object.keys(allMealsByCategory) as MealCategory[];
+  const seen = Object.fromEntries(cats.map((cat) => [cat, [...recentHistory[cat]]])) as ByCategory<number[][]>;
+  const week: ByCategory<Meal[]>[] = [];
+  for (let day = 0; day < days; day++) {
+    const combo = findBestGlobalCombo(allMealsByCategory, categoryTargets, dailyLimit, seen);
+    for (const cat of cats) seen[cat].push(combo[cat].map((m) => m.id).sort((a, b) => a - b));
+    week.push(combo);
+  }
+  return week;
+}

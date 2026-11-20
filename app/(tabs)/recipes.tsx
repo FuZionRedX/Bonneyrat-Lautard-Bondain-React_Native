@@ -28,7 +28,7 @@ import { Colors } from '@/constants/theme';
 import { saveMealHistory } from '@/lib/api';
 import { CATEGORY_LABELS, CATEGORY_ORDER, toLocalDateKey } from '@/constants/meals';
 import { getNutrition } from '@/lib/nutrition';
-import { findBestGlobalCombo } from '@/lib/suggest';
+import { findBestGlobalCombo, planWeek } from '@/lib/suggest';
 import { Meal, MealCategory, useMealPlan } from '@/contexts/meal-plan-context';
 import { useProfile } from '@/contexts/profile-context';
 import { useLanguage } from '@/contexts/language-context';
@@ -123,29 +123,31 @@ export default function RecipesScreen() {
   }
 
   function confirmApplyForWeek() {
-    if (!suggestedCombo || !profile.email) return;
+    if (!categoryTargets || !dailyCalories || !profile.email) return;
     setShowWeekConfirm(false);
-
-    const next: Partial<Record<MealCategory, number[]>> = {};
-    CATEGORY_ORDER.forEach((category) => {
-      next[category] = suggestedCombo[category].map((m) => m.id);
-    });
-    setSelectedByCategory((prev) => ({ ...next, custom: prev.custom }));
 
     const today = new Date();
     const dayOfWeek = today.getDay(); // 0 = Sunday
     const daysUntilSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
+    // A different combo for each day from today through Sunday.
+    const week = planWeek(allMealsByCategory, categoryTargets, dailyCalories, recentHistory, daysUntilSunday + 1);
 
     // The day being planned is saved by MealPlanProvider; save the rest of the week here.
     const saves: Promise<boolean>[] = [];
-    for (let i = 0; i <= daysUntilSunday; i++) {
+    week.forEach((combo, i) => {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
-      if (toLocalDateKey(date) === planDate) continue;
-      saves.push(
-        saveMealHistory(profile.email, profile.password, next, toLocalDateKey(date)),
-      );
-    }
+      const dateKey = toLocalDateKey(date);
+      const next: Partial<Record<MealCategory, number[]>> = {};
+      CATEGORY_ORDER.forEach((category) => {
+        next[category] = combo[category].map((m) => m.id);
+      });
+      if (dateKey === planDate) {
+        setSelectedByCategory((prev) => ({ ...next, custom: prev.custom }));
+      } else {
+        saves.push(saveMealHistory(profile.email, profile.password, next, dateKey));
+      }
+    });
     Promise.all(saves).then((results) => {
       if (results.every(Boolean)) {
         setShowWeekModal(true);
@@ -402,7 +404,7 @@ export default function RecipesScreen() {
       icon="calendar"
       tone="info"
       title={t("Apply for the week?")}
-      message={t("This will save the suggested meal plan for every day from today through Sunday.")}
+      message={t("This will save a different suggested meal plan for each day from today through Sunday.")}
     >
       <Button label={t("Cancel")} variant="secondary" onPress={() => setShowWeekConfirm(false)} style={styles.flex} />
       <Button label={t("Confirm")} onPress={confirmApplyForWeek} style={styles.flex} />
@@ -413,7 +415,7 @@ export default function RecipesScreen() {
       onClose={() => setShowWeekModal(false)}
       icon="calendar"
       title={t("Week Plan Applied")}
-      message={t("The suggested meal plan has been saved for every day from today through Sunday.")}
+      message={t("A different meal plan has been saved for each day from today through Sunday.")}
     >
       <Button label={t("OK")} onPress={() => setShowWeekModal(false)} style={styles.flex} />
     </Sheet>

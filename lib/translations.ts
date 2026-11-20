@@ -240,11 +240,11 @@ const fr: Dictionary = {
   "Combo Applied": "Combinaison appliquée",
   "The suggested meal plan has been applied to your daily plan.": "Le plan de repas suggéré a été appliqué à votre journée.",
   "Apply for the week?": "Appliquer pour la semaine ?",
-  "This will save the suggested meal plan for every day from today through Sunday.": "Le plan de repas suggéré sera enregistré pour chaque jour d'aujourd'hui à dimanche.",
+  "This will save a different suggested meal plan for each day from today through Sunday.": "Un plan de repas différent sera enregistré pour chaque jour d'aujourd'hui à dimanche.",
   "Week Plan Applied": "Plan de la semaine appliqué",
   "Week plan not saved": "Plan de la semaine non enregistré",
   "Some days could not be saved. Check your connection and try again.": "Certains jours n'ont pas pu être enregistrés. Vérifiez votre connexion et réessayez.",
-  "The suggested meal plan has been saved for every day from today through Sunday.": "Le plan de repas suggéré a été enregistré pour chaque jour d'aujourd'hui à dimanche.",
+  "A different meal plan has been saved for each day from today through Sunday.": "Un plan de repas différent a été enregistré pour chaque jour d'aujourd'hui à dimanche.",
 
   // Profile
   "UNDERWEIGHT": "INSUFFISANCE PONDÉRALE",
@@ -524,11 +524,11 @@ const es: Dictionary = {
   "Combo Applied": "Combinación aplicada",
   "The suggested meal plan has been applied to your daily plan.": "El plan de comidas sugerido se ha aplicado a tu día.",
   "Apply for the week?": "¿Aplicar para la semana?",
-  "This will save the suggested meal plan for every day from today through Sunday.": "Se guardará el plan de comidas sugerido para cada día desde hoy hasta el domingo.",
+  "This will save a different suggested meal plan for each day from today through Sunday.": "Se guardará un plan de comidas distinto para cada día desde hoy hasta el domingo.",
   "Week Plan Applied": "Plan semanal aplicado",
   "Week plan not saved": "Plan semanal no guardado",
   "Some days could not be saved. Check your connection and try again.": "Algunos días no se pudieron guardar. Revisa tu conexión e inténtalo de nuevo.",
-  "The suggested meal plan has been saved for every day from today through Sunday.": "El plan de comidas sugerido se ha guardado para cada día desde hoy hasta el domingo.",
+  "A different meal plan has been saved for each day from today through Sunday.": "Se ha guardado un plan de comidas distinto para cada día desde hoy hasta el domingo.",
 
   // Profile
   "UNDERWEIGHT": "BAJO PESO",
@@ -808,11 +808,11 @@ const de: Dictionary = {
   "Combo Applied": "Kombination übernommen",
   "The suggested meal plan has been applied to your daily plan.": "Der vorgeschlagene Essensplan wurde für deinen Tag übernommen.",
   "Apply for the week?": "Für die Woche übernehmen?",
-  "This will save the suggested meal plan for every day from today through Sunday.": "Der vorgeschlagene Essensplan wird für jeden Tag von heute bis Sonntag gespeichert.",
+  "This will save a different suggested meal plan for each day from today through Sunday.": "Für jeden Tag von heute bis Sonntag wird ein anderer Essensplan gespeichert.",
   "Week Plan Applied": "Wochenplan übernommen",
   "Week plan not saved": "Wochenplan nicht gespeichert",
   "Some days could not be saved. Check your connection and try again.": "Einige Tage konnten nicht gespeichert werden. Prüfe deine Verbindung und versuche es erneut.",
-  "The suggested meal plan has been saved for every day from today through Sunday.": "Der vorgeschlagene Essensplan wurde für jeden Tag von heute bis Sonntag gespeichert.",
+  "A different meal plan has been saved for each day from today through Sunday.": "Für jeden Tag von heute bis Sonntag wurde ein anderer Essensplan gespeichert.",
 
   // Profile
   "UNDERWEIGHT": "UNTERGEWICHT",
