@@ -1,5 +1,6 @@
 import type { PlanSelection } from "@/contexts/meal-plan-context";
 import { ProfileData } from "@/contexts/profile-context";
+import Constants from "expo-constants";
 import { Platform } from "react-native";
 
 // shortcut: plain http and the password sent with every request, fine for a local XAMPP demo; add HTTPS + a login token before any real deploy.
@@ -21,10 +22,14 @@ function resolveWebApiBase() {
   return "/health_app";
 }
 
+// In dev, hostUri is "<PC IP>:8081" (the Metro server the phone already reached), and XAMPP runs on that same PC.
+const devHost = Constants.expoConfig?.hostUri?.split(":")[0];
+
 export const API_BASE =
   Platform.OS === "web"
     ? resolveWebApiBase()
-    : process.env.EXPO_PUBLIC_API_BASE_URL || NATIVE_DEFAULT_API_BASE;
+    : process.env.EXPO_PUBLIC_API_BASE_URL ||
+      (devHost ? `http://${devHost}/health_app` : NATIVE_DEFAULT_API_BASE);
 
 export type GetProfileResponse = Omit<ProfileData, "password">;
 
