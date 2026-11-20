@@ -105,6 +105,7 @@ export default function PlannerScreen() {
 
   // "Add your own food" form; the plan stores it under `custom` (see PlanSelection).
   const [showAddFood, setShowAddFood] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [foodName, setFoodName] = useState("");
   const [foodKcal, setFoodKcal] = useState("");
   const [foodCategory, setFoodCategory] = useState<MealCategory>("breakfast");
@@ -219,7 +220,22 @@ export default function PlannerScreen() {
         </Text>
       )}
 
-      <SectionHeader title={t("Meals")} />
+      <SectionHeader
+        title={t("Meals")}
+        right={
+          hasMealPlan ? (
+            <TouchableOpacity
+              accessibilityRole="button"
+              onPress={() => setShowClearConfirm(true)}
+              hitSlop={10}
+              style={styles.clearDay}
+            >
+              <Feather name="trash-2" size={15} color={colors.dangerText} />
+              <Text style={[styles.clearDayText, { color: colors.dangerText }]}>{t("Clear day")}</Text>
+            </TouchableOpacity>
+          ) : undefined
+        }
+      />
       <View style={styles.meals}>
         {hasMealPlan ? (
           mealSections.map((section) => {
@@ -331,6 +347,27 @@ export default function PlannerScreen() {
     </Sheet>
 
     <Sheet
+      visible={showClearConfirm}
+      onClose={() => setShowClearConfirm(false)}
+      icon="trash-2"
+      tone="danger"
+      title={t("Clear this day's plan?")}
+      message={t("All meals planned for {date} will be removed.", { date: planDay.long })}
+    >
+      <Button label={t("Cancel")} variant="secondary" onPress={() => setShowClearConfirm(false)} style={styles.flex} />
+      <Button
+        label={t("Clear")}
+        variant="danger"
+        onPress={() => {
+          // MealPlanProvider saves the empty plan, which deletes that day's row on the server.
+          setSelectedByCategory({});
+          setShowClearConfirm(false);
+        }}
+        style={styles.flex}
+      />
+    </Sheet>
+
+    <Sheet
       visible={showAddFood}
       onClose={() => setShowAddFood(false)}
       icon="plus"
@@ -425,6 +462,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   historyText: { fontSize: 15, fontWeight: "700" },
+
+  clearDay: { flexDirection: "row", alignItems: "center", gap: 5, paddingVertical: 8 },
+  clearDayText: { fontSize: 13, fontWeight: "700" },
 
   form: { flex: 1 },
   inputLabel: { fontSize: 13, fontWeight: "700", marginBottom: 6, marginTop: 4 },
