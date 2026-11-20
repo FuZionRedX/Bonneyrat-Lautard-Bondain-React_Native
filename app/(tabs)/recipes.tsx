@@ -2,7 +2,7 @@ import mealsData from '@/data/meals.json';
 import React, { useMemo, useState } from 'react';
 import {
   Alert,
-  Modal,
+  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -10,9 +10,23 @@ import {
   View,
 } from 'react-native';
 
+import Feather from '@expo/vector-icons/Feather';
+
+import {
+  Button,
+  Card,
+  CapsLabel,
+  categoryColors,
+  heading,
+  MealThumb,
+  ScreenTitle,
+  SectionHeader,
+  Sheet,
+  softShadow,
+} from '@/components/ui/kit';
 import { Colors } from '@/constants/theme';
 import { saveMealHistory } from '@/lib/api';
-import { CATEGORY_LABELS, CATEGORY_ORDER, getMealEmoji, toLocalDateKey } from '@/constants/meals';
+import { CATEGORY_LABELS, CATEGORY_ORDER, toLocalDateKey } from '@/constants/meals';
 import { getNutrition } from '@/lib/nutrition';
 import { findBestGlobalCombo } from '@/lib/suggest';
 import { Meal, MealCategory, useMealPlan } from '@/contexts/meal-plan-context';
@@ -46,7 +60,7 @@ export default function RecipesScreen() {
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [showWeekConfirm, setShowWeekConfirm] = useState(false);
   const [showWeekModal, setShowWeekModal] = useState(false);
-  const [expandedCategories, setExpandedCategories] = useState<Set<MealCategory>>(new Set());
+  const [activeCategory, setActiveCategory] = useState<MealCategory>('breakfast');
 
   // Per-category list of sorted meal-id arrays used in the last 7 days,
   // from the history MealPlanProvider already loaded.
@@ -143,18 +157,6 @@ export default function RecipesScreen() {
     });
   }
 
-  function toggleCategory(category: MealCategory) {
-    setExpandedCategories((prev) => {
-      const next = new Set(prev);
-      if (next.has(category)) {
-        next.delete(category);
-      } else {
-        next.add(category);
-      }
-      return next;
-    });
-  }
-
   const finalPlanCalories = selectedMeals.reduce((total, meal) => total + meal.totalCalories, 0);
   const hasMetrics = bmi !== null && bmr !== null && dailyCalories !== null;
   const bmiLabel = bmi === null ? t("N/A") : bmi.toFixed(1);
@@ -165,13 +167,30 @@ export default function RecipesScreen() {
       ? t("You should aim to lose weight. Choose one or more options per category to build your daily plan.")
       : t("You do not currently need to lose weight. Continue with your current meal plan.");
 
+  const adviceTone = !hasMetrics
+    ? { bg: colors.cardMuted, fg: colors.tertiaryText, icon: 'info' as const }
+    : needsWeightLoss
+      ? { bg: colors.breakfastBg, fg: colors.breakfastText, icon: 'target' as const }
+      : { bg: colors.primaryLight, fg: colors.primaryText, icon: 'check-circle' as const };
+
+  const stat = (label: string, value: string) => (
+    <View style={[styles.stat, { backgroundColor: colors.cardMuted }]}>
+      <Text style={[styles.statLabel, { color: colors.secondaryText }]}>{label}</Text>
+      <Text style={[heading(20), { color: colors.text }]}>{value}</Text>
+    </View>
+  );
+
+  const categoryMeals = allMealsByCategory[activeCategory];
+  const activeIds = selectedByCategory[activeCategory] ?? [];
+
   return (
     <>
-    <ScrollView style={[styles.container, { backgroundColor: colors.screenBackground }]} showsVerticalScrollIndicator={false}>
-      <View style={[styles.header, { backgroundColor: colors.cardBackground }]}>
-        <Text style={[styles.title, { color: colors.text }]}>{t("Recipes")}</Text>
-        <Text style={[styles.subtitle, { color: colors.secondaryText }]}>{t("BMI and BMR based recommendations")}</Text>
-      </View>
+    <ScrollView
+      style={[styles.container, { backgroundColor: colors.screenBackground }]}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+    >
+      <ScreenTitle title={t("Recipes")} subtitle={t("BMI and BMR based recommendations")} />
 
       {loadFailed ? (
         <Text style={[styles.syncWarning, { color: colors.dangerText }]}>
@@ -179,512 +198,289 @@ export default function RecipesScreen() {
         </Text>
       ) : null}
 
-      <View style={[styles.statusCard, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
-        <Text style={[styles.statusTitle, { color: colors.text }]}>{t("Your Health Baseline")}</Text>
-        <View style={styles.statusRow}>
-          <Text style={[styles.statusMetric, { color: colors.tertiaryText }]}>{t("BMI: {value}", { value: bmiLabel })}</Text>
-          <Text style={[styles.statusMetric, { color: colors.tertiaryText }]}>{t("BMR: {value} kcal", { value: bmrLabel })}</Text>
+      <Card style={styles.block}>
+        <Text style={[heading(16, 'bold'), { color: colors.text, marginBottom: 12 }]} accessibilityRole="header">
+          {t("Your Health Baseline")}
+        </Text>
+        <View style={styles.stats}>
+          {stat(t("BMI"), bmiLabel)}
+          {stat("BMR", bmrLabel)}
+          {stat(t("Target"), dailyCalories === null ? t("N/A") : dailyCalories.toLocaleString())}
         </View>
-        {dailyCalories !== null && (
-          <Text style={[styles.statusTarget, { color: colors.labelText }]}>
-            {t("Daily target for recommendation: {n} kcal", { n: dailyCalories ?? "" })}
-          </Text>
-        )}
-        <Text style={[styles.statusAdvice, { color: colors.labelText }]}>{adviceText}</Text>
-      </View>
-
-      {!needsWeightLoss && hasMetrics && (
-        <View style={[styles.maintainCard, { backgroundColor: colors.cardBackground, borderColor: colors.selectedBorder }]}>
-          <Text style={[styles.maintainTitle, { color: colors.primaryText }]}>{t("Current Plan Is Appropriate")}</Text>
-          <Text style={[styles.maintainText, { color: colors.primaryText }]}>
-            {t("Keep following your current meal rhythm and monitor your progress weekly.")}
-          </Text>
+        <View style={[styles.advice, { backgroundColor: adviceTone.bg }]}>
+          <Feather name={adviceTone.icon} size={18} color={adviceTone.fg} />
+          <View style={styles.flex}>
+            {!needsWeightLoss && hasMetrics ? (
+              <Text style={[styles.adviceTitle, { color: adviceTone.fg }]}>{t("Current Plan Is Appropriate")}</Text>
+            ) : null}
+            <Text style={[styles.adviceText, { color: adviceTone.fg }]}>
+              {!needsWeightLoss && hasMetrics
+                ? t("Keep following your current meal rhythm and monitor your progress weekly.")
+                : adviceText}
+            </Text>
+          </View>
         </View>
-      )}
+      </Card>
 
       {needsWeightLoss && categoryTargets && suggestedCombo && (
         <>
-          <View style={[styles.suggestedCard, { backgroundColor: colors.darkCard, shadowColor: colors.shadow }]}>
-            <View style={styles.suggestedHeader}>
-              <View>
-                <Text style={[styles.suggestedTitle, { color: colors.darkCardText }]}>{t("Suggested Combo")}</Text>
-                <Text style={[styles.suggestedSubtitle, { color: colors.darkCardSubtext }]}>
-                  {t("Best match for your {n} kcal target", { n: dailyCalories ?? "" })}
-                </Text>
-              </View>
-              <View style={styles.applyButtons}>
-                <TouchableOpacity accessibilityRole="button"
-                  style={[styles.applyButton, { backgroundColor: colors.primary }]}
-                  onPress={applySuggestedCombo}
-                >
-                  <Text style={styles.applyButtonText}>{t("Apply")}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity accessibilityRole="button"
-                  style={[styles.applyWeekButton, { borderColor: colors.primary }]}
-                  onPress={() => setShowWeekConfirm(true)}
-                >
-                  <Text style={[styles.applyWeekButtonText, { color: colors.primary }]}>{t("Week")}</Text>
-                </TouchableOpacity>
-              </View>
+          <View style={[styles.combo, { backgroundColor: colors.primaryLight, borderColor: colors.border }]}>
+            <View style={styles.comboHead}>
+              <Feather name="zap" size={16} color={colors.primaryText} />
+              <CapsLabel color={colors.primaryText}>{t("Suggested Combo")}</CapsLabel>
             </View>
-
-            {CATEGORY_ORDER.map((category) => {
-              const meals = suggestedCombo[category];
-              if (!meals.length) return null;
-              const categoryTotal = meals.reduce((s, m) => s + m.totalCalories, 0);
-              return (
-                <View key={category} style={[styles.suggestedCategoryBlock, { borderBottomColor: 'rgba(255,255,255,0.08)' }]}>
-                  <View style={styles.suggestedCategoryHeader}>
-                    <Text style={styles.suggestedEmoji}>{getMealEmoji(category)}</Text>
-                    <Text style={[styles.suggestedCategoryLabel, { color: colors.darkCardSubtext }]}>
-                      {t(CATEGORY_LABELS[category])} · {t("target {n} kcal", { n: categoryTargets[category] })}
-                    </Text>
-                    <Text style={styles.suggestedMealKcal}>{categoryTotal} kcal</Text>
+            <Text style={[styles.comboSub, { color: colors.tertiaryText }]}>
+              {t("Best match for your {n} kcal target", { n: dailyCalories ?? "" })} · {t("Total")} {suggestedComboCalories} kcal
+            </Text>
+            <View style={styles.comboRow}>
+              {CATEGORY_ORDER.map((category) => {
+                const meals = suggestedCombo[category];
+                if (!meals.length) return null;
+                const kcal = meals.reduce((sum, m) => sum + m.totalCalories, 0);
+                return (
+                  <View key={category} style={styles.comboItem} accessible accessibilityLabel={`${t(CATEGORY_LABELS[category])}: ${meals.map((m) => m.name).join(', ')}, ${kcal} kcal`}>
+                    <MealThumb meal={meals[0]} size={58} radius={18} />
+                    <Text style={[styles.comboCat, { color: colors.tertiaryText }]}>{t(CATEGORY_LABELS[category])}</Text>
+                    <Text style={[styles.comboKcal, { color: colors.text }]}>{kcal}</Text>
                   </View>
-                  {meals.map((meal) => (
-                    <View key={meal.id} style={styles.suggestedRow}>
-                      <Text style={[styles.suggestedMealName, { color: colors.darkCardText }]}>{meal.name}</Text>
-                      <Text style={[styles.suggestedMealSub, { color: colors.darkCardSubtext }]}>{meal.totalCalories} kcal</Text>
-                    </View>
-                  ))}
-                </View>
-              );
-            })}
-
-            <View style={[styles.suggestedTotal, { borderTopColor: 'rgba(255,255,255,0.15)' }]}>
-              <Text style={[styles.suggestedTotalLabel, { color: colors.darkCardText }]}>{t("Total")}</Text>
-              <Text style={styles.suggestedTotalValue}>{suggestedComboCalories} kcal</Text>
+                );
+              })}
+            </View>
+            <View style={styles.comboButtons}>
+              <Button label={t("Apply")} onPress={applySuggestedCombo} style={styles.flex} />
+              <Button label={t("Week")} icon="repeat" variant="secondary" onPress={() => setShowWeekConfirm(true)} style={styles.flex} />
             </View>
           </View>
 
-          <TouchableOpacity accessibilityRole="button"
-            style={[styles.historyButton, { backgroundColor: colors.primary }]}
-            onPress={() => router.push('/meal-history')}
-          >
-            <Text style={styles.historyButtonText}>{t("View Meal History")}</Text>
-          </TouchableOpacity>
-
-          {selectedMeals.length > 0 && (
-            <TouchableOpacity accessibilityRole="button"
-              style={[styles.clearButton, { borderColor: colors.border }]}
-              onPress={() => setSelectedByCategory({})}
-            >
-              <Text style={[styles.clearButtonText, { color: colors.secondaryText }]}>{t("Unselect All")}</Text>
-            </TouchableOpacity>
-          )}
-
-          {CATEGORY_ORDER.map((category) => {
-            const isExpanded = expandedCategories.has(category);
-            const meals = allMealsByCategory[category];
-            const selectedIds = selectedByCategory[category] ?? [];
-            const selectedInCategory = meals.filter((m) => selectedIds.includes(m.id));
-
-            return (
-              <View key={category} style={[styles.categoryCard, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
-                <TouchableOpacity accessibilityRole="button"
-                  accessibilityState={{ expanded: isExpanded }}
-                  style={styles.dropdownHeader}
-                  onPress={() => toggleCategory(category)}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.dropdownHeaderLeft}>
-                    <Text style={[styles.categoryTitle, { color: colors.text }]}>
-                      {getMealEmoji(category)} {t(CATEGORY_LABELS[category])}
-                    </Text>
-                    <Text style={[styles.categoryHint, { color: colors.secondaryText }]}>
-                      {t("Target: {kcal} kcal · {n} options", { kcal: categoryTargets[category], n: meals.length })}
-                    </Text>
-                  </View>
-                  <Text style={[styles.dropdownChevron, { color: colors.secondaryText }]}>
-                    {isExpanded ? '▲' : '▼'}
-                  </Text>
+          <SectionHeader
+            title={t("Recipes")}
+            right={
+              selectedMeals.length > 0 ? (
+                <TouchableOpacity accessibilityRole="button" onPress={() => setSelectedByCategory({})} hitSlop={10} style={styles.unselect}>
+                  <Text style={[styles.unselectText, { color: colors.secondaryText }]}>{t("Unselect All")}</Text>
                 </TouchableOpacity>
+              ) : undefined
+            }
+          />
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs}>
+            {CATEGORY_ORDER.map((category) => {
+              const active = category === activeCategory;
+              const count = (selectedByCategory[category] ?? []).length;
+              return (
+                <TouchableOpacity
+                  key={category}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: active }}
+                  onPress={() => setActiveCategory(category)}
+                  style={[
+                    styles.tab,
+                    active ? { backgroundColor: colors.text } : [{ backgroundColor: colors.cardBackground }, softShadow(colors)],
+                  ]}
+                >
+                  <Text style={[styles.tabText, { color: active ? colors.screenBackground : colors.tertiaryText }]}>
+                    {t(CATEGORY_LABELS[category])}
+                  </Text>
+                  {count > 0 ? (
+                    <View style={[styles.tabCount, { backgroundColor: colors.primary }]}>
+                      <Text style={[styles.tabCountText, { color: colors.onPrimary }]}>{count}</Text>
+                    </View>
+                  ) : null}
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+          <Text style={[styles.tabHint, { color: colors.secondaryText }]}>
+            {t("Target: {kcal} kcal · {n} options", { kcal: categoryTargets[activeCategory], n: categoryMeals.length })}
+          </Text>
 
-                {!isExpanded && selectedInCategory.length > 0 && (
-                  <View style={[styles.selectedPreview, { borderTopColor: colors.borderLight }]}>
-                    {selectedInCategory.map((meal) => (
-                      <View key={meal.id} style={styles.selectedPreviewRow}>
-                        <Text style={[styles.selectedPreviewName, { color: colors.primary }]} numberOfLines={1}>
-                          {meal.name}
-                        </Text>
-                        <Text style={[styles.selectedPreviewKcal, { color: colors.primary }]}>{meal.totalCalories} kcal</Text>
-                      </View>
-                    ))}
+          <View style={styles.options}>
+            {categoryMeals.map((meal) => {
+              const selected = activeIds.includes(meal.id);
+              return (
+                <TouchableOpacity
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: selected }}
+                  key={meal.id}
+                  activeOpacity={0.8}
+                  style={[
+                    styles.option,
+                    selected
+                      ? { backgroundColor: colors.selectedBackground, borderColor: colors.primary }
+                      : [{ backgroundColor: colors.cardBackground, borderColor: 'transparent' }, softShadow(colors)],
+                  ]}
+                  onPress={() =>
+                    setSelectedByCategory((previous) => {
+                      const prev = previous[activeCategory] ?? [];
+                      const next = prev.includes(meal.id) ? prev.filter((id) => id !== meal.id) : [...prev, meal.id];
+                      return { ...previous, [activeCategory]: next };
+                    })
+                  }
+                >
+                  <MealThumb meal={meal} size={64} />
+                  <View style={styles.flex}>
+                    <Text style={[styles.optionName, { color: colors.text }]}>{meal.name}</Text>
+                    <Text style={[styles.optionMeta, { color: colors.secondaryText }]}>
+                      {t("{n} ingredients", { n: meal.ingredients.length })} · {meal.totalCalories} kcal
+                    </Text>
                   </View>
-                )}
-
-                {isExpanded && (
-                  <View style={[styles.dropdownList, { borderTopColor: colors.borderLight }]}>
-                    {meals.map((meal) => {
-                      const selected = selectedIds.includes(meal.id);
-                      return (
-                        <TouchableOpacity accessibilityRole="checkbox"
-                          accessibilityState={{ checked: selected }}
-                          key={meal.id}
-                          style={[
-                            styles.optionCard,
-                            { borderColor: colors.border, backgroundColor: colors.cardBackground },
-                            selected && { borderColor: colors.primary, backgroundColor: colors.selectedBackground },
-                          ]}
-                          onPress={() =>
-                            setSelectedByCategory((previous) => {
-                              const prev = previous[category] ?? [];
-                              const next = prev.includes(meal.id)
-                                ? prev.filter((id) => id !== meal.id)
-                                : [...prev, meal.id];
-                              return { ...previous, [category]: next };
-                            })
-                          }
-                        >
-                          <View style={styles.optionInfo}>
-                            <Text style={[styles.optionName, { color: colors.text }]}>{meal.name}</Text>
-                            <Text style={[styles.optionMeta, { color: colors.secondaryText }]}>
-                              {t("{n} ingredients", { n: meal.ingredients.length })} · {t(meal.calorieBand)}
-                            </Text>
-                          </View>
-                          <Text style={[styles.optionKcal, { color: selected ? colors.primary : colors.tertiaryText }]}>
-                            {meal.totalCalories} kcal
-                          </Text>
-                        </TouchableOpacity>
-                      );
-                    })}
+                  <View
+                    style={[
+                      styles.check,
+                      selected ? { backgroundColor: colors.primary, borderColor: colors.primary } : { borderColor: colors.border },
+                    ]}
+                  >
+                    <Feather name={selected ? 'check' : 'plus'} size={16} color={selected ? colors.onPrimary : colors.secondaryText} />
                   </View>
-                )}
-              </View>
-            );
-          })}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
 
-          <View style={[styles.finalPlanCard, { backgroundColor: colors.darkCard }]}>
-            <Text style={[styles.finalPlanTitle, { color: colors.darkCardText }]}>{t("Final Daily Meal Plan")}</Text>
-            {selectedMeals.map((meal) => (
-              <View key={meal.id} style={styles.finalPlanRow}>
-                <Text style={[styles.finalPlanMeal, { color: colors.darkCardSubtext }]}>{meal.name}</Text>
-                <Text style={styles.finalPlanMealKcal}>{meal.totalCalories} kcal</Text>
-              </View>
-            ))}
-            <View style={[styles.finalPlanDivider, { backgroundColor: colors.border }]} />
-            <View style={styles.finalPlanRow}>
-              <Text style={[styles.finalPlanTotalLabel, { color: colors.darkCardText }]}>{t("Total")}</Text>
-              <Text style={styles.finalPlanTotalValue}>{finalPlanCalories} kcal</Text>
+          <View style={[styles.finalPlan, { backgroundColor: colors.tipBackground }]}>
+            <CapsLabel color={colors.tipLabel}>{t("Final Daily Meal Plan")}</CapsLabel>
+            {selectedMeals.map((meal) => {
+              const cat = categoryColors(colors, meal.category);
+              return (
+                <View key={meal.id} style={styles.finalRow}>
+                  <View style={[styles.finalDot, { backgroundColor: cat.bg }]} />
+                  <Text style={[styles.finalMeal, { color: colors.tipText }]} numberOfLines={1}>{meal.name}</Text>
+                  <Text style={[styles.finalKcal, { color: colors.tipLabel }]}>{meal.totalCalories} kcal</Text>
+                </View>
+              );
+            })}
+            <View style={[styles.finalDivider, { backgroundColor: 'rgba(255,255,255,0.15)' }]} />
+            <View style={styles.finalRow}>
+              <Text style={[heading(16, 'bold'), styles.flex, { color: colors.tipText }]}>{t("Total")}</Text>
+              <Text style={[heading(20), { color: colors.brandLime }]}>{finalPlanCalories} kcal</Text>
             </View>
           </View>
         </>
       )}
 
       {!hasMetrics && (
-        <View style={[styles.emptyCard, { backgroundColor: colors.cardBackground }]}>
-          <Text style={[styles.empty, { color: colors.secondaryText }]}>
+        <Card style={[styles.block, styles.empty]}>
+          <Image source={require('@/assets/images/food/chicken-salad.png')} style={styles.emptyImage} accessible={false} />
+          <Text style={[styles.emptyText, { color: colors.tertiaryText }]}>
             {t("Complete your profile details to unlock BMI and BMR based meal recommendations.")}
           </Text>
-        </View>
+          <Button label={t("Profile")} icon="user" onPress={() => router.navigate('/profile')} style={styles.emptyButton} />
+        </Card>
       )}
 
       {hasMetrics && needsWeightLoss && selectedMeals.length === 0 && (
-        <View style={[styles.emptyCard, { backgroundColor: colors.cardBackground }]}>
-          <Text style={[styles.empty, { color: colors.secondaryText }]}>{t("No matching meals found for your calorie targets.")}</Text>
-        </View>
+        <Card style={[styles.block, styles.empty]}>
+          <Text style={[styles.emptyText, { color: colors.tertiaryText }]}>{t("No matching meals found for your calorie targets.")}</Text>
+        </Card>
       )}
 
-      <View style={{ height: 20 }} />
+      {profile.email ? (
+        <TouchableOpacity
+          accessibilityRole="button"
+          onPress={() => router.push('/meal-history')}
+          style={[styles.historyLink, { borderColor: colors.border }]}
+        >
+          <Feather name="clock" size={19} color={colors.primaryText} />
+          <Text style={[styles.historyText, { color: colors.primaryText }]}>{t("View Meal History")}</Text>
+        </TouchableOpacity>
+      ) : null}
     </ScrollView>
 
-    <Modal visible={showApplyModal} transparent animationType="fade" onRequestClose={() => setShowApplyModal(false)}>
-      <View style={styles.modalOverlay}>
-        <View style={[styles.modalCard, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
-          <Text style={[styles.modalIcon]}>&#10003;</Text>
-          <Text style={[styles.modalTitle, { color: colors.text }]}>{t("Combo Applied")}</Text>
-          <Text style={[styles.modalMessage, { color: colors.secondaryText }]}>
-            {t("The suggested meal plan has been applied to your daily plan.")}
-          </Text>
-          <TouchableOpacity accessibilityRole="button"
-            style={[styles.modalButton, { backgroundColor: colors.primary }]}
-            onPress={() => setShowApplyModal(false)}
-          >
-            <Text style={styles.modalButtonText}>{t("OK")}</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </Modal>
+    <Sheet
+      visible={showApplyModal}
+      onClose={() => setShowApplyModal(false)}
+      icon="check"
+      title={t("Combo Applied")}
+      message={t("The suggested meal plan has been applied to your daily plan.")}
+    >
+      <Button label={t("OK")} onPress={() => setShowApplyModal(false)} style={styles.flex} />
+    </Sheet>
 
-    <Modal visible={showWeekConfirm} transparent animationType="fade" onRequestClose={() => setShowWeekConfirm(false)}>
-      <View style={styles.modalOverlay}>
-        <View style={[styles.modalCard, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
-          <Text style={[styles.modalIcon]}>&#128197;</Text>
-          <Text style={[styles.modalTitle, { color: colors.text }]}>{t("Apply for the week?")}</Text>
-          <Text style={[styles.modalMessage, { color: colors.secondaryText }]}>
-            {t("This will save the suggested meal plan for every day from today through Sunday.")}
-          </Text>
-          <View style={styles.modalButtonRow}>
-            <TouchableOpacity accessibilityRole="button"
-              style={[styles.modalCancelButton, { borderColor: colors.border }]}
-              onPress={() => setShowWeekConfirm(false)}
-            >
-              <Text style={[styles.modalCancelButtonText, { color: colors.secondaryText }]}>{t("Cancel")}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity accessibilityRole="button"
-              style={[styles.modalButton, { backgroundColor: colors.primary }]}
-              onPress={confirmApplyForWeek}
-            >
-              <Text style={styles.modalButtonText}>{t("Confirm")}</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    </Modal>
+    <Sheet
+      visible={showWeekConfirm}
+      onClose={() => setShowWeekConfirm(false)}
+      icon="calendar"
+      tone="info"
+      title={t("Apply for the week?")}
+      message={t("This will save the suggested meal plan for every day from today through Sunday.")}
+    >
+      <Button label={t("Cancel")} variant="secondary" onPress={() => setShowWeekConfirm(false)} style={styles.flex} />
+      <Button label={t("Confirm")} onPress={confirmApplyForWeek} style={styles.flex} />
+    </Sheet>
 
-    <Modal visible={showWeekModal} transparent animationType="fade" onRequestClose={() => setShowWeekModal(false)}>
-      <View style={styles.modalOverlay}>
-        <View style={[styles.modalCard, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
-          <Text style={[styles.modalIcon]}>&#128197;</Text>
-          <Text style={[styles.modalTitle, { color: colors.text }]}>{t("Week Plan Applied")}</Text>
-          <Text style={[styles.modalMessage, { color: colors.secondaryText }]}>
-            {t("The suggested meal plan has been saved for every day from today through Sunday.")}
-          </Text>
-          <TouchableOpacity accessibilityRole="button"
-            style={[styles.modalButton, { backgroundColor: colors.primary }]}
-            onPress={() => setShowWeekModal(false)}
-          >
-            <Text style={styles.modalButtonText}>{t("OK")}</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </Modal>
+    <Sheet
+      visible={showWeekModal}
+      onClose={() => setShowWeekModal(false)}
+      icon="calendar"
+      title={t("Week Plan Applied")}
+      message={t("The suggested meal plan has been saved for every day from today through Sunday.")}
+    >
+      <Button label={t("OK")} onPress={() => setShowWeekModal(false)} style={styles.flex} />
+    </Sheet>
     </>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  syncWarning: { marginHorizontal: 16, marginTop: 12, fontSize: 13, fontWeight: '600' },
+  content: { paddingBottom: 24 },
+  flex: { flex: 1 },
+  syncWarning: { marginHorizontal: 20, marginTop: 12, fontSize: 13, fontWeight: '600' },
+  block: { marginHorizontal: 20, marginTop: 16 },
 
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 56,
-    paddingBottom: 16,
-  },
-  title: { fontSize: 24, fontWeight: '800' },
-  subtitle: { fontSize: 14, marginTop: 2 },
+  stats: { flexDirection: 'row', gap: 8 },
+  stat: { flex: 1, borderRadius: 16, padding: 10 },
+  statLabel: { fontSize: 11, fontWeight: '700' },
+  advice: { flexDirection: 'row', gap: 10, alignItems: 'flex-start', marginTop: 12, padding: 12, borderRadius: 16 },
+  adviceTitle: { fontSize: 13, fontWeight: '800', marginBottom: 2 },
+  adviceText: { fontSize: 13, lineHeight: 19 },
 
-  statusCard: {
-    marginHorizontal: 16,
-    marginVertical: 14,
-    borderRadius: 14,
-    padding: 14,
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 1,
-  },
-  statusTitle: { fontSize: 15, fontWeight: '700', marginBottom: 8 },
-  statusRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
-  statusMetric: { fontSize: 13, fontWeight: '600' },
-  statusTarget: { fontSize: 13, marginBottom: 8 },
-  statusAdvice: { fontSize: 13, lineHeight: 18 },
+  combo: { marginHorizontal: 20, marginTop: 12, borderRadius: 26, padding: 16, borderWidth: 1 },
+  comboHead: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  comboSub: { fontSize: 13, marginTop: 4 },
+  comboRow: { flexDirection: 'row', marginVertical: 14 },
+  comboItem: { flex: 1, alignItems: 'center', gap: 4 },
+  comboCat: { fontSize: 11, fontWeight: '700' },
+  comboKcal: { fontSize: 12, fontWeight: '700' },
+  comboButtons: { flexDirection: 'row', gap: 8 },
 
-  maintainCard: {
-    marginHorizontal: 16,
-    marginBottom: 12,
-    borderRadius: 14,
-    padding: 14,
-    borderWidth: 1,
-  },
-  maintainTitle: { fontSize: 14, fontWeight: '700', marginBottom: 4 },
-  maintainText: { fontSize: 13 },
+  unselect: { paddingVertical: 8 },
+  unselectText: { fontSize: 13, fontWeight: '700' },
+  tabs: { paddingHorizontal: 20, gap: 8, paddingBottom: 6 },
+  tab: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44, paddingHorizontal: 16, borderRadius: 999 },
+  tabText: { fontSize: 14, fontWeight: '700' },
+  tabCount: { minWidth: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5 },
+  tabCountText: { fontSize: 11, fontWeight: '800' },
+  tabHint: { marginHorizontal: 24, marginTop: 6, marginBottom: 10, fontSize: 13, fontWeight: '600' },
 
-  historyButton: {
-    marginHorizontal: 16,
-    marginBottom: 12,
-    paddingVertical: 10,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  historyButtonText: { color: '#fff', fontSize: 14, fontWeight: '700' },
-
-  clearButton: {
-    marginHorizontal: 16,
-    marginBottom: 12,
-    paddingVertical: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    alignItems: 'center',
-  },
-  clearButtonText: { fontSize: 14, fontWeight: '600' },
-
-  suggestedCard: {
-    marginHorizontal: 16,
-    marginBottom: 12,
-    borderRadius: 14,
-    padding: 14,
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  suggestedHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  suggestedTitle: { fontSize: 15, fontWeight: '800' },
-  suggestedSubtitle: { fontSize: 12, marginTop: 2 },
-  applyButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  applyButtons: { flexDirection: 'row', gap: 8 },
-  applyButtonText: { color: '#fff', fontWeight: '700', fontSize: 13 },
-  applyWeekButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1.5,
-  },
-  applyWeekButtonText: { fontWeight: '700', fontSize: 13 },
-  suggestedCategoryBlock: {
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-  },
-  suggestedCategoryHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  suggestedCategoryLabel: { flex: 1, fontSize: 11, marginLeft: 6 },
-  suggestedEmoji: { fontSize: 16 },
-  suggestedRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingLeft: 22,
-    marginBottom: 3,
-  },
-  suggestedMealName: { fontSize: 13, fontWeight: '700', flex: 1, paddingRight: 8 },
-  suggestedMealSub: { fontSize: 12 },
-  suggestedMealKcal: { color: '#86EFAC', fontSize: 13, fontWeight: '700' },
-  suggestedTotal: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingTop: 10,
-    borderTopWidth: 1,
-    marginTop: 2,
-  },
-  suggestedTotalLabel: { fontWeight: '700', fontSize: 14 },
-  suggestedTotalValue: { color: '#86EFAC', fontWeight: '800', fontSize: 14 },
-
-  categoryCard: {
-    marginHorizontal: 16,
-    marginBottom: 12,
-    borderRadius: 14,
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 1,
-    overflow: 'hidden',
-  },
-  dropdownHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 14,
-  },
-  dropdownHeaderLeft: { flex: 1 },
-  dropdownChevron: { fontSize: 12, marginLeft: 8 },
-  categoryTitle: { fontSize: 15, fontWeight: '700' },
-  categoryHint: { fontSize: 12, marginTop: 2 },
-  selectedPreview: {
-    paddingHorizontal: 14,
-    paddingBottom: 12,
-    borderTopWidth: 1,
-  },
-  selectedPreviewRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingTop: 8,
-  },
-  selectedPreviewName: { fontSize: 13, fontWeight: '600', flex: 1, paddingRight: 8 },
-  selectedPreviewKcal: { fontSize: 13, fontWeight: '700' },
-  dropdownList: {
-    paddingHorizontal: 10,
-    paddingBottom: 10,
-    borderTopWidth: 1,
-    paddingTop: 8,
-  },
-
-  optionCard: {
-    borderRadius: 12,
-    borderWidth: 1,
-    padding: 12,
-    marginBottom: 8,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  optionInfo: { flex: 1, paddingRight: 10 },
-  optionName: { fontSize: 14, fontWeight: '700' },
+  options: { paddingHorizontal: 20, gap: 10 },
+  option: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 10, borderRadius: 20, borderWidth: 2 },
+  optionName: { fontSize: 15, fontWeight: '700' },
   optionMeta: { fontSize: 12, marginTop: 3 },
-  optionKcal: { fontSize: 13, fontWeight: '700' },
+  check: { width: 30, height: 30, borderRadius: 10, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
 
-  finalPlanCard: {
-    marginHorizontal: 16,
-    marginBottom: 12,
-    borderRadius: 14,
-    padding: 14,
-  },
-  finalPlanTitle: { fontSize: 15, fontWeight: '700', marginBottom: 10 },
-  finalPlanRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  finalPlanMeal: { fontSize: 13, flex: 1, paddingRight: 8 },
-  finalPlanMealKcal: { color: '#86EFAC', fontSize: 13, fontWeight: '700' },
-  finalPlanDivider: { height: 1, marginVertical: 8 },
-  finalPlanTotalLabel: { fontWeight: '700', fontSize: 14 },
-  finalPlanTotalValue: { color: '#86EFAC', fontWeight: '800', fontSize: 14 },
+  finalPlan: { marginHorizontal: 20, marginTop: 16, borderRadius: 24, padding: 18, gap: 8 },
+  finalRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  finalDot: { width: 10, height: 10, borderRadius: 5 },
+  finalMeal: { flex: 1, fontSize: 14 },
+  finalKcal: { fontSize: 13, fontWeight: '700' },
+  finalDivider: { height: 1, marginVertical: 4 },
 
-  emptyCard: {
-    marginHorizontal: 16,
-    marginBottom: 12,
-    borderRadius: 14,
-    padding: 14,
-  },
-  empty: { textAlign: 'center', fontSize: 14 },
+  empty: { alignItems: 'center', gap: 10, padding: 20 },
+  emptyImage: { width: 110, height: 110, borderRadius: 55 },
+  emptyText: { fontSize: 14, lineHeight: 20, textAlign: 'center' },
+  emptyButton: { alignSelf: 'stretch' },
 
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 30,
-  },
-  modalCard: {
-    width: '100%',
+  historyLink: {
+    marginHorizontal: 20,
+    marginTop: 16,
+    minHeight: 52,
     borderRadius: 18,
-    padding: 24,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    flexDirection: 'row',
     alignItems: 'center',
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 5,
+    justifyContent: 'center',
+    gap: 8,
   },
-  modalIcon: {
-    fontSize: 40,
-    color: '#4CAF50',
-    marginBottom: 12,
-  },
-  modalTitle: { fontSize: 18, fontWeight: '800', marginBottom: 8 },
-  modalMessage: { fontSize: 14, textAlign: 'center', lineHeight: 20, marginBottom: 20 },
-  modalButton: {
-    paddingHorizontal: 32,
-    paddingVertical: 10,
-    borderRadius: 20,
-  },
-  modalButtonText: { color: '#fff', fontWeight: '700', fontSize: 14 },
-  modalButtonRow: { flexDirection: 'row', gap: 12 },
-  modalCancelButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 10,
-    borderRadius: 20,
-    borderWidth: 1,
-  },
-  modalCancelButtonText: { fontWeight: '700', fontSize: 14 },
+  historyText: { fontSize: 15, fontWeight: '700' },
 });

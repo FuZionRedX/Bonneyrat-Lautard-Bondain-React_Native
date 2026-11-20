@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import {
-  Modal,
+  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -8,6 +8,9 @@ import {
   View,
 } from 'react-native';
 
+import Feather from '@expo/vector-icons/Feather';
+
+import { Button, Card, heading, ProgressBar, ScreenTitle, Sheet, softShadow } from '@/components/ui/kit';
 import { Colors } from '@/constants/theme';
 import { useMealPlan } from '@/contexts/meal-plan-context';
 import { useLanguage } from '@/contexts/language-context';
@@ -62,208 +65,124 @@ export default function GroceriesScreen() {
   const visibleItems = dismissed ? [] : items;
   const checkedCount = visibleItems.filter((i) => checkedKeys.has(i.key)).length;
 
+  const progress = visibleItems.length > 0 ? checkedCount / visibleItems.length : 0;
+
   return (
     <>
-      <ScrollView style={[styles.container, { backgroundColor: colors.screenBackground }]} showsVerticalScrollIndicator={false}>
-        <View style={[styles.header, { backgroundColor: colors.cardBackground }]}>
-          <View>
-            <Text style={[styles.title, { color: colors.text }]}>{t("Groceries")}</Text>
-            <Text style={[styles.subtitle, { color: colors.secondaryText }]}>
-              {visibleItems.length > 0
-                ? t("{checked} / {total} items checked", { checked: checkedCount, total: visibleItems.length })
-                : t("No meals selected yet")}
-            </Text>
-          </View>
-          {visibleItems.length > 0 && (
-            <View style={styles.headerRight}>
-              <View style={[styles.progressCircle, { backgroundColor: colors.primaryLight, borderColor: colors.primary }]}>
-                <Text style={[styles.progressPct, { color: colors.primary }]}>
-                  {Math.round((checkedCount / visibleItems.length) * 100)}%
-                </Text>
-              </View>
-              <TouchableOpacity accessibilityRole="button" style={[styles.clearBtn, { backgroundColor: '#FF5252' }]} onPress={() => setShowClearModal(true)}>
-                <Text style={styles.clearBtnText}>{t("Done")}</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
-
-        {visibleItems.length > 0 && (
-          <View style={[styles.progressTrackWrap, { backgroundColor: colors.cardBackground }]}>
-            <View style={[styles.progressTrack, { backgroundColor: colors.progressTrack }]}>
-              <View
-                style={[
-                  styles.progressFill,
-                  { width: `${(checkedCount / visibleItems.length) * 100}%` as any, backgroundColor: colors.progressFill },
-                ]}
-              />
-            </View>
-          </View>
-        )}
+      <ScrollView
+        style={[styles.container, { backgroundColor: colors.screenBackground }]}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        <ScreenTitle
+          title={t("Groceries")}
+          subtitle={visibleItems.length > 0 ? t("Shopping list") : t("No meals selected yet")}
+        />
 
         {visibleItems.length > 0 ? (
-          <View style={styles.categorySection}>
-              <Text style={[styles.categoryTitle, { color: colors.secondaryText }]}>{t("Shopping list")}</Text>
-              {visibleItems.map((item) => {
+          <>
+            <Card style={styles.block}>
+              <View style={styles.progressHead}>
+                <Text style={[heading(22), { color: colors.text }]}>
+                  {t("{checked} / {total} items checked", { checked: checkedCount, total: visibleItems.length })}
+                </Text>
+                <Text style={[heading(16, 'bold'), { color: colors.primaryText }]}>{Math.round(progress * 100)}%</Text>
+              </View>
+              <ProgressBar progress={progress} />
+            </Card>
+
+            <View style={[styles.list, { backgroundColor: colors.cardBackground }, softShadow(colors)]}>
+              {visibleItems.map((item, index) => {
                 const checked = checkedKeys.has(item.key);
-                const qtyText = item.uses.map((u) => `${u.qty} · ${u.mealName}`).join('\n');
                 return (
                   <TouchableOpacity
                     key={item.key}
-                    style={[styles.itemRow, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}
+                    style={[styles.itemRow, index < visibleItems.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.border }]}
                     onPress={() => toggle(item.key)}
                     activeOpacity={0.7}
                     accessibilityRole="checkbox"
                     accessibilityState={{ checked }}
                     accessibilityLabel={`${item.name}, ${item.uses.map((u) => t("{qty} for {meal}", { qty: u.qty, meal: u.mealName })).join(', ')}`}
                   >
-                    <View style={[styles.checkbox, { borderColor: colors.border }, checked && { backgroundColor: colors.primary, borderColor: colors.primary }]}>
-                      {checked && <Text style={styles.checkmark}>&#10003;</Text>}
+                    <View
+                      style={[
+                        styles.checkbox,
+                        checked ? { backgroundColor: colors.primary, borderColor: colors.primary } : { borderColor: colors.border },
+                      ]}
+                    >
+                      {checked && <Feather name="check" size={16} color={colors.onPrimary} />}
                     </View>
                     <View style={styles.itemInfo}>
-                      <Text style={[styles.itemName, { color: colors.text }, checked && { textDecorationLine: 'line-through', color: colors.secondaryText }]}>
+                      <Text
+                        style={[
+                          styles.itemName,
+                          { color: colors.text },
+                          checked && { textDecorationLine: 'line-through', color: colors.secondaryText },
+                        ]}
+                      >
                         {item.name}
                       </Text>
-                      <Text style={[styles.itemQty, { color: colors.secondaryText }]}>{qtyText}</Text>
+                      {item.uses.map((u, i) => (
+                        <Text key={i} style={[styles.itemQty, { color: colors.secondaryText }]}>
+                          {t("{qty} for {meal}", { qty: u.qty, meal: u.mealName })}
+                        </Text>
+                      ))}
                     </View>
                   </TouchableOpacity>
                 );
               })}
             </View>
+
+            <Button label={t("Done")} icon="check-circle" onPress={() => setShowClearModal(true)} style={styles.doneButton} />
+          </>
         ) : (
-          <View style={styles.emptyCard}>
-            <Text style={[styles.emptyText, { color: colors.secondaryText }]}>
+          <Card style={[styles.block, styles.empty]}>
+            <Image source={require('@/assets/images/food/hummus.png')} style={styles.emptyImage} accessible={false} />
+            <Text style={[styles.emptyText, { color: colors.tertiaryText }]}>
               {t("Select meals in the Recipes tab to generate your grocery list.")}
             </Text>
-          </View>
+          </Card>
         )}
-
-        <View style={{ height: 20 }} />
       </ScrollView>
 
-      <Modal visible={showClearModal} transparent animationType="fade" onRequestClose={() => setShowClearModal(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalCard, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
-            <Text style={styles.modalIcon}>&#10003;</Text>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>{t("All done shopping?")}</Text>
-            <Text style={[styles.modalMessage, { color: colors.secondaryText }]}>
-              {t("This will clear your grocery list. Your meal plan will not be affected.")}
-            </Text>
-            <View style={styles.modalButtons}>
-              <TouchableOpacity accessibilityRole="button"
-                style={[styles.modalButton, { backgroundColor: colors.progressTrack }]}
-                onPress={() => setShowClearModal(false)}
-              >
-                <Text style={[styles.modalButtonText, { color: colors.text }]}>{t("Cancel")}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity accessibilityRole="button"
-                style={[styles.modalButton, { backgroundColor: '#FF5252' }]}
-                onPress={() => { setDismissed(true); setShowClearModal(false); }}
-              >
-                <Text style={styles.modalButtonText}>{t("Clear")}</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <Sheet
+        visible={showClearModal}
+        onClose={() => setShowClearModal(false)}
+        icon="shopping-bag"
+        title={t("All done shopping?")}
+        message={t("This will clear your grocery list. Your meal plan will not be affected.")}
+      >
+        <Button label={t("Cancel")} variant="secondary" onPress={() => setShowClearModal(false)} style={styles.flex} />
+        <Button
+          label={t("Clear")}
+          onPress={() => {
+            setDismissed(true);
+            setShowClearModal(false);
+          }}
+          style={styles.flex}
+        />
+      </Sheet>
     </>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  content: { paddingBottom: 24 },
+  flex: { flex: 1 },
+  block: { marginHorizontal: 20, marginTop: 16 },
+  progressHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10, gap: 8 },
 
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 56,
-    paddingBottom: 16,
-  },
-  title: { fontSize: 24, fontWeight: '800' },
-  subtitle: { fontSize: 14, marginTop: 2 },
-  progressCircle: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 3,
-  },
-  progressPct: { fontSize: 14, fontWeight: '800' },
-
-  progressTrackWrap: { paddingHorizontal: 16, paddingVertical: 8 },
-  progressTrack: { height: 6, borderRadius: 3, overflow: 'hidden' },
-  progressFill: { height: 6, borderRadius: 3 },
-
-  categorySection: { marginHorizontal: 16, marginTop: 16 },
-  categoryTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 1,
-    marginBottom: 8,
-    textTransform: 'uppercase',
-  },
-
-  itemRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 8,
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 6,
-    borderWidth: 2,
-    marginRight: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  checkmark: { color: '#fff', fontSize: 14, fontWeight: '700' },
-
+  list: { marginHorizontal: 20, marginTop: 14, borderRadius: 22, paddingHorizontal: 12, paddingVertical: 4 },
+  itemRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56, paddingVertical: 10 },
+  checkbox: { width: 26, height: 26, borderRadius: 9, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   itemInfo: { flex: 1 },
-  itemName: { fontSize: 15, fontWeight: '600' },
+  itemName: { fontSize: 15, fontWeight: '600', textTransform: 'capitalize' },
   itemQty: { fontSize: 12, marginTop: 2 },
 
-  emptyCard: {
-    marginHorizontal: 16,
-    marginTop: 24,
-    borderRadius: 14,
-    padding: 20,
-    alignItems: 'center',
-  },
-  emptyText: { fontSize: 14, textAlign: 'center' },
+  doneButton: { marginHorizontal: 20, marginTop: 14 },
 
-  headerRight: { alignItems: 'center', gap: 8 },
-  clearBtn: { borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
-  clearBtnText: { color: '#fff', fontSize: 12, fontWeight: '700' },
-
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 30,
-  },
-  modalCard: {
-    width: '100%',
-    borderRadius: 18,
-    padding: 24,
-    alignItems: 'center',
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 5,
-  },
-  modalIcon: { fontSize: 40, color: '#4CAF50', marginBottom: 12 },
-  modalTitle: { fontSize: 18, fontWeight: '800', marginBottom: 8 },
-  modalMessage: { fontSize: 14, textAlign: 'center', lineHeight: 20, marginBottom: 20 },
-  modalButtons: { flexDirection: 'row', gap: 12 },
-  modalButton: { paddingHorizontal: 28, paddingVertical: 10, borderRadius: 20 },
-  modalButtonText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+  empty: { alignItems: 'center', gap: 10, padding: 20 },
+  emptyImage: { width: 110, height: 110, borderRadius: 55 },
+  emptyText: { fontSize: 14, lineHeight: 20, textAlign: 'center' },
 });

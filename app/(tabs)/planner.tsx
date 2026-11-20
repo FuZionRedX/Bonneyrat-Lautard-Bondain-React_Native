@@ -1,6 +1,7 @@
 import { useIsFocused, useRouter } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
+  Image,
   Modal,
   ScrollView,
   StyleSheet,
@@ -9,7 +10,21 @@ import {
   View,
 } from "react-native";
 
-import { CATEGORY_LABELS, CATEGORY_ORDER, getMealEmoji, toLocalDateKey } from "@/constants/meals";
+import Feather from "@expo/vector-icons/Feather";
+
+import {
+  Button,
+  Card,
+  CapsLabel,
+  categoryColors,
+  heading,
+  MealThumb,
+  Pill,
+  ProgressRing,
+  SectionHeader,
+  softShadow,
+} from "@/components/ui/kit";
+import { CATEGORY_LABELS, CATEGORY_ORDER, toLocalDateKey } from "@/constants/meals";
 import { getNutrition } from "@/lib/nutrition";
 import { Colors } from "@/constants/theme";
 import { useMealPlan } from "@/contexts/meal-plan-context";
@@ -17,34 +32,10 @@ import { useProfile } from "@/contexts/profile-context";
 import { useLanguage } from "@/contexts/language-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 
-function ProgressBar({
-  value,
-  max,
-  color,
-  trackColor,
-}: {
-  value: number;
-  max: number;
-  color: string;
-  trackColor: string;
-}) {
-  const pct = Math.min((value / max) * 100, 100);
-  return (
-    <View style={[styles.progressTrack, { backgroundColor: trackColor }]}>
-      <View
-        style={[
-          styles.progressFill,
-          { width: `${pct}%` as any, backgroundColor: color },
-        ]}
-      />
-    </View>
-  );
-}
-
 export default function PlannerScreen() {
   const router = useRouter();
   const { profile } = useProfile();
-  const { selectedMeals, planDate, setPlanDate, loadFailed } = useMealPlan();
+  const { selectedMeals, planDate, setPlanDate, loadFailed, history } = useMealPlan();
   const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
   const { locale, t } = useLanguage();
@@ -101,58 +92,60 @@ export default function PlannerScreen() {
     wasOverLimitRef.current = isOverLimit;
   }, [excess, isOverLimit, isFocused]);
 
+  // Days that already have a saved plan get a small dot in the day strip.
+  const plannedDays = new Set(
+    (history ?? []).filter((e) => Object.values(e.meal_ids).some((ids) => ids.length > 0)).map((e) => e.saved_at.slice(0, 10)),
+  );
+  if (hasMealPlan) plannedDays.add(planDay.key);
+  const progress = totalPlanned / dailyTarget;
+
   return (
     <>
     <ScrollView
       style={[styles.container, { backgroundColor: colors.screenBackground }]}
+      contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      <View style={[styles.header, { backgroundColor: colors.cardBackground }]}>
-        <View>
-          <Text style={[styles.greeting, { color: colors.text }]}>
-            {t("Good morning, {name}", { name: firstName })}{" "}
+      <View style={styles.header}>
+        <View style={styles.flex}>
+          <Text style={[heading(26), { color: colors.text }]} accessibilityRole="header">
+            {t("Good morning, {name}", { name: firstName })}
           </Text>
-          <Text style={[styles.subGreeting, { color: colors.secondaryText }]}>
+          <Text style={[styles.subGreeting, { color: colors.tertiaryText }]}>
             {isToday ? t("Let's track your nutrition today") : t("Planning {date}", { date: planDay.long })}
           </Text>
         </View>
-        <View
-          style={[styles.bmiBadge, { backgroundColor: colors.primaryLight }]}
-        >
-          <Text style={[styles.bmiValue, { color: colors.primary }]}>
-            {bmiDisplay}
-          </Text>
-          <Text style={[styles.bmiLabel, { color: colors.primary }]}>{t("BMI")}</Text>
+        <View style={[styles.bmiBadge, { backgroundColor: colors.primaryLight }]} accessible accessibilityLabel={`${t("BMI")} ${bmiDisplay}`}>
+          <Text style={[heading(20), { color: colors.primaryText }]}>{bmiDisplay}</Text>
+          <Text style={[styles.bmiLabel, { color: colors.primaryText }]}>{t("BMI")}</Text>
         </View>
       </View>
 
       {profile.email ? (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.dayStrip}
-        >
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.dayStrip}>
           {days.map((d) => {
             const selected = d.key === planDay.key;
+            const fg = selected ? colors.onPrimary : colors.text;
             return (
               <TouchableOpacity
                 key={d.key}
                 onPress={() => setPlanDate(d.key)}
                 style={[
                   styles.dayChip,
-                  { backgroundColor: colors.cardBackground, borderColor: colors.border },
-                  selected && { backgroundColor: colors.primary, borderColor: colors.primary },
+                  selected ? { backgroundColor: colors.primary } : [{ backgroundColor: colors.cardBackground }, softShadow(colors)],
                 ]}
                 accessibilityRole="button"
                 accessibilityLabel={t("Plan {date}", { date: d.long })}
                 accessibilityState={{ selected }}
               >
-                <Text style={[styles.dayChipWeekday, { color: selected ? "#fff" : colors.secondaryText }]}>
-                  {d.weekday}
-                </Text>
-                <Text style={[styles.dayChipNumber, { color: selected ? "#fff" : colors.text }]}>
-                  {d.day}
-                </Text>
+                <Text style={[styles.dayChipWeekday, { color: selected ? fg : colors.secondaryText }]}>{d.weekday}</Text>
+                <Text style={[heading(19), { color: fg }]}>{d.day}</Text>
+                <View
+                  style={[
+                    styles.dayDot,
+                    plannedDays.has(d.key) && { backgroundColor: selected ? colors.onPrimary : colors.primary },
+                  ]}
+                />
               </TouchableOpacity>
             );
           })}
@@ -160,204 +153,141 @@ export default function PlannerScreen() {
       ) : null}
 
       {loadFailed ? (
-        <Text style={[styles.syncWarning, { color: colors.dangerText }]}>
-          {t("Could not reach the server. Changes to this day are not saved.")}
-        </Text>
+        <View style={[styles.syncWarning, { backgroundColor: colors.dangerLight }]}>
+          <Feather name="wifi-off" size={16} color={colors.dangerText} />
+          <Text style={[styles.syncWarningText, { color: colors.dangerText }]}>
+            {t("Could not reach the server. Changes to this day are not saved.")}
+          </Text>
+        </View>
       ) : null}
 
-      <View
-        style={[
-          styles.targetCard,
-          {
-            backgroundColor: colors.cardBackground,
-            shadowColor: colors.shadow,
-          },
-        ]}
-      >
-        <View style={styles.targetHeader}>
-          <Text style={[styles.targetTitle, { color: colors.secondaryText }]}>
-            {t("DAILY TARGET")}
-          </Text>
-          <Text style={[styles.targetKcal, { color: colors.text }]}>
-            {dailyTarget.toLocaleString()} kcal
-          </Text>
-        </View>
-        <View style={styles.targetRow}>
-          <Text
-            style={[styles.targetConsumed, { color: colors.secondaryText }]}
-          >
-            {t("CALORIES PLANNED")}{"\n"}
-            <Text style={[styles.targetConsumedValue, { color: colors.text }]}>
-              {totalPlanned.toLocaleString()} / {dailyTarget.toLocaleString()}
-            </Text>
-          </Text>
-          <Text
-            style={[
-              styles.remainingBadge,
-              isOverLimit
-                ? { color: colors.danger, backgroundColor: "#FDECEA" }
-                : {
-                    color: colors.primary,
-                    backgroundColor: colors.primaryLight,
-                  },
-            ]}
-          >
-            {isOverLimit ? t("{n} over limit", { n: excess }) : t("{n} remaining", { n: remaining })}
-          </Text>
-        </View>
-        <ProgressBar
-          value={totalPlanned}
-          max={dailyTarget}
-          color={isOverLimit ? colors.danger : colors.primary}
-          trackColor={colors.progressTrack}
+      <Card style={styles.targetCard}>
+        <ProgressRing
+          progress={progress}
+          size={128}
+          stroke={13}
+          label={(isOverLimit ? excess : remaining).toLocaleString(locale)}
+          sublabel={isOverLimit ? t("kcal over") : t("kcal left")}
+          color={isOverLimit ? colors.danger : undefined}
+          accessibilityLabel={isOverLimit ? t("{n} over limit", { n: excess }) : t("{n} remaining", { n: remaining })}
         />
-        {isOverLimit && (
-          <Text style={styles.overLimitAlert}>
-            {t("You are {n} kcal above your daily target. Consider removing some meals.", { n: excess })}
-          </Text>
-        )}
-      </View>
-
-      {hasMealPlan ? (
-        mealSections.map((section) => (
-          <View
-            key={section.category}
-            style={[
-              styles.mealSection,
-              {
-                backgroundColor: colors.cardBackground,
-                shadowColor: colors.shadow,
-              },
-            ]}
-          >
-            <View style={styles.mealSectionHeader}>
-              <Text style={[styles.mealSectionTitle, { color: colors.text }]}>
-                {getMealEmoji(section.category)} {section.label}
-              </Text>
-              {section.totalKcal > 0 && (
-                <Text
-                  style={[
-                    styles.mealSectionKcal,
-                    { color: colors.secondaryText },
-                  ]}
-                >
-                  {section.totalKcal} kcal
-                </Text>
-              )}
-            </View>
-            {section.meals.length > 0 ? (
-              section.meals.map((meal) => (
-                <View key={meal.id} style={styles.mealRow}>
-                  <View
-                    style={[
-                      styles.mealIcon,
-                      { backgroundColor: colors.chipBackground },
-                    ]}
-                  >
-                    <Text style={styles.mealIconText}>
-                      {getMealEmoji(meal.category)}
-                    </Text>
-                  </View>
-                  <View style={styles.mealInfo}>
-                    <Text style={[styles.mealName, { color: colors.text }]}>
-                      {meal.name}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.mealDetail,
-                        { color: colors.secondaryText },
-                      ]}
-                    >
-                      {t("{n} ingredients", { n: meal.ingredients.length })} -{" "}
-                      {meal.totalCalories} kcal
-                    </Text>
-                  </View>
-                </View>
-              ))
-            ) : (
-              <Text
-                style={[
-                  styles.mealDetail,
-                  { color: colors.secondaryText, paddingVertical: 4 },
-                ]}
-              >
-                {t("No {categoryLower} selected", { category: section.label, categoryLower: section.label.toLowerCase() })}
-              </Text>
-            )}
+        <View style={styles.targetInfo}>
+          <View>
+            <CapsLabel>{t("DAILY TARGET")}</CapsLabel>
+            <Text style={[heading(22), { color: colors.text }]}>{dailyTarget.toLocaleString(locale)} kcal</Text>
           </View>
-        ))
-      ) : (
-        <View
-          style={[
-            styles.mealSection,
-            {
-              backgroundColor: colors.cardBackground,
-              shadowColor: colors.shadow,
-            },
-          ]}
-        >
-          <Text
-            style={[
-              styles.mealSectionTitle,
-              { color: colors.text, marginBottom: 6 },
-            ]}
-          >
-            {t("No meals planned yet")}
-          </Text>
-          <Text style={[styles.mealDetail, { color: colors.secondaryText }]}>
-            {t("Go to the Recipes tab to select your meals")}
-          </Text>
+          <View>
+            <CapsLabel>{t("CALORIES PLANNED")}</CapsLabel>
+            <Text style={[heading(22), { color: isOverLimit ? colors.dangerText : colors.text }]}>
+              {totalPlanned.toLocaleString(locale)}
+            </Text>
+          </View>
+          {isOverLimit ? (
+            <Pill label={t("{n} over limit", { n: excess })} bg={colors.dangerLight} fg={colors.dangerText} />
+          ) : (
+            <Pill label={t("{n} remaining", { n: remaining })} bg={colors.primaryLight} fg={colors.primaryText} />
+          )}
         </View>
+      </Card>
+      {isOverLimit && (
+        <Text style={[styles.overLimitAlert, { color: colors.dangerText }]}>
+          {t("You are {n} kcal above your daily target. Consider removing some meals.", { n: excess })}
+        </Text>
       )}
 
-      {!hasMealPlan && (
-        <View
-          style={[
-            styles.recommendCard,
-            { backgroundColor: colors.darkCard, shadowColor: colors.shadow },
-          ]}
-        >
-          <View>
-            <Text
-              style={[styles.recommendTitle, { color: colors.darkCardText }]}
-            >
-              {t("Ready for lunch?")}
-            </Text>
-            <Text
-              style={[styles.recommendSub, { color: colors.darkCardSubtext }]}
-            >
+      <SectionHeader title={t("Meals")} />
+      <View style={styles.meals}>
+        {hasMealPlan ? (
+          mealSections.map((section) => {
+            const cat = categoryColors(colors, section.category);
+            return (
+              <Card key={section.category}>
+                <View style={styles.mealSectionHeader}>
+                  <View style={styles.mealSectionTitleRow}>
+                    <View style={[styles.catDot, { backgroundColor: cat.fg }]} />
+                    <Text style={[heading(16, "bold"), { color: colors.text }]}>{section.label}</Text>
+                  </View>
+                  {section.totalKcal > 0 && <Pill label={`${section.totalKcal} kcal`} bg={cat.bg} fg={cat.fg} />}
+                </View>
+                {section.meals.length > 0 ? (
+                  section.meals.map((meal) => (
+                    <View key={meal.id} style={styles.mealRow}>
+                      <MealThumb meal={meal} size={56} />
+                      <View style={styles.flex}>
+                        <Text style={[styles.mealName, { color: colors.text }]}>{meal.name}</Text>
+                        <Text style={[styles.mealDetail, { color: colors.secondaryText }]}>
+                          {t("{n} ingredients", { n: meal.ingredients.length })}
+                        </Text>
+                      </View>
+                      <Text style={[styles.mealKcal, { color: colors.tertiaryText }]}>{meal.totalCalories} kcal</Text>
+                    </View>
+                  ))
+                ) : (
+                  <Text style={[styles.mealDetail, { color: colors.secondaryText }]}>
+                    {t("No {categoryLower} selected", { category: section.label, categoryLower: section.label.toLowerCase() })}
+                  </Text>
+                )}
+              </Card>
+            );
+          })
+        ) : (
+          <Card style={styles.emptyCard}>
+            <Image source={require("@/assets/images/food/quinoa-bowl.png")} style={styles.emptyImage} accessible={false} />
+            <Text style={[heading(18), { color: colors.text, textAlign: "center" }]}>{t("No meals planned yet")}</Text>
+            <Text style={[styles.emptyText, { color: colors.tertiaryText }]}>
               {t("Follow your personalised nutrition plan to maintain your BMI goal.")}
             </Text>
-            <Text style={[styles.recommendNote, { color: colors.primary }]}>
-              {t("Meals tailored for you")}
-            </Text>
-          </View>
-          <TouchableOpacity accessibilityRole="button"
-            style={[styles.recommendBtn, { backgroundColor: colors.primary }]}
-            onPress={() => router.push("/(tabs)/recipes" as any)}
-          >
-            <Text style={styles.recommendBtnText}>{t("See Meal Plan")}</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+            <Button
+              label={t("See Meal Plan")}
+              icon="arrow-right"
+              onPress={() => router.navigate("/recipes")}
+              style={styles.emptyButton}
+            />
+          </Card>
+        )}
 
-      <View style={{ height: 20 }} />
+        {profile.email ? (
+          <TouchableOpacity
+            onPress={() => router.push("/meal-history")}
+            accessibilityRole="button"
+            style={[styles.historyLink, { borderColor: colors.border }]}
+          >
+            <Feather name="clock" size={19} color={colors.primaryText} />
+            <Text style={[styles.historyText, { color: colors.primaryText }]}>{t("View Meal History")}</Text>
+          </TouchableOpacity>
+        ) : null}
+      </View>
     </ScrollView>
 
-    <Modal visible={showOverLimitModal} transparent animationType="fade" onRequestClose={() => setShowOverLimitModal(false)}>
+    <Modal
+      visible={showOverLimitModal}
+      transparent
+      animationType="slide"
+      onRequestClose={() => setShowOverLimitModal(false)}
+    >
       <View style={styles.modalOverlay}>
-        <View style={[styles.modalCard, { backgroundColor: colors.cardBackground, shadowColor: colors.shadow }]}>
-          <Text style={styles.modalIcon}>&#9888;</Text>
-          <Text style={[styles.modalTitle, { color: colors.text }]}>{t("Daily limit exceeded")}</Text>
-          <Text style={[styles.modalMessage, { color: colors.secondaryText }]}>
+        <View style={[styles.sheet, { backgroundColor: colors.cardBackground }]} accessibilityViewIsModal>
+          <View style={[styles.sheetHandle, { backgroundColor: colors.border }]} />
+          <View style={[styles.sheetIcon, { backgroundColor: colors.dangerLight }]}>
+            <Feather name="alert-triangle" size={28} color={colors.dangerText} />
+          </View>
+          <Text style={[heading(22), { color: colors.text, textAlign: "center" }]} accessibilityRole="header">
+            {t("Daily limit exceeded")}
+          </Text>
+          <Text style={[styles.sheetMessage, { color: colors.tertiaryText }]}>
             {t("You are {n} kcal above your target. Consider removing some meals.", { n: excess })}
           </Text>
-          <TouchableOpacity accessibilityRole="button"
-            style={[styles.modalButton, { backgroundColor: "#D32F2F" }]}
-            onPress={() => setShowOverLimitModal(false)}
-          >
-            <Text style={styles.modalButtonText}>{t("OK")}</Text>
-          </TouchableOpacity>
+          <View style={styles.sheetButtons}>
+            <Button label={t("OK")} variant="secondary" onPress={() => setShowOverLimitModal(false)} style={styles.flex} />
+            <Button
+              label={t("Adjust meals")}
+              onPress={() => {
+                setShowOverLimitModal(false);
+                router.navigate("/recipes");
+              }}
+              style={styles.flex}
+            />
+          </View>
         </View>
       </View>
     </Modal>
@@ -366,174 +296,73 @@ export default function PlannerScreen() {
 }
 
 const styles = StyleSheet.create({
-  syncWarning: { marginHorizontal: 16, marginTop: 12, fontSize: 13, fontWeight: "600" },
-  dayStrip: { paddingHorizontal: 16, paddingTop: 12, gap: 8 },
-  dayChip: {
-    width: 54,
-    paddingVertical: 8,
-    borderRadius: 12,
-    borderWidth: 1,
-    alignItems: "center",
-  },
-  dayChipWeekday: { fontSize: 11, fontWeight: "600" },
-  dayChipNumber: { fontSize: 16, fontWeight: "800", marginTop: 2 },
   container: { flex: 1 },
+  content: { paddingBottom: 24 },
+  flex: { flex: 1 },
 
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingTop: 56,
-    paddingBottom: 16,
-  },
-  greeting: { fontSize: 18, fontWeight: "700" },
-  subGreeting: { fontSize: 13, marginTop: 2 },
-  bmiBadge: {
-    alignItems: "center",
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-  },
-  bmiValue: { fontSize: 20, fontWeight: "800" },
-  bmiLabel: { fontSize: 11, fontWeight: "600" },
+  header: { flexDirection: "row", alignItems: "flex-start", gap: 12, paddingHorizontal: 20, paddingTop: 60 },
+  subGreeting: { fontSize: 14, marginTop: 3 },
+  bmiBadge: { alignItems: "center", borderRadius: 18, paddingHorizontal: 12, paddingVertical: 8 },
+  bmiLabel: { fontSize: 10, fontWeight: "800", letterSpacing: 1 },
 
-  targetCard: {
-    margin: 16,
-    borderRadius: 16,
-    padding: 16,
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  targetHeader: {
+  dayStrip: { paddingHorizontal: 20, paddingTop: 18, paddingBottom: 8, gap: 8 },
+  dayChip: { width: 54, height: 72, borderRadius: 18, alignItems: "center", justifyContent: "center", gap: 2 },
+  dayChipWeekday: { fontSize: 11, fontWeight: "600" },
+  dayDot: { width: 5, height: 5, borderRadius: 3, marginTop: 2 },
+
+  syncWarning: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 10,
-  },
-  targetTitle: {
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 1,
-  },
-  targetKcal: { fontSize: 22, fontWeight: "800" },
-  targetRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-end",
-    marginBottom: 8,
-  },
-  targetConsumed: { fontSize: 11, fontWeight: "600" },
-  targetConsumedValue: { fontSize: 15, fontWeight: "700" },
-  remainingBadge: {
-    fontSize: 12,
-    fontWeight: "700",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  overLimitAlert: {
+    gap: 8,
+    marginHorizontal: 20,
     marginTop: 10,
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#D32F2F",
+    padding: 12,
+    borderRadius: 14,
   },
-  progressTrack: {
-    height: 8,
-    borderRadius: 4,
-    overflow: "hidden",
-  },
-  progressFill: { height: 8, borderRadius: 4 },
+  syncWarningText: { flex: 1, fontSize: 13, fontWeight: "600" },
 
-  mealSection: {
-    marginHorizontal: 16,
-    marginBottom: 12,
-    borderRadius: 16,
-    padding: 14,
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 1,
-  },
-  mealSectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  mealSectionTitle: { fontSize: 15, fontWeight: "700" },
-  mealSectionKcal: { fontSize: 13, fontWeight: "600" },
-  mealRow: { flexDirection: "row", alignItems: "center", marginBottom: 8 },
-  mealIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 10,
-  },
-  mealIconText: { fontSize: 18 },
-  mealInfo: { flex: 1 },
-  mealName: { fontSize: 14, fontWeight: "600" },
+  targetCard: { marginHorizontal: 20, marginTop: 12, borderRadius: 26, padding: 18, flexDirection: "row", alignItems: "center", gap: 18 },
+  targetInfo: { flex: 1, gap: 10 },
+  overLimitAlert: { marginHorizontal: 24, marginTop: 10, fontSize: 13, fontWeight: "600" },
+
+  meals: { paddingHorizontal: 20, gap: 10 },
+  mealSectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
+  mealSectionTitleRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  catDot: { width: 10, height: 10, borderRadius: 5 },
+  mealRow: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 6 },
+  mealName: { fontSize: 15, fontWeight: "700" },
   mealDetail: { fontSize: 12, marginTop: 2 },
-  recommendCard: {
-    marginHorizontal: 16,
-    marginBottom: 12,
-    borderRadius: 16,
-    padding: 18,
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  recommendTitle: {
-    fontSize: 18,
-    fontWeight: "800",
-    marginBottom: 6,
-  },
-  recommendSub: {
-    fontSize: 13,
-    marginBottom: 4,
-    lineHeight: 18,
-  },
-  recommendNote: {
-    fontSize: 12,
-    fontWeight: "600",
-    marginBottom: 14,
-  },
-  recommendBtn: {
-    borderRadius: 10,
-    paddingVertical: 12,
-    alignItems: "center",
-  },
-  recommendBtnText: { color: "#fff", fontWeight: "700", fontSize: 15 },
+  mealKcal: { fontSize: 14, fontWeight: "700" },
 
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 30,
-  },
-  modalCard: {
-    width: "100%",
+  emptyCard: { alignItems: "center", gap: 8, padding: 20 },
+  emptyImage: { width: 120, height: 120, borderRadius: 60, marginBottom: 4 },
+  emptyText: { fontSize: 14, lineHeight: 20, textAlign: "center" },
+  emptyButton: { alignSelf: "stretch", marginTop: 8 },
+
+  historyLink: {
+    minHeight: 52,
     borderRadius: 18,
-    padding: 24,
+    borderWidth: 1.5,
+    borderStyle: "dashed",
+    flexDirection: "row",
     alignItems: "center",
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 5,
+    justifyContent: "center",
+    gap: 8,
   },
-  modalIcon: {
-    fontSize: 40,
-    color: "#D32F2F",
-    marginBottom: 12,
+  historyText: { fontSize: 15, fontWeight: "700" },
+
+  modalOverlay: { flex: 1, backgroundColor: "rgba(8,16,12,0.45)", justifyContent: "flex-end" },
+  sheet: {
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    paddingHorizontal: 24,
+    paddingTop: 12,
+    paddingBottom: 36,
+    alignItems: "center",
+    gap: 12,
   },
-  modalTitle: { fontSize: 18, fontWeight: "800", marginBottom: 8 },
-  modalMessage: { fontSize: 14, textAlign: "center", lineHeight: 20, marginBottom: 20 },
-  modalButton: {
-    paddingHorizontal: 32,
-    paddingVertical: 10,
-    borderRadius: 20,
-  },
-  modalButtonText: { color: "#fff", fontWeight: "700", fontSize: 14 },
+  sheetHandle: { width: 40, height: 5, borderRadius: 3 },
+  sheetIcon: { width: 64, height: 64, borderRadius: 22, alignItems: "center", justifyContent: "center", marginTop: 8 },
+  sheetMessage: { fontSize: 15, lineHeight: 22, textAlign: "center" },
+  sheetButtons: { flexDirection: "row", gap: 10, alignSelf: "stretch", marginTop: 8 },
 });
