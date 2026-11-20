@@ -1,3 +1,4 @@
+import type { PlanSelection } from "@/contexts/meal-plan-context";
 import { ProfileData } from "@/contexts/profile-context";
 import { Platform } from "react-native";
 
@@ -71,14 +72,14 @@ export async function loginProfile(
 }
 
 export interface MealHistoryEntry {
-  meal_ids: Record<string, number[]>;
+  meal_ids: PlanSelection;
   saved_at: string;
 }
 
 export async function saveMealHistory(
   email: string,
   password: string,
-  mealIds: Record<string, number[]>,
+  mealIds: PlanSelection,
   savedAt?: string,
 ): Promise<boolean> {
   try {

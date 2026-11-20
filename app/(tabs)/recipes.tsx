@@ -117,7 +117,8 @@ export default function RecipesScreen() {
     CATEGORY_ORDER.forEach((category) => {
       next[category] = suggestedCombo[category].map((m) => m.id);
     });
-    setSelectedByCategory(next); // MealPlanProvider saves today's plan
+    // Foods the user added themselves stay; MealPlanProvider saves today's plan.
+    setSelectedByCategory((prev) => ({ ...next, custom: prev.custom }));
     setShowApplyModal(true);
   }
 
@@ -129,7 +130,7 @@ export default function RecipesScreen() {
     CATEGORY_ORDER.forEach((category) => {
       next[category] = suggestedCombo[category].map((m) => m.id);
     });
-    setSelectedByCategory(next);
+    setSelectedByCategory((prev) => ({ ...next, custom: prev.custom }));
 
     const today = new Date();
     const dayOfWeek = today.getDay(); // 0 = Sunday
@@ -142,7 +143,7 @@ export default function RecipesScreen() {
       date.setDate(today.getDate() + i);
       if (toLocalDateKey(date) === planDate) continue;
       saves.push(
-        saveMealHistory(profile.email, profile.password, next as Record<string, number[]>, toLocalDateKey(date)),
+        saveMealHistory(profile.email, profile.password, next, toLocalDateKey(date)),
       );
     }
     Promise.all(saves).then((results) => {

@@ -17,7 +17,7 @@ import {
 import { toLocalDateKey } from '@/constants/meals';
 import { Colors } from '@/constants/theme';
 import { useLanguage } from '@/contexts/language-context';
-import { useMealPlan, type Meal } from '@/contexts/meal-plan-context';
+import { planMeals, useMealPlan, type Meal } from '@/contexts/meal-plan-context';
 import { getProfileInitials, useProfile } from '@/contexts/profile-context';
 import { getNutrition } from '@/lib/nutrition';
 import mealsData from '@/data/meals.json';
@@ -62,8 +62,7 @@ export default function HomeScreen() {
   // Today's plan summary. The context holds the live plan of planDate; when the
   // Planner shows another day, today's plan comes from the loaded history.
   const todayIds = history?.find((e) => e.saved_at.slice(0, 10) === today)?.meal_ids ?? {};
-  const todayMeals =
-    planDate === today ? selectedMeals : ALL_MEALS.filter((m) => (todayIds[m.category] ?? []).includes(m.id));
+  const todayMeals = planDate === today ? selectedMeals : planMeals(todayIds);
   const planned = todayMeals.reduce((sum, m) => sum + m.totalCalories, 0);
   const mealCount = todayMeals.length;
   const dailyTarget = getNutrition(profile).dailyTarget ?? 2000;

@@ -5,6 +5,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -15,6 +16,7 @@ import {
   Button,
   Card,
   CapsLabel,
+  CategoryPicker,
   categoryColors,
   heading,
   MealThumb,
@@ -27,7 +29,7 @@ import {
 import { CATEGORY_LABELS, CATEGORY_ORDER, toLocalDateKey } from "@/constants/meals";
 import { getNutrition } from "@/lib/nutrition";
 import { Colors } from "@/constants/theme";
-import { useMealPlan } from "@/contexts/meal-plan-context";
+import { MealCategory, useMealPlan } from "@/contexts/meal-plan-context";
 import { useProfile } from "@/contexts/profile-context";
 import { useLanguage } from "@/contexts/language-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
@@ -35,7 +37,7 @@ import { useColorScheme } from "@/hooks/use-color-scheme";
 export default function PlannerScreen() {
   const router = useRouter();
   const { profile } = useProfile();
-  const { selectedMeals, planDate, setPlanDate, loadFailed, history } = useMealPlan();
+  const { selectedMeals, setSelectedByCategory, addCustomFood, planDate, setPlanDate, loadFailed, history } = useMealPlan();
   const colorScheme = useColorScheme() ?? "light";
   const colors = Colors[colorScheme];
   const { locale, t } = useLanguage();
@@ -100,6 +102,26 @@ export default function PlannerScreen() {
   if (hasMealPlan) plannedDays.add(planDay.key);
   else plannedDays.delete(planDay.key);
   const progress = totalPlanned / dailyTarget;
+
+  // "Add your own food" form; the plan stores it under `custom` (see PlanSelection).
+  const [showAddFood, setShowAddFood] = useState(false);
+  const [foodName, setFoodName] = useState("");
+  const [foodKcal, setFoodKcal] = useState("");
+  const [foodCategory, setFoodCategory] = useState<MealCategory>("breakfast");
+  const kcal = Number.parseInt(foodKcal, 10);
+  const canAddFood = foodName.trim().length > 0 && kcal > 0 && kcal <= 5000;
+
+  function addFood() {
+    if (!canAddFood) return;
+    addCustomFood(foodName.trim(), foodCategory, kcal);
+    setShowAddFood(false);
+    setFoodName("");
+    setFoodKcal("");
+  }
+
+  function removeFood(id: number) {
+    setSelectedByCategory((prev) => ({ ...prev, custom: prev.custom?.filter((m) => m.id !== id) }));
+  }
 
   return (
     <>
@@ -218,10 +240,20 @@ export default function PlannerScreen() {
                       <View style={styles.flex}>
                         <Text style={[styles.mealName, { color: colors.text }]}>{meal.name}</Text>
                         <Text style={[styles.mealDetail, { color: colors.secondaryText }]}>
-                          {t("{n} ingredients", { n: meal.ingredients.length })}
+                          {meal.id < 0 ? t("Added by you") : t("{n} ingredients", { n: meal.ingredients.length })}
                         </Text>
                       </View>
                       <Text style={[styles.mealKcal, { color: colors.tertiaryText }]}>{meal.totalCalories} kcal</Text>
+                      {meal.id < 0 ? (
+                        <TouchableOpacity
+                          onPress={() => removeFood(meal.id)}
+                          hitSlop={12}
+                          accessibilityRole="button"
+                          accessibilityLabel={t("Remove {name}", { name: meal.name })}
+                        >
+                          <Feather name="x" size={18} color={colors.secondaryText} />
+                        </TouchableOpacity>
+                      ) : null}
                     </View>
                   ))
                 ) : (
@@ -248,6 +280,14 @@ export default function PlannerScreen() {
           </Card>
         )}
 
+        <TouchableOpacity
+          onPress={() => setShowAddFood(true)}
+          accessibilityRole="button"
+          style={[styles.historyLink, { borderColor: colors.border }]}
+        >
+          <Feather name="plus" size={19} color={colors.primaryText} />
+          <Text style={[styles.historyText, { color: colors.primaryText }]}>{t("Add your own food")}</Text>
+        </TouchableOpacity>
         {profile.email ? (
           <TouchableOpacity
             onPress={() => router.push("/meal-history")}
@@ -278,6 +318,43 @@ export default function PlannerScreen() {
         }}
         style={styles.flex}
       />
+    </Sheet>
+
+    <Sheet
+      visible={showAddFood}
+      onClose={() => setShowAddFood(false)}
+      icon="plus"
+      tone="info"
+      title={t("Add your own food")}
+    >
+      <View style={styles.form}>
+        <Text style={[styles.inputLabel, { color: colors.labelText }]}>{t("Food name")}</Text>
+        <TextInput
+          style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.inputBackground }]}
+          placeholder={t("e.g. Ham sandwich")}
+          placeholderTextColor={colors.placeholderText}
+          value={foodName}
+          onChangeText={setFoodName}
+          maxLength={60}
+          accessibilityLabel={t("Food name")}
+        />
+        <Text style={[styles.inputLabel, { color: colors.labelText }]}>{t("Calories (kcal)")}</Text>
+        <TextInput
+          style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.inputBackground }]}
+          placeholder="350"
+          placeholderTextColor={colors.placeholderText}
+          value={foodKcal}
+          onChangeText={(text) => setFoodKcal(text.replace(/[^0-9]/g, ""))}
+          keyboardType="number-pad"
+          maxLength={4}
+          accessibilityLabel={t("Calories (kcal)")}
+        />
+        <CategoryPicker value={foodCategory} onChange={setFoodCategory} />
+        <View style={styles.formButtons}>
+          <Button label={t("Cancel")} variant="secondary" onPress={() => setShowAddFood(false)} style={styles.flex} />
+          <Button label={t("Add")} onPress={addFood} disabled={!canAddFood} style={styles.flex} />
+        </View>
+      </View>
     </Sheet>
     </>
   );
@@ -338,4 +415,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   historyText: { fontSize: 15, fontWeight: "700" },
+
+  form: { flex: 1 },
+  inputLabel: { fontSize: 13, fontWeight: "700", marginBottom: 6, marginTop: 4 },
+  input: { minHeight: 50, borderWidth: 1.5, borderRadius: 16, paddingHorizontal: 14, fontSize: 16, marginBottom: 8 },
+  formButtons: { flexDirection: "row", gap: 10, marginTop: 16 },
 });

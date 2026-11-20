@@ -5,6 +5,7 @@ import { getMealHistory, MealHistoryEntry, saveMealHistory } from "@/lib/api";
 import React, {
   createContext,
   ReactNode,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -30,14 +31,31 @@ export interface Meal {
 
 export type MealCategory = Meal["category"];
 
+// One day's plan, saved as-is in meal_history.meal_ids: catalogue meal ids per category,
+// plus foods the user typed in themselves (negative ids, no ingredients).
+export interface PlanSelection extends Partial<Record<MealCategory, number[]>> {
+  custom?: Meal[];
+}
+
 const ALL_MEALS = (mealsData as { meals: Meal[] }).meals;
 
+// Every meal of a plan, catalogue and custom, in category order.
+export function planMeals(plan: PlanSelection): Meal[] {
+  return CATEGORY_ORDER.flatMap((category) => {
+    const ids = plan[category] ?? [];
+    return [
+      ...ALL_MEALS.filter((meal) => meal.category === category && ids.includes(meal.id)),
+      ...(plan.custom ?? []).filter((meal) => meal.category === category),
+    ];
+  });
+}
+
 interface MealPlanContextValue {
-  selectedByCategory: Partial<Record<MealCategory, number[]>>;
-  setSelectedByCategory: React.Dispatch<
-    React.SetStateAction<Partial<Record<MealCategory, number[]>>>
-  >;
+  selectedByCategory: PlanSelection;
+  setSelectedByCategory: React.Dispatch<React.SetStateAction<PlanSelection>>;
   selectedMeals: Meal[];
+  // Adds a food the user typed or scanned to the plan of planDate.
+  addCustomFood: (name: string, category: MealCategory, kcal: number) => void;
   // Day being planned, "YYYY-MM-DD" (local). Defaults to today.
   planDate: string;
   setPlanDate: (date: string) => void;
@@ -52,9 +70,7 @@ const MealPlanContext = createContext<MealPlanContextValue | undefined>(
 );
 
 export function MealPlanProvider({ children }: { children: ReactNode }) {
-  const [selectedByCategory, setSelectedByCategory] = useState<
-    Partial<Record<MealCategory, number[]>>
-  >({});
+  const [selectedByCategory, setSelectedByCategory] = useState<PlanSelection>({});
   const [planDate, setPlanDate] = useState(() => toLocalDateKey(new Date()));
   // Bumped to retry a failed load.
   const [reloadCount, setReloadCount] = useState(0);
@@ -123,31 +139,31 @@ export function MealPlanProvider({ children }: { children: ReactNode }) {
     saveMealHistory(
       profile.email,
       profile.password,
-      selectedByCategory as Record<string, number[]>,
+      selectedByCategory,
       planDate,
     );
   }, [selectedByCategory, profile.email, profile.password, planDate, planKey]);
 
-  const selectedMeals = useMemo(() => {
-    return CATEGORY_ORDER.flatMap((category) => {
-      const ids = selectedByCategory[category] ?? [];
-      return ALL_MEALS.filter(
-        (meal) => meal.category === category && ids.includes(meal.id)
-      );
-    });
-  }, [selectedByCategory]);
+  const selectedMeals = useMemo(() => planMeals(selectedByCategory), [selectedByCategory]);
+
+  const addCustomFood = useCallback((name: string, category: MealCategory, kcal: number) => {
+    // Negative ids never clash with the catalogue's positive ones.
+    const food: Meal = { id: -Date.now(), name, category, totalCalories: kcal, calorieBand: "", ingredients: [] };
+    setSelectedByCategory((prev) => ({ ...prev, custom: [...(prev.custom ?? []), food] }));
+  }, []);
 
   const value = useMemo(
     () => ({
       selectedByCategory,
       setSelectedByCategory,
       selectedMeals,
+      addCustomFood,
       planDate,
       setPlanDate,
       loadFailed,
       history,
     }),
-    [selectedByCategory, selectedMeals, planDate, loadFailed, history]
+    [selectedByCategory, selectedMeals, addCustomFood, planDate, loadFailed, history]
   );
 
   return (

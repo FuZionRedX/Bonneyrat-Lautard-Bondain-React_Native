@@ -4,6 +4,7 @@ import React, { type ComponentProps, type ReactNode } from 'react';
 import {
   ActivityIndicator,
   Image,
+  KeyboardAvoidingView,
   Modal,
   type StyleProp,
   StyleSheet,
@@ -15,7 +16,7 @@ import {
 } from 'react-native';
 import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 
-import { CATEGORY_LABELS } from '@/constants/meals';
+import { CATEGORY_LABELS, CATEGORY_ORDER } from '@/constants/meals';
 import { Colors, Fonts, Radius, type ThemeColors } from '@/constants/theme';
 import { useLanguage } from '@/contexts/language-context';
 import type { Meal, MealCategory } from '@/contexts/meal-plan-context';
@@ -75,6 +76,33 @@ export function CategoryChip({ category, style }: { category: MealCategory; styl
   const { t } = useLanguage();
   const c = categoryColors(colors, category);
   return <Pill label={t(CATEGORY_LABELS[category])} bg={c.bg} fg={c.fg} style={style} />;
+}
+
+// One tappable chip per meal category, the chosen one filled.
+export function CategoryPicker({ value, onChange }: { value: MealCategory; onChange: (category: MealCategory) => void }) {
+  const colors = useThemeColors();
+  const { t } = useLanguage();
+  return (
+    <View style={styles.categoryPicker} accessibilityRole="radiogroup">
+      {CATEGORY_ORDER.map((category) => {
+        const selected = category === value;
+        const cat = categoryColors(colors, category);
+        return (
+          <TouchableOpacity
+            key={category}
+            onPress={() => onChange(category)}
+            accessibilityRole="radio"
+            accessibilityState={{ selected }}
+            style={[styles.categoryPickerChip, { backgroundColor: selected ? cat.fg : cat.bg }]}
+          >
+            <Text style={[styles.categoryPickerText, { color: selected ? colors.cardBackground : cat.fg }]}>
+              {t(CATEGORY_LABELS[category])}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
 }
 
 export function MealThumb({ meal, size = 56, radius = 16 }: { meal: Pick<Meal, 'name' | 'category'>; size?: number; radius?: number }) {
@@ -370,7 +398,8 @@ export function Sheet({
   }[tone];
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={styles.sheetOverlay}>
+      {/* Keeps sheets with text inputs above the keyboard (edge-to-edge Android doesn't resize the window). */}
+      <KeyboardAvoidingView behavior="padding" style={styles.sheetOverlay}>
         <View style={[styles.sheet, { backgroundColor: colors.cardBackground }]} accessibilityViewIsModal>
           <View style={[styles.sheetHandle, { backgroundColor: colors.border }]} />
           <View style={[styles.sheetIcon, { backgroundColor: toneColors.bg }]}>
@@ -382,7 +411,7 @@ export function Sheet({
           {message ? <Text style={[styles.sheetMessage, { color: colors.tertiaryText }]}>{message}</Text> : null}
           {children ? <View style={styles.sheetButtons}>{children}</View> : null}
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -402,6 +431,9 @@ const styles = StyleSheet.create({
   sheetIcon: { width: 64, height: 64, borderRadius: 22, alignItems: 'center', justifyContent: 'center', marginTop: 8 },
   sheetMessage: { fontSize: 15, lineHeight: 22, textAlign: 'center' },
   sheetButtons: { flexDirection: 'row', gap: 10, alignSelf: 'stretch', marginTop: 8 },
+  categoryPicker: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  categoryPickerChip: { minHeight: 40, paddingHorizontal: 14, borderRadius: 999, justifyContent: 'center' },
+  categoryPickerText: { fontSize: 13, fontWeight: '700' },
 
   flex: { flex: 1 },
   card: { borderRadius: Radius.lg, padding: 16 },

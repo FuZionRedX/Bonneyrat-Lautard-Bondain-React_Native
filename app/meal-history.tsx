@@ -1,4 +1,3 @@
-import mealsData from '@/data/meals.json';
 import { Stack, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
@@ -13,19 +12,12 @@ import {
 import { BackHeader, Card, CapsLabel, categoryColors, heading, MealThumb, Pill, ProgressBar } from '@/components/ui/kit';
 import { getMealHistory, MealHistoryEntry } from '@/lib/api';
 import { getNutrition } from '@/lib/nutrition';
-import { CATEGORY_LABELS, CATEGORY_ORDER, toLocalDateKey } from '@/constants/meals';
-import { Meal } from '@/contexts/meal-plan-context';
+import { CATEGORY_LABELS, toLocalDateKey } from '@/constants/meals';
+import { planMeals } from '@/contexts/meal-plan-context';
 import { useProfile } from '@/contexts/profile-context';
 import { Colors } from '@/constants/theme';
 import { useLanguage } from '@/contexts/language-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-
-interface MealsFile {
-  meals: Meal[];
-}
-
-const MEALS = (mealsData as MealsFile).meals;
-const MEALS_BY_ID = new Map(MEALS.map((m) => [m.id, m]));
 
 // saved_at is the server's local "YYYY-MM-DD HH:MM:SS"; the "T" makes every JS engine parse it as local time.
 function formatDate(dateStr: string, locale: string) {
@@ -73,9 +65,7 @@ export default function MealHistoryScreen() {
   const dailyTarget = getNutrition(profile).dailyTarget ?? 2000;
 
   function renderDayCard(entry: MealHistoryEntry, isFuture: boolean) {
-    const meals = CATEGORY_ORDER.flatMap((cat) =>
-      (entry.meal_ids[cat] ?? []).map((id) => MEALS_BY_ID.get(id)).filter((m): m is Meal => !!m),
-    );
+    const meals = planMeals(entry.meal_ids);
     const dayTotal = meals.reduce((sum, m) => sum + m.totalCalories, 0);
     const over = dayTotal > dailyTarget;
 
