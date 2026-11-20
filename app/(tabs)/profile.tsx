@@ -370,7 +370,7 @@ const styles = StyleSheet.create({
   loginSubtitle: { fontSize: 15, lineHeight: 21, textAlign: "center", marginTop: 6, marginBottom: 12 },
   inputLabel: { fontSize: 13, fontWeight: "700", marginTop: 14, marginBottom: 6 },
   inputShell: { minHeight: 54, borderWidth: 1.5, borderRadius: 18, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", gap: 10 },
-  loginInput: { flex: 1, fontSize: 16, paddingVertical: 12 },
+  loginInput: { flex: 1, minWidth: 0, fontSize: 16, paddingVertical: 12 },
   eyeButton: { width: 44, height: 44, alignItems: "center", justifyContent: "center", marginRight: -10 },
   loginError: { marginTop: 6, fontSize: 13, fontWeight: "600" },
   loginButton: { marginTop: 22 },

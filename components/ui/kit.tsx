@@ -214,6 +214,7 @@ export function Button({
   label,
   onPress,
   icon,
+  iconRight,
   variant = 'primary',
   disabled,
   loading,
@@ -223,6 +224,8 @@ export function Button({
   label: string;
   onPress?: () => void;
   icon?: IconName;
+  // Show the icon after the label (e.g. a "Continue" arrow).
+  iconRight?: boolean;
   variant?: ButtonVariant;
   disabled?: boolean;
   loading?: boolean;
@@ -254,8 +257,9 @@ export function Button({
         <ActivityIndicator color={look.fg} />
       ) : (
         <>
-          {icon ? <Feather name={icon} size={19} color={look.fg} /> : null}
+          {icon && !iconRight ? <Feather name={icon} size={19} color={look.fg} /> : null}
           <Text style={[styles.buttonText, { color: look.fg }]}>{label}</Text>
+          {icon && iconRight ? <Feather name={icon} size={19} color={look.fg} /> : null}
         </>
       )}
     </TouchableOpacity>

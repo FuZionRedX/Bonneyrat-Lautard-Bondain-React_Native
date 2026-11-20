@@ -10,6 +10,9 @@ import {
   View,
 } from "react-native";
 
+import Feather from "@expo/vector-icons/Feather";
+
+import { Button, heading, softShadow, type IconName } from "@/components/ui/kit";
 import { saveProfile } from "@/lib/api";
 import { Colors } from "@/constants/theme";
 import {
@@ -22,6 +25,12 @@ import { useColorScheme } from "@/hooks/use-color-scheme";
 
 const GENDERS = ["Male", "Female", "Other"];
 const GOALS = ["Lose Weight", "Gain Muscle", "Stay Fit", "Eat Healthier"];
+const GOAL_ICONS: Record<string, IconName> = {
+  "Lose Weight": "trending-down",
+  "Gain Muscle": "zap",
+  "Stay Fit": "activity",
+  "Eat Healthier": "feather",
+};
 
 function StepIndicator({ current, total, colors }: { current: number; total: number; colors: typeof Colors.light }) {
   return (
@@ -29,10 +38,7 @@ function StepIndicator({ current, total, colors }: { current: number; total: num
       {Array.from({ length: total }).map((_, i) => (
         <View
           key={i}
-          style={[
-            styles.stepDot,
-            { backgroundColor: i < current ? colors.primary : colors.progressTrack },
-          ]}
+          style={[styles.stepDot, { backgroundColor: i < current ? colors.primary : colors.progressTrack }]}
         />
       ))}
     </View>
@@ -46,6 +52,8 @@ function InputField({
   onChangeText,
   secureTextEntry,
   keyboardType,
+  icon,
+  error,
   colors,
 }: {
   label: string;
@@ -54,21 +62,33 @@ function InputField({
   onChangeText: (v: string) => void;
   secureTextEntry?: boolean;
   keyboardType?: "default" | "email-address" | "numeric";
+  icon?: IconName;
+  error?: string;
   colors: typeof Colors.light;
 }) {
   return (
     <View style={styles.fieldWrap}>
-      <Text style={[styles.fieldLabel, { color: colors.tertiaryText }]}>{label}</Text>
-      <TextInput
-        style={[styles.input, { backgroundColor: colors.cardBackground, borderColor: colors.border, color: colors.text }]}
-        placeholder={placeholder}
-        placeholderTextColor={colors.secondaryText}
-        value={value}
-        onChangeText={onChangeText}
-        secureTextEntry={secureTextEntry}
-        keyboardType={keyboardType ?? "default"}
-        autoCapitalize="none"
-      />
+      <Text style={[styles.fieldLabel, { color: colors.labelText }]}>{label}</Text>
+      <View
+        style={[
+          styles.inputShell,
+          { backgroundColor: colors.inputBackground, borderColor: error ? colors.danger : colors.border },
+        ]}
+      >
+        {icon ? <Feather name={icon} size={19} color={colors.secondaryText} /> : null}
+        <TextInput
+          style={[styles.input, { color: colors.text }]}
+          placeholder={placeholder}
+          placeholderTextColor={colors.placeholderText}
+          value={value}
+          onChangeText={onChangeText}
+          secureTextEntry={secureTextEntry}
+          keyboardType={keyboardType ?? "default"}
+          autoCapitalize="none"
+          accessibilityLabel={label}
+        />
+      </View>
+      {error ? <Text style={[styles.fieldError, { color: colors.dangerText }]}>{error}</Text> : null}
     </View>
   );
 }
@@ -153,30 +173,37 @@ export default function ProfileSetupScreen() {
     else router.back();
   };
 
+  const isError = statusMessage !== "" && statusMessage !== t("User input processing completed.");
+
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1 }}
+      style={styles.flex}
       behavior="padding" // also on Android: without it the keyboard covers the fields
     >
       <ScrollView
-        style={[styles.container, { backgroundColor: colors.screenBackground }]}
+        style={[styles.flex, { backgroundColor: colors.screenBackground }]}
         contentContainerStyle={{ paddingBottom: 120 }} // scroll room above the keyboard
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.header, { backgroundColor: colors.cardBackground }]}>
-          <View style={styles.headerRow}>
-            <Text style={[styles.headerTitle, { color: colors.text }]}>{t("Profile Details")}</Text>
-            <Text style={[styles.headerStep, { color: colors.secondaryText }]}>{t("Step {step} of 3", { step })}</Text>
-          </View>
+        <View style={styles.header}>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={t("Go back")}
+            onPress={back}
+            style={[styles.iconButton, { backgroundColor: colors.cardBackground }, softShadow(colors)]}
+          >
+            <Feather name="chevron-left" size={22} color={colors.text} />
+          </TouchableOpacity>
           <StepIndicator current={step} total={3} colors={colors} />
+          <Text style={[styles.headerStep, { color: colors.secondaryText }]}>{t("Step {step} of 3", { step })}</Text>
         </View>
 
         <View style={styles.body}>
           {step === 1 && (
             <>
-              <Text style={[styles.sectionHeading, { color: colors.text }]}>{t("Tell us about yourself")}</Text>
-              <Text style={[styles.sectionSubtitle, { color: colors.secondaryText }]}>
+              <Text style={[heading(28), { color: colors.text }]} accessibilityRole="header">{t("Tell us about yourself")}</Text>
+              <Text style={[styles.sectionSubtitle, { color: colors.tertiaryText }]}>
                 {t("This helps us calculate your daily caloric needs and body mass index.")}
               </Text>
 
@@ -190,6 +217,7 @@ export default function ProfileSetupScreen() {
                     value={form.email}
                     onChangeText={set("email")}
                     keyboardType="email-address"
+                    icon="mail"
                     colors={colors}
                   />
                   <InputField
@@ -198,6 +226,7 @@ export default function ProfileSetupScreen() {
                     value={form.password}
                     onChangeText={set("password")}
                     secureTextEntry
+                    icon="lock"
                     colors={colors}
                   />
                 </>
@@ -207,18 +236,22 @@ export default function ProfileSetupScreen() {
                 placeholder="John Doe"
                 value={form.fullName}
                 onChangeText={set("fullName")}
+                icon="user"
                 colors={colors}
               />
 
-              <View style={[styles.previewCard, { backgroundColor: colors.primaryLight, borderColor: colors.primary }]}>
-                <Text style={[styles.previewTitle, { color: colors.primaryDark }]}>{t("Live Input Preview")}</Text>
-                <Text style={[styles.previewLine, { color: colors.primaryText }]}>
+              <View style={[styles.previewCard, { backgroundColor: colors.primaryLight }]}>
+                <View style={styles.previewHead}>
+                  <Feather name="eye" size={16} color={colors.primaryText} />
+                  <Text style={[styles.previewTitle, { color: colors.primaryText }]}>{t("Live Input Preview")}</Text>
+                </View>
+                <Text style={[styles.previewLine, { color: colors.text }]}>
                   {t("Name: {value}", { value: form.fullName || t("Not set yet") })}
                 </Text>
-                <Text style={[styles.previewLine, { color: colors.primaryText }]}>
+                <Text style={[styles.previewLine, { color: colors.text }]}>
                   {t("Email: {value}", { value: form.email || t("Not set yet") })}
                 </Text>
-                <Text style={[styles.previewLine, { color: colors.primaryText }]}>
+                <Text style={[styles.previewLine, { color: colors.text }]}>
                   {t("Password: {value}", { value: maskPassword(form.password) })}
                 </Text>
               </View>
@@ -227,86 +260,61 @@ export default function ProfileSetupScreen() {
 
           {step === 2 && (
             <>
-              <Text style={[styles.sectionHeading, { color: colors.text }]}>{t("Your body details")}</Text>
-              <Text style={[styles.sectionSubtitle, { color: colors.secondaryText }]}>
+              <Text style={[heading(28), { color: colors.text }]} accessibilityRole="header">{t("Your body details")}</Text>
+              <Text style={[styles.sectionSubtitle, { color: colors.tertiaryText }]}>
                 {t("We use this information to personalise your nutrition plan.")}
               </Text>
 
-              <View style={styles.rowFields}>
-                <View style={{ flex: 1 }}>
-                  <InputField
-                    label={t("Age")}
-                    placeholder="25"
-                    value={form.age}
-                    onChangeText={(v) => { set("age")(v); if (ageError) setAgeError(""); }}
-                    keyboardType="numeric"
-                    colors={colors}
-                  />
-                  {ageError ? (
-                    <Text style={{ color: colors.dangerText, fontSize: 12, marginTop: 2 }}>
-                      {ageError}
-                    </Text>
-                  ) : null}
-                </View>
-                <View style={{ flex: 1, marginLeft: 12 }}>
-                  <Text style={[styles.fieldLabel, { color: colors.tertiaryText }]}>{t("Gender")}</Text>
-                  <View style={styles.selectRow}>
-                    {GENDERS.map((g) => (
-                      <TouchableOpacity accessibilityRole="radio"
-                        accessibilityState={{ checked: form.gender === g }}
-                        key={g}
-                        style={[
-                          styles.selectChip,
-                          { borderColor: colors.border, backgroundColor: colors.cardBackground },
-                          form.gender === g && { backgroundColor: colors.primary, borderColor: colors.primary },
-                        ]}
-                        onPress={() => set("gender")(g)}
-                      >
-                        <Text
-                          style={[
-                            styles.selectChipText,
-                            { color: colors.tertiaryText },
-                            form.gender === g && { color: "#fff" },
-                          ]}
-                        >
-                          {t(g)}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                </View>
+              <Text style={[styles.fieldLabel, { color: colors.labelText }]}>{t("Gender")}</Text>
+              <View style={[styles.segment, { backgroundColor: colors.cardMuted }]} accessibilityRole="radiogroup">
+                {GENDERS.map((g) => {
+                  const selected = form.gender === g;
+                  return (
+                    <TouchableOpacity
+                      accessibilityRole="radio"
+                      accessibilityState={{ checked: selected }}
+                      key={g}
+                      style={[styles.segmentItem, selected && [{ backgroundColor: colors.cardBackground }, softShadow(colors)]]}
+                      onPress={() => set("gender")(g)}
+                    >
+                      <Text style={[styles.segmentText, { color: selected ? colors.text : colors.secondaryText }]}>{t(g)}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
 
+              <InputField
+                label={t("Age")}
+                placeholder="25"
+                value={form.age}
+                onChangeText={(v) => { set("age")(v); if (ageError) setAgeError(""); }}
+                keyboardType="numeric"
+                icon="calendar"
+                error={ageError}
+                colors={colors}
+              />
               <View style={styles.rowFields}>
-                <View style={{ flex: 1 }}>
+                <View style={styles.flex}>
                   <InputField
                     label={t("Height (cm)")}
                     placeholder="180"
                     value={form.height}
                     onChangeText={(v) => { set("height")(v); if (heightError) setHeightError(""); }}
                     keyboardType="numeric"
+                    error={heightError}
                     colors={colors}
                   />
-                  {heightError ? (
-                    <Text style={{ color: colors.dangerText, fontSize: 12, marginTop: 2 }}>
-                      {heightError}
-                    </Text>
-                  ) : null}
                 </View>
-                <View style={{ flex: 1, marginLeft: 12 }}>
+                <View style={styles.flex}>
                   <InputField
                     label={t("Weight (kg)")}
                     placeholder="75"
                     value={form.weight}
                     onChangeText={(v) => { set("weight")(v); if (weightError) setWeightError(""); }}
                     keyboardType="numeric"
+                    error={weightError}
                     colors={colors}
                   />
-                  {weightError ? (
-                    <Text style={{ color: colors.dangerText, fontSize: 12, marginTop: 2 }}>
-                      {weightError}
-                    </Text>
-                  ) : null}
                 </View>
               </View>
             </>
@@ -314,190 +322,107 @@ export default function ProfileSetupScreen() {
 
           {step === 3 && (
             <>
-              <Text style={[styles.sectionHeading, { color: colors.text }]}>{t("Your primary goal")}</Text>
-              <Text style={[styles.sectionSubtitle, { color: colors.secondaryText }]}>
+              <Text style={[heading(28), { color: colors.text }]} accessibilityRole="header">{t("Your primary goal")}</Text>
+              <Text style={[styles.sectionSubtitle, { color: colors.tertiaryText }]}>
                 {t("Choose the goal that best describes what you want to achieve.")}
               </Text>
 
-              <View style={styles.goalGrid}>
-                {GOALS.map((g) => (
-                  <TouchableOpacity accessibilityRole="radio"
-                    accessibilityState={{ checked: form.goal === g }}
-                    accessibilityLabel={t(g)}
-                    key={g}
-                    style={[
-                      styles.goalCard,
-                      { backgroundColor: colors.cardBackground, borderColor: colors.border, shadowColor: colors.shadow },
-                      form.goal === g && { borderColor: colors.primary, backgroundColor: colors.primaryLight },
-                    ]}
-                    onPress={() => set("goal")(g)}
-                  >
-                    <Text style={styles.goalEmoji}>
-                      {g === "Lose Weight"
-                        ? "\u2696\uFE0F"
-                        : g === "Gain Muscle"
-                          ? "\u{1F3CB}\uFE0F"
-                          : g === "Stay Fit"
-                            ? "\u{1F3C3}"
-                            : "\u{1F957}"}
-                    </Text>
-                    <Text
+              <View style={styles.goalGrid} accessibilityRole="radiogroup">
+                {GOALS.map((g, i) => {
+                  const selected = form.goal === g;
+                  const tone = [
+                    { bg: colors.snackBg, fg: colors.snackText },
+                    { bg: colors.dinnerBg, fg: colors.dinnerText },
+                    { bg: colors.breakfastBg, fg: colors.breakfastText },
+                    { bg: colors.lunchBg, fg: colors.lunchText },
+                  ][i];
+                  return (
+                    <TouchableOpacity
+                      accessibilityRole="radio"
+                      accessibilityState={{ checked: selected }}
+                      accessibilityLabel={t(g)}
+                      key={g}
+                      activeOpacity={0.8}
                       style={[
-                        styles.goalCardText,
-                        { color: colors.tertiaryText },
-                        form.goal === g && { color: colors.primaryText },
+                        styles.goalCard,
+                        selected
+                          ? { backgroundColor: colors.selectedBackground, borderColor: colors.primary }
+                          : [{ backgroundColor: colors.cardBackground, borderColor: "transparent" }, softShadow(colors)],
                       ]}
+                      onPress={() => set("goal")(g)}
                     >
-                      {t(g)}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                      <View style={[styles.goalIcon, { backgroundColor: tone.bg }]}>
+                        <Feather name={GOAL_ICONS[g]} size={22} color={tone.fg} />
+                      </View>
+                      <Text style={[heading(17), { color: colors.text }]}>{t(g)}</Text>
+                      {selected ? (
+                        <View style={[styles.goalCheck, { backgroundColor: colors.primary }]}>
+                          <Feather name="check" size={14} color={colors.onPrimary} />
+                        </View>
+                      ) : null}
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             </>
           )}
         </View>
-
-        <View style={{ height: 20 }} />
       </ScrollView>
 
-      <View style={[styles.bottomNav, { backgroundColor: colors.cardBackground, borderTopColor: colors.borderLight }]}>
-        <TouchableOpacity accessibilityRole="button" style={[styles.backBtn, { backgroundColor: colors.screenBackground, borderColor: colors.border }]} onPress={back}>
-          <Text style={[styles.backBtnText, { color: colors.tertiaryText }]}>{t("← Back")}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity accessibilityRole="button" style={[styles.nextBtn, { backgroundColor: colors.primary }]} onPress={next}>
-          <Text style={styles.nextBtnText}>
-            {step < 3 ? t("Continue →") : t("Finish Setup ✓")}
-          </Text>
-        </TouchableOpacity>
-      </View>
-
       {statusMessage ? (
-        <View style={[styles.statusBanner, { backgroundColor: colors.primaryDark }]}>
-          <Text style={styles.statusText}>{statusMessage}</Text>
+        <View style={[styles.statusBanner, { backgroundColor: isError ? colors.dangerLight : colors.primaryLight }]} accessibilityLiveRegion="polite">
+          <Feather name={isError ? "alert-circle" : "check-circle"} size={18} color={isError ? colors.dangerText : colors.primaryText} />
+          <Text style={[styles.statusText, { color: isError ? colors.dangerText : colors.primaryText }]}>{statusMessage}</Text>
         </View>
       ) : null}
+
+      <View style={[styles.bottomNav, { backgroundColor: colors.screenBackground }]}>
+        <Button
+          label={step < 3 ? t("Continue") : t("Finish Setup")}
+          icon={step < 3 ? "arrow-right" : "check"}
+          iconRight={step < 3}
+          onPress={next}
+          style={styles.flex}
+        />
+      </View>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  flex: { flex: 1 },
 
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 56,
-    paddingBottom: 20,
-  },
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  headerTitle: { fontSize: 18, fontWeight: "800" },
-  headerStep: { fontSize: 13, fontWeight: "600" },
-
-  stepIndicator: { flexDirection: "row", gap: 8 },
+  header: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 20, paddingTop: 56 },
+  iconButton: { width: 44, height: 44, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  headerStep: { fontSize: 13, fontWeight: "700" },
+  stepIndicator: { flex: 1, flexDirection: "row", gap: 6 },
   stepDot: { height: 6, flex: 1, borderRadius: 3 },
 
-  body: { padding: 20 },
+  body: { paddingHorizontal: 24, paddingTop: 28 },
+  sectionSubtitle: { fontSize: 15, lineHeight: 22, marginTop: 8, marginBottom: 22 },
 
-  sectionHeading: {
-    fontSize: 22,
-    fontWeight: "800",
-    marginBottom: 8,
-  },
-  sectionSubtitle: {
-    fontSize: 14,
-    marginBottom: 24,
-    lineHeight: 20,
-  },
+  fieldWrap: { marginBottom: 14 },
+  fieldLabel: { fontSize: 13, fontWeight: "700", marginBottom: 6 },
+  inputShell: { minHeight: 54, borderWidth: 1.5, borderRadius: 18, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", gap: 10 },
+  input: { flex: 1, minWidth: 0, fontSize: 16, paddingVertical: 12 },
+  fieldError: { fontSize: 12, fontWeight: "600", marginTop: 4 },
+  rowFields: { flexDirection: "row", gap: 12 },
 
-  fieldWrap: { marginBottom: 16 },
-  fieldLabel: {
-    fontSize: 13,
-    fontWeight: "700",
-    marginBottom: 6,
-  },
-  input: {
-    borderRadius: 12,
-    borderWidth: 1,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 15,
-  },
-  previewCard: {
-    marginTop: 8,
-    borderRadius: 12,
-    padding: 14,
-    borderWidth: 1,
-  },
-  previewTitle: {
-    fontSize: 14,
-    fontWeight: "700",
-    marginBottom: 8,
-  },
-  previewLine: { fontSize: 13, marginBottom: 4 },
+  segment: { flexDirection: "row", padding: 4, borderRadius: 18, gap: 4, marginBottom: 16 },
+  segmentItem: { flex: 1, minHeight: 46, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  segmentText: { fontSize: 15, fontWeight: "700" },
 
-  rowFields: { flexDirection: "row", marginBottom: 0 },
-
-  selectRow: { flexDirection: "column", gap: 6, marginTop: 6 },
-  selectChip: {
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    alignItems: "center",
-  },
-  selectChipText: { fontSize: 12, fontWeight: "600" },
+  previewCard: { borderRadius: 20, padding: 16, marginTop: 6, gap: 4 },
+  previewHead: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 },
+  previewTitle: { fontSize: 13, fontWeight: "800" },
+  previewLine: { fontSize: 14 },
 
   goalGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
-  goalCard: {
-    width: "46%",
-    borderRadius: 16,
-    padding: 20,
-    alignItems: "center",
-    borderWidth: 2,
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 1,
-  },
-  goalEmoji: { fontSize: 30, marginBottom: 8 },
-  goalCardText: {
-    fontSize: 14,
-    fontWeight: "700",
-    textAlign: "center",
-  },
+  goalCard: { flexBasis: "47%", flexGrow: 1, minHeight: 140, borderRadius: 22, padding: 16, gap: 12, borderWidth: 2 },
+  goalIcon: { width: 44, height: 44, borderRadius: 15, alignItems: "center", justifyContent: "center" },
+  goalCheck: { position: "absolute", top: 12, right: 12, width: 24, height: 24, borderRadius: 12, alignItems: "center", justifyContent: "center" },
 
-  bottomNav: {
-    flexDirection: "row",
-    padding: 16,
-    gap: 12,
-    borderTopWidth: 1,
-  },
-  backBtn: {
-    flex: 1,
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: "center",
-    borderWidth: 1,
-  },
-  backBtnText: { fontSize: 15, fontWeight: "700" },
-  nextBtn: {
-    flex: 2,
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: "center",
-  },
-  nextBtnText: { fontSize: 15, fontWeight: "700", color: "#fff" },
-  statusBanner: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-  },
-  statusText: {
-    color: "#fff",
-    fontSize: 13,
-    fontWeight: "700",
-    textAlign: "center",
-  },
+  statusBanner: { flexDirection: "row", alignItems: "center", gap: 8, marginHorizontal: 24, padding: 12, borderRadius: 14 },
+  statusText: { flex: 1, fontSize: 13, fontWeight: "600" },
+  bottomNav: { flexDirection: "row", paddingHorizontal: 24, paddingTop: 12, paddingBottom: 30 },
 });

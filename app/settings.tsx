@@ -1,3 +1,6 @@
+import Feather from "@expo/vector-icons/Feather";
+
+import { BackHeader, Button, GroupCard, ListRow, softShadow } from "@/components/ui/kit";
 import { changePassword, deleteAccount, saveProfile } from "@/lib/api";
 import { Language, LANGUAGES, translate } from "@/lib/translations";
 import { Colors, LAST_PROFILE_EMAIL_KEY, THEME_PREF_KEY } from "@/constants/theme";
@@ -169,295 +172,133 @@ export default function SettingsScreen() {
     );
   };
 
+  const choice = (selected: boolean) => [
+    styles.choice,
+    selected ? [{ backgroundColor: colors.cardBackground }, softShadow(colors)] : null,
+  ];
+
   return (
     <>
-      <Stack.Screen options={{ title: t("Settings") }} />
+      <Stack.Screen options={{ headerShown: false, title: t("Settings") }} />
       {/* Lifts the page above the keyboard so the change-password fields stay visible. */}
       <KeyboardAvoidingView style={styles.container} behavior="padding">
       <ScrollView
         style={[styles.container, { backgroundColor: colors.screenBackground }]}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        <Text style={[styles.pageTitle, { color: colors.text }]}>{t("Settings")}</Text>
+        <BackHeader title={t("Settings")} onBack={() => router.back()} backLabel={t("Go back")} />
 
-        {/* Appearance */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.subtitleText }]}>
-            {t("Appearance")}
-          </Text>
-          <View
-            style={[
-              styles.card,
-              {
-                backgroundColor: colors.cardBackground,
-                shadowColor: colors.shadow,
-              },
-            ]}
-          >
-            <View style={styles.themeSwitchRow}>
-              <TouchableOpacity accessibilityRole="radio"
-                accessibilityState={{ checked: themePreference === "light" }}
-                style={[
-                  styles.themeChip,
-                  {
-                    borderColor: colors.border,
-                    backgroundColor: colors.inputBackground,
-                  },
-                  themePreference === "light" && {
-                    borderColor: colors.primary,
-                    backgroundColor: colors.primaryLight,
-                  },
-                ]}
-                onPress={() => applyThemePreference("light")}
-              >
-                <Text
-                  style={[
-                    styles.themeChipText,
-                    { color: colors.labelText },
-                    themePreference === "light" && {
-                      color: colors.primaryText,
-                    },
-                  ]}
+        <GroupCard title={t("Appearance")}>
+          <View style={[styles.segment, { backgroundColor: colors.cardMuted }]} accessibilityRole="radiogroup">
+            {(["light", "dark"] as const).map((mode) => {
+              const selected = themePreference === mode;
+              return (
+                <TouchableOpacity
+                  key={mode}
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: selected }}
+                  style={choice(selected)}
+                  onPress={() => applyThemePreference(mode)}
                 >
-                  {t("White mode")}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity accessibilityRole="radio"
-                accessibilityState={{ checked: themePreference === "dark" }}
-                style={[
-                  styles.themeChip,
-                  {
-                    borderColor: colors.border,
-                    backgroundColor: colors.inputBackground,
-                  },
-                  themePreference === "dark" && {
-                    borderColor: colors.primary,
-                    backgroundColor: colors.primaryLight,
-                  },
-                ]}
-                onPress={() => applyThemePreference("dark")}
-              >
-                <Text
-                  style={[
-                    styles.themeChipText,
-                    { color: colors.labelText },
-                    themePreference === "dark" && { color: colors.primaryText },
-                  ]}
-                >
-                  {t("Dark mode")}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-
-        {/* Language */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.subtitleText }]}>
-            {t("Language")}
-          </Text>
-          <View
-            style={[
-              styles.card,
-              {
-                backgroundColor: colors.cardBackground,
-                shadowColor: colors.shadow,
-              },
-            ]}
-          >
-            <View style={[styles.themeSwitchRow, styles.languageRow]}>
-              {LANGUAGES.map((option) => {
-                const selected = language === option.code;
-                return (
-                  <TouchableOpacity accessibilityRole="radio"
-                    accessibilityState={{ checked: selected }}
-                    key={option.code}
-                    style={[
-                      styles.themeChip,
-                      styles.languageChip,
-                      {
-                        borderColor: colors.border,
-                        backgroundColor: colors.inputBackground,
-                      },
-                      selected && {
-                        borderColor: colors.primary,
-                        backgroundColor: colors.primaryLight,
-                      },
-                    ]}
-                    onPress={() => applyLanguage(option.code)}
-                  >
-                    <Text
-                      style={[
-                        styles.themeChipText,
-                        { color: colors.labelText },
-                        selected && { color: colors.primaryText },
-                      ]}
-                    >
-                      {option.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-        </View>
-
-        {/* Personal Information */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.subtitleText }]}>
-            {t("Personal Information")}
-          </Text>
-          <View
-            style={[
-              styles.card,
-              {
-                backgroundColor: colors.cardBackground,
-                shadowColor: colors.shadow,
-              },
-            ]}
-          >
-            <TouchableOpacity accessibilityRole="button"
-              style={[styles.row, { borderBottomColor: colors.borderLight }]}
-              onPress={() => router.push("/profile-setup" as any)}
-              activeOpacity={0.75}
-            >
-              <Text style={[styles.rowLabel, { color: colors.text }]}>
-                {t("Edit personal information")}
-              </Text>
-              <View style={styles.rowRight}>
-                <Text style={[styles.rowValue, { color: colors.subtitleText }]}>
-                  {t("Open")}
-                </Text>
-                <Text
-                  style={[styles.rowArrow, { color: colors.secondaryText }]}
-                >
-                  &rsaquo;
-                </Text>
-              </View>
-            </TouchableOpacity>
-            {profile.email ? (
-              <TouchableOpacity accessibilityRole="button"
-                style={[styles.row, { borderBottomColor: colors.borderLight }]}
-                onPress={() => setShowPasswordForm((v) => !v)}
-                activeOpacity={0.75}
-                accessibilityState={{ expanded: showPasswordForm }}
-              >
-                <Text style={[styles.rowLabel, { color: colors.text }]}>
-                  {t("Change password")}
-                </Text>
-                <Text style={[styles.rowArrow, { color: colors.secondaryText }]}>
-                  {showPasswordForm ? "⌄" : "›"}
-                </Text>
-              </TouchableOpacity>
-            ) : null}
-            {showPasswordForm ? (
-              <View style={styles.passwordForm}>
-                <TextInput
-                  style={[styles.passwordInput, { borderColor: colors.border, color: colors.text, backgroundColor: colors.inputBackground }]}
-                  placeholder={t("Current password")}
-                  placeholderTextColor={colors.secondaryText}
-                  value={currentPassword}
-                  onChangeText={setCurrentPassword}
-                  secureTextEntry
-                  autoCapitalize="none"
-                  accessibilityLabel={t("Current password")}
-                />
-                <TextInput
-                  style={[styles.passwordInput, { borderColor: colors.border, color: colors.text, backgroundColor: colors.inputBackground }]}
-                  placeholder={t("New password")}
-                  placeholderTextColor={colors.secondaryText}
-                  value={newPassword}
-                  onChangeText={setNewPassword}
-                  secureTextEntry
-                  autoCapitalize="none"
-                  accessibilityLabel={t("New password")}
-                />
-                <TouchableOpacity accessibilityRole="button"
-                  style={[styles.passwordSave, { backgroundColor: colors.primary }]}
-                  onPress={isSavingPassword ? undefined : submitPasswordChange}
-                  disabled={isSavingPassword}
-                >
-                  <Text style={styles.passwordSaveText}>
-                    {isSavingPassword ? t("Saving...") : t("Save new password")}
+                  <Feather name={mode === "light" ? "sun" : "moon"} size={17} color={selected ? colors.primaryText : colors.secondaryText} />
+                  <Text style={[styles.choiceText, { color: selected ? colors.text : colors.secondaryText }]}>
+                    {mode === "light" ? t("White mode") : t("Dark mode")}
                   </Text>
                 </TouchableOpacity>
-              </View>
-            ) : null}
+              );
+            })}
           </View>
-        </View>
+        </GroupCard>
 
-        {/* Legal */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.subtitleText }]}>
-            {t("Legal")}
-          </Text>
-          <View
-            style={[
-              styles.card,
-              {
-                backgroundColor: colors.cardBackground,
-                shadowColor: colors.shadow,
-              },
-            ]}
-          >
-            {[
-              "Cookie policy",
-              "Personal data protection policy",
-              "Terms and conditions of use",
-            ].map((label) => (
-              <TouchableOpacity accessibilityRole="button"
-                key={label}
-                style={[styles.row, { borderBottomColor: colors.borderLight }]}
-                onPress={() => openLegal(label)}
-                activeOpacity={0.75}
-              >
-                <Text style={[styles.rowLabel, { color: colors.text }]}>
-                  {t(label)}
-                </Text>
-                <View style={styles.rowRight}>
-                  <Text
-                    style={[styles.rowValue, { color: colors.subtitleText }]}
-                  >
-                    {t("View")}
-                  </Text>
-                  <Text
-                    style={[styles.rowArrow, { color: colors.secondaryText }]}
-                  >
-                    &rsaquo;
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            ))}
+        <GroupCard title={t("Language")}>
+          <View style={[styles.segment, styles.wrap, { backgroundColor: colors.cardMuted }]} accessibilityRole="radiogroup">
+            {LANGUAGES.map((option) => {
+              const selected = language === option.code;
+              return (
+                <TouchableOpacity
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: selected }}
+                  key={option.code}
+                  style={[choice(selected), styles.languageChoice]}
+                  onPress={() => applyLanguage(option.code)}
+                >
+                  <Text style={[styles.choiceText, { color: selected ? colors.text : colors.secondaryText }]}>{option.label}</Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
-        </View>
+        </GroupCard>
 
-        {/* Account */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.subtitleText }]}>
-            {t("Account")}
-          </Text>
-          <View
-            style={[
-              styles.card,
-              {
-                backgroundColor: colors.cardBackground,
-                shadowColor: colors.shadow,
-              },
-            ]}
-          >
-            <TouchableOpacity accessibilityRole="button"
-              style={[styles.row, { borderBottomColor: colors.borderLight }]}
-              onPress={isDeleting ? undefined : confirmDeleteAccount}
-              disabled={isDeleting}
-              activeOpacity={0.75}
-            >
-              <Text style={[styles.rowLabel, { color: colors.dangerText }]}>
-                {isDeleting ? t("Deleting account...") : t("Delete my account")}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        <GroupCard title={t("Personal Information")}>
+          <ListRow
+            icon="edit-3"
+            label={t("Edit personal information")}
+            onPress={() => router.push("/profile-setup")}
+            last={!profile.email}
+          />
+          {profile.email ? (
+            <ListRow
+              icon="lock"
+              label={t("Change password")}
+              onPress={() => setShowPasswordForm((v) => !v)}
+              right={<Feather name={showPasswordForm ? "chevron-up" : "chevron-down"} size={18} color={colors.secondaryText} />}
+              last={!showPasswordForm}
+            />
+          ) : null}
+          {showPasswordForm ? (
+            <View style={styles.passwordForm}>
+              <TextInput
+                style={[styles.passwordInput, { borderColor: colors.border, color: colors.text, backgroundColor: colors.inputBackground }]}
+                placeholder={t("Current password")}
+                placeholderTextColor={colors.placeholderText}
+                value={currentPassword}
+                onChangeText={setCurrentPassword}
+                secureTextEntry
+                autoCapitalize="none"
+                accessibilityLabel={t("Current password")}
+              />
+              <TextInput
+                style={[styles.passwordInput, { borderColor: colors.border, color: colors.text, backgroundColor: colors.inputBackground }]}
+                placeholder={t("New password")}
+                placeholderTextColor={colors.placeholderText}
+                value={newPassword}
+                onChangeText={setNewPassword}
+                secureTextEntry
+                autoCapitalize="none"
+                accessibilityLabel={t("New password")}
+              />
+              <Button
+                label={isSavingPassword ? t("Saving...") : t("Save new password")}
+                onPress={submitPasswordChange}
+                loading={isSavingPassword}
+              />
+            </View>
+          ) : null}
+        </GroupCard>
+
+        <GroupCard title={t("Legal")}>
+          {["Cookie policy", "Personal data protection policy", "Terms and conditions of use"].map((label, i, all) => (
+            <ListRow
+              key={label}
+              icon={i === 1 ? "shield" : "file-text"}
+              label={t(label)}
+              onPress={() => openLegal(label)}
+              last={i === all.length - 1}
+            />
+          ))}
+        </GroupCard>
+
+        <GroupCard title={t("Account")}>
+          <ListRow
+            icon="trash-2"
+            label={isDeleting ? t("Deleting account...") : t("Delete my account")}
+            onPress={isDeleting ? undefined : confirmDeleteAccount}
+            danger
+            last
+          />
+        </GroupCard>
       </ScrollView>
       </KeyboardAvoidingView>
     </>
@@ -466,62 +307,20 @@ export default function SettingsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { padding: 16, paddingBottom: 120 }, // scroll room above the keyboard
-  pageTitle: {
-    fontSize: 28,
-    fontWeight: "800",
-    marginBottom: 12,
-  },
-  section: { marginBottom: 14 },
-  sectionTitle: {
-    fontSize: 13,
-    fontWeight: "700",
-    marginBottom: 8,
-    marginLeft: 4,
-  },
-  card: {
-    borderRadius: 14,
-    overflow: "hidden",
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 1,
-  },
-  row: {
-    minHeight: 52,
-    paddingHorizontal: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    borderBottomWidth: 1,
-  },
-  rowLabel: { fontSize: 14, fontWeight: "600" },
-  rowRight: { flexDirection: "row", alignItems: "center", gap: 8 },
-  rowValue: { fontSize: 13, fontWeight: "600" },
-  rowArrow: { fontSize: 18 },
-  passwordForm: { paddingVertical: 12, gap: 10 },
-  passwordInput: {
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-  },
-  passwordSave: { borderRadius: 10, paddingVertical: 12, alignItems: "center" },
-  passwordSaveText: { color: "#fff", fontWeight: "700", fontSize: 14 },
-  themeSwitchRow: {
-    flexDirection: "row",
-    gap: 10,
-    padding: 12,
-  },
-  themeChip: {
+  content: { paddingBottom: 120 }, // scroll room above the keyboard
+  segment: { flexDirection: "row", gap: 4, padding: 4, borderRadius: 16, marginVertical: 8 },
+  wrap: { flexWrap: "wrap" },
+  choice: {
     flex: 1,
-    height: 42,
-    borderRadius: 10,
-    borderWidth: 1,
+    minHeight: 46,
+    borderRadius: 12,
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    gap: 6,
   },
-  themeChipText: { fontWeight: "700", fontSize: 13 },
-  languageRow: { flexWrap: "wrap" },
-  languageChip: { flexBasis: "40%" }, // two per row
+  languageChoice: { flexBasis: "45%" }, // two per row
+  choiceText: { fontSize: 14, fontWeight: "700" },
+  passwordForm: { paddingVertical: 12, gap: 10 },
+  passwordInput: { minHeight: 50, borderWidth: 1.5, borderRadius: 16, paddingHorizontal: 14, fontSize: 15 },
 });

@@ -243,6 +243,19 @@ const fr: Dictionary = {
   "Weight": "Poids",
   "Primary Goal": "Objectif principal",
   "Log Out": "Déconnexion",
+  // Redesign
+  "Opens the Planner tab": "Ouvre l'onglet Planning",
+  "planned": "prévu",
+  "Today's plan": "Plan du jour",
+  "Nothing planned yet": "Rien de prévu pour l'instant",
+  "{kcal} kcal left · {n} meals planned": "{kcal} kcal restantes · {n} repas prévus",
+  "Open planner": "Ouvrir le planning",
+  "kcal over": "kcal en trop",
+  "kcal left": "kcal restantes",
+  "Meals": "Repas",
+  "Adjust meals": "Ajuster les repas",
+  "Target": "Objectif",
+  "Finish Setup": "Terminer",
 };
 
 const es: Dictionary = {
@@ -476,6 +489,19 @@ const es: Dictionary = {
   "Weight": "Peso",
   "Primary Goal": "Objetivo principal",
   "Log Out": "Cerrar sesión",
+  // Redesign
+  "Opens the Planner tab": "Abre la pestaña Planificador",
+  "planned": "previsto",
+  "Today's plan": "Plan de hoy",
+  "Nothing planned yet": "Nada previsto todavía",
+  "{kcal} kcal left · {n} meals planned": "{kcal} kcal restantes · {n} comidas previstas",
+  "Open planner": "Abrir planificador",
+  "kcal over": "kcal de más",
+  "kcal left": "kcal restantes",
+  "Meals": "Comidas",
+  "Adjust meals": "Ajustar comidas",
+  "Target": "Objetivo",
+  "Finish Setup": "Terminar",
 };
 
 const de: Dictionary = {
@@ -709,6 +735,19 @@ const de: Dictionary = {
   "Weight": "Gewicht",
   "Primary Goal": "Hauptziel",
   "Log Out": "Abmelden",
+  // Redesign
+  "Opens the Planner tab": "Öffnet den Tab Planer",
+  "planned": "geplant",
+  "Today's plan": "Heutiger Plan",
+  "Nothing planned yet": "Noch nichts geplant",
+  "{kcal} kcal left · {n} meals planned": "{kcal} kcal übrig · {n} Mahlzeiten geplant",
+  "Open planner": "Planer öffnen",
+  "kcal over": "kcal zu viel",
+  "kcal left": "kcal übrig",
+  "Meals": "Mahlzeiten",
+  "Adjust meals": "Mahlzeiten anpassen",
+  "Target": "Ziel",
+  "Finish Setup": "Fertig",
 };
 
 export const TRANSLATIONS: Record<Exclude<Language, "en">, Dictionary> = { fr, es, de };
