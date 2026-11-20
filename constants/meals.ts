@@ -15,10 +15,3 @@ export const CATEGORY_LABELS: Record<MealCategory, string> = {
   dinner: 'Dinner',
   snack: 'Snack',
 };
-
-export function getMealEmoji(category: MealCategory): string {
-  if (category === 'breakfast') return '\u{1F963}';
-  if (category === 'lunch') return '\u{1F957}';
-  if (category === 'dinner') return '\u{1F37D}\uFE0F';
-  return '\u{1F34E}';
-}

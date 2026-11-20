@@ -33,7 +33,7 @@ export default function HomeScreen() {
   const colors = Colors[colorScheme];
   const { t, language, locale } = useLanguage();
   const { profile } = useProfile();
-  const { selectedMeals, planDate } = useMealPlan();
+  const { selectedMeals, planDate, history } = useMealPlan();
   const router = useRouter();
   const [openArticle, setOpenArticle] = useState<string | null>(null);
   // Today's local date; refreshed when the app comes back on screen, so a night in
@@ -59,11 +59,13 @@ export default function HomeScreen() {
   );
   const firstName = profile.fullName.trim().split(/\s+/)[0];
 
-  // Today's plan summary. The context holds the plan of planDate, so it only
-  // counts when the Planner is showing today.
-  const showsToday = planDate === today;
-  const planned = showsToday ? selectedMeals.reduce((sum, m) => sum + m.totalCalories, 0) : 0;
-  const mealCount = showsToday ? selectedMeals.length : 0;
+  // Today's plan summary. The context holds the live plan of planDate; when the
+  // Planner shows another day, today's plan comes from the loaded history.
+  const todayIds = history?.find((e) => e.saved_at.slice(0, 10) === today)?.meal_ids ?? {};
+  const todayMeals =
+    planDate === today ? selectedMeals : ALL_MEALS.filter((m) => (todayIds[m.category] ?? []).includes(m.id));
+  const planned = todayMeals.reduce((sum, m) => sum + m.totalCalories, 0);
+  const mealCount = todayMeals.length;
   const dailyTarget = getNutrition(profile).dailyTarget ?? 2000;
   const progress = planned / dailyTarget;
   const left = Math.max(dailyTarget - planned, 0);
@@ -125,7 +127,9 @@ export default function HomeScreen() {
             <Text style={[styles.meta, { color: colors.tertiaryText }]}>
               {mealCount === 0
                 ? t('Nothing planned yet')
-                : t('{kcal} kcal left · {n} meals planned', { kcal: left.toLocaleString(locale), n: mealCount })}
+                : mealCount === 1
+                  ? t('{kcal} kcal left · 1 meal planned', { kcal: left.toLocaleString(locale) })
+                  : t('{kcal} kcal left · {n} meals planned', { kcal: left.toLocaleString(locale), n: mealCount })}
             </Text>
             <View style={styles.linkRow}>
               <Text style={[styles.link, { color: colors.primaryText }]}>{t('Open planner')}</Text>

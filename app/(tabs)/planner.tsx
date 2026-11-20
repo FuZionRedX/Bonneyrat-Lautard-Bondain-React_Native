@@ -2,7 +2,6 @@ import { useIsFocused, useRouter } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Image,
-  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -22,6 +21,7 @@ import {
   Pill,
   ProgressRing,
   SectionHeader,
+  Sheet,
   softShadow,
 } from "@/components/ui/kit";
 import { CATEGORY_LABELS, CATEGORY_ORDER, toLocalDateKey } from "@/constants/meals";
@@ -96,7 +96,9 @@ export default function PlannerScreen() {
   const plannedDays = new Set(
     (history ?? []).filter((e) => Object.values(e.meal_ids).some((ids) => ids.length > 0)).map((e) => e.saved_at.slice(0, 10)),
   );
+  // The selected day follows the live plan; history is a snapshot from when the day was picked.
   if (hasMealPlan) plannedDays.add(planDay.key);
+  else plannedDays.delete(planDay.key);
   const progress = totalPlanned / dailyTarget;
 
   return (
@@ -259,38 +261,24 @@ export default function PlannerScreen() {
       </View>
     </ScrollView>
 
-    <Modal
+    <Sheet
       visible={showOverLimitModal}
-      transparent
-      animationType="slide"
-      onRequestClose={() => setShowOverLimitModal(false)}
+      onClose={() => setShowOverLimitModal(false)}
+      icon="alert-triangle"
+      tone="danger"
+      title={t("Daily limit exceeded")}
+      message={t("You are {n} kcal above your target. Consider removing some meals.", { n: excess })}
     >
-      <View style={styles.modalOverlay}>
-        <View style={[styles.sheet, { backgroundColor: colors.cardBackground }]} accessibilityViewIsModal>
-          <View style={[styles.sheetHandle, { backgroundColor: colors.border }]} />
-          <View style={[styles.sheetIcon, { backgroundColor: colors.dangerLight }]}>
-            <Feather name="alert-triangle" size={28} color={colors.dangerText} />
-          </View>
-          <Text style={[heading(22), { color: colors.text, textAlign: "center" }]} accessibilityRole="header">
-            {t("Daily limit exceeded")}
-          </Text>
-          <Text style={[styles.sheetMessage, { color: colors.tertiaryText }]}>
-            {t("You are {n} kcal above your target. Consider removing some meals.", { n: excess })}
-          </Text>
-          <View style={styles.sheetButtons}>
-            <Button label={t("OK")} variant="secondary" onPress={() => setShowOverLimitModal(false)} style={styles.flex} />
-            <Button
-              label={t("Adjust meals")}
-              onPress={() => {
-                setShowOverLimitModal(false);
-                router.navigate("/recipes");
-              }}
-              style={styles.flex}
-            />
-          </View>
-        </View>
-      </View>
-    </Modal>
+      <Button label={t("OK")} variant="secondary" onPress={() => setShowOverLimitModal(false)} style={styles.flex} />
+      <Button
+        label={t("Adjust meals")}
+        onPress={() => {
+          setShowOverLimitModal(false);
+          router.navigate("/recipes");
+        }}
+        style={styles.flex}
+      />
+    </Sheet>
     </>
   );
 }
@@ -350,19 +338,4 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   historyText: { fontSize: 15, fontWeight: "700" },
-
-  modalOverlay: { flex: 1, backgroundColor: "rgba(8,16,12,0.45)", justifyContent: "flex-end" },
-  sheet: {
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
-    paddingHorizontal: 24,
-    paddingTop: 12,
-    paddingBottom: 36,
-    alignItems: "center",
-    gap: 12,
-  },
-  sheetHandle: { width: 40, height: 5, borderRadius: 3 },
-  sheetIcon: { width: 64, height: 64, borderRadius: 22, alignItems: "center", justifyContent: "center", marginTop: 8 },
-  sheetMessage: { fontSize: 15, lineHeight: 22, textAlign: "center" },
-  sheetButtons: { flexDirection: "row", gap: 10, alignSelf: "stretch", marginTop: 8 },
 });
